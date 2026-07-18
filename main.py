@@ -2,6 +2,7 @@ import tkinter
 from constants import Constants
 from action import Action
 from gamestate import GameState
+from input_manager import InputManager
 from pygame import mixer
 
 # Constants
@@ -25,18 +26,12 @@ class Main:
         self.canvas = tkinter.Canvas(root, width=constants.WIDTH, height=constants.HEIGHT, bg="black", highlightthickness=0)
         self.canvas.pack()
 
+        # Initialize Managers
+        self.input_manager = InputManager()
         mixer.init()
 
-        self.keys = {
-            "Left": False, "Right": False, "Up": False, "Down": False,
-            "z": False, "Z": False,
-            "x": False, "X": False,
-            "c": False, "C": False,
-            "Return": False
-        }
-
-        root.bind("<KeyPress>", self.press_key)
-        root.bind("<KeyRelease>", self.release_key)
+        root.bind("<KeyPress>", self.input_manager.press_key)
+        root.bind("<KeyRelease>", self.input_manager.release_key)
 
         self.state = GameState.MENU # Possible states: MENU, PLAYING, BATTLE, GAMEOVER
 
@@ -44,38 +39,6 @@ class Main:
         self.game_loop() # Start the game loop
 
         root.mainloop()
-
-    def press_key(self, event):
-        """Callback for keyboard press."""
-        if event.keysym in self.keys:
-            self.keys[event.keysym] = True
-
-    def release_key(self, event):
-        """Callback for keyboard release."""
-        if event.keysym in self.keys:
-            self.keys[event.keysym] = False
-
-    def is_pressed(self, action):
-        """
-        A helper function to group similar keys together.
-        E.g., checking if "z" OR "Return" is pressed for confirmation.
-        """
-        if action == Action.CONFIRM:
-            return self.keys["z"] or self.keys["Z"] or self.keys["Return"]
-        if action == Action.CANCEL:
-            return self.keys["x"] or self.keys["X"]
-        if action == Action.MENU:
-            return self.keys["c"] or self.keys["C"]
-        
-        if action == Action.UP:
-            return self.keys["Up"]
-        if action == Action.DOWN:
-            return self.keys["Down"]
-        if action == Action.LEFT:
-            return self.keys["Left"]
-        if action == Action.RIGHT:
-            return self.keys["Right"]
-        return False
 
     def setup_menu(self):
         """Draws the initial main menu layout on the canvas."""
@@ -105,20 +68,20 @@ class Main:
 
     def game_loop(self):
         if self.state == GameState.MENU:
-            if self.is_pressed(Action.CONFIRM):
+            if self.input_manager.is_pressed(Action.CONFIRM):
                 self.start_game()
 
         elif self.state == GameState.PLAYING:
             dx = 0
             dy = 0
 
-            if self.is_pressed(Action.UP):
+            if self.input_manager.is_pressed(Action.UP):
                 dy = -constants.SOUL_SPEED
-            if self.is_pressed(Action.DOWN):
+            if self.input_manager.is_pressed(Action.DOWN):
                 dy = constants.SOUL_SPEED
-            if self.is_pressed(Action.LEFT):
+            if self.input_manager.is_pressed(Action.LEFT):
                 dx = -constants.SOUL_SPEED
-            if self.is_pressed(Action.RIGHT):
+            if self.input_manager.is_pressed(Action.RIGHT):
                 dx = constants.SOUL_SPEED
                 
             if (dx != 0 or dy != 0):
