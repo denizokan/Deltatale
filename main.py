@@ -1,5 +1,8 @@
 import tkinter
 from constants import Constants
+from action import Action
+from gamestate import GameState
+from pygame import mixer
 
 # Constants
 constants = Constants()
@@ -22,6 +25,8 @@ class Main:
         self.canvas = tkinter.Canvas(root, width=constants.WIDTH, height=constants.HEIGHT, bg="black", highlightthickness=0)
         self.canvas.pack()
 
+        mixer.init()
+
         self.keys = {
             "Left": False, "Right": False, "Up": False, "Down": False,
             "z": False, "Z": False,
@@ -33,7 +38,7 @@ class Main:
         root.bind("<KeyPress>", self.press_key)
         root.bind("<KeyRelease>", self.release_key)
 
-        self.state = "MENU" # Possible states: MENU, PLAYING, BATTLE, GAMEOVER
+        self.state = GameState.MENU # Possible states: MENU, PLAYING, BATTLE, GAMEOVER
 
         self.setup_menu() # Enter the main menu
         self.game_loop() # Start the game loop
@@ -55,12 +60,21 @@ class Main:
         A helper function to group similar keys together.
         E.g., checking if "z" OR "Return" is pressed for confirmation.
         """
-        if action == "confirm":
+        if action == Action.CONFIRM:
             return self.keys["z"] or self.keys["Z"] or self.keys["Return"]
-        if action == "cancel":
+        if action == Action.CANCEL:
             return self.keys["x"] or self.keys["X"]
-        if action == "menu":
+        if action == Action.MENU:
             return self.keys["c"] or self.keys["C"]
+        
+        if action == Action.UP:
+            return self.keys["Up"]
+        if action == Action.DOWN:
+            return self.keys["Down"]
+        if action == Action.LEFT:
+            return self.keys["Left"]
+        if action == Action.RIGHT:
+            return self.keys["Right"]
         return False
 
     def setup_menu(self):
@@ -73,11 +87,13 @@ class Main:
             justify="center",
             font=("Determination Sans", 26, "normal")
         )
+        sound = mixer.Sound("assets/menu_theme.mp3")
+        sound.play(loops=-1)
 
     def start_game(self):
         """Transition from menu to active gameplay."""
         self.canvas.delete(self.menu_text)
-        self.state = "PLAYING"
+        self.state = GameState.PLAYING
 
         self.player_x = constants.WIDTH // 2
         self.player_y = constants.HEIGHT - 80
@@ -88,19 +104,25 @@ class Main:
         )
 
     def game_loop(self):
-        if self.state == "MENU":
-            if self.is_pressed("confirm"):
+        if self.state == GameState.MENU:
+            if self.is_pressed(Action.CONFIRM):
                 self.start_game()
 
-        elif self.state == "PLAYING":
+        elif self.state == GameState.PLAYING:
             dx = 0
-            if self.keys["Left"]:
-                dx = -4
-            if self.keys["Right"]:
-                dx = 4
+            dy = 0
+
+            if self.is_pressed(Action.UP):
+                dy = -constants.SOUL_SPEED
+            if self.is_pressed(Action.DOWN):
+                dy = constants.SOUL_SPEED
+            if self.is_pressed(Action.LEFT):
+                dx = -constants.SOUL_SPEED
+            if self.is_pressed(Action.RIGHT):
+                dx = constants.SOUL_SPEED
                 
-            if dx != 0:
-                self.canvas.move(self.player, dx, 0)
+            if (dx != 0 or dy != 0):
+                self.canvas.move(self.player, dx, dy)
 
         delay_ms = int(1000 / constants.FPS)
         self.root.after(delay_ms, self.game_loop)
