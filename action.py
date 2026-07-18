@@ -16,3 +16,4 @@ class Action(Enum):
     UP = 6
     DOWN = 7
     LEFT = 8
+    RIGHT = 9
