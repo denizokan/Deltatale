@@ -1,4 +1,5 @@
 from pygame import mixer
+from action import Action
 
 class FileSelectScreen:
     """
@@ -40,7 +41,7 @@ class FileSelectScreen:
         ```
         """
         
-        sound = mixer.Sound(file="sounds/assets/menu_theme.mp3")
+        sound = mixer.Sound(file="sounds/menu_theme.mp3")
         sound.play(loops=-1)
 
         title_text = self.game.canvas.create_text(
@@ -66,13 +67,15 @@ class FileSelectScreen:
         ]
 
         # Create the save slot boxes & their texts
+        self.slot_visual_ids = []
+        
         for index, slot in enumerate(save_slots):
             x1 = (self.game.constants.WIDTH - box_width) // 2
             x2 = x1 + box_width
             y1 = start_y + (index * spacing)
             y2 = y1 + box_height
 
-            self.ui_positions.append((x1, x2, y1, y2))
+            self.ui_positions.append((x1, y1, x2, y2))
             save_slot_box = self.game.canvas.create_rectangle(x1, y1, x2, y2, outline="gray", width=2)
             self.active_ui_elements.append(save_slot_box)
 
@@ -102,6 +105,12 @@ class FileSelectScreen:
             )
 
             self.active_ui_elements.extend([name_text, location_text, time_text])
+            self.slot_visual_ids.append({
+                "box": save_slot_box,
+                "name": name_text,
+                "location": location_text,
+                "time": time_text
+            })
 
         # Copy, Erase, Quit Buttons
         start_x = (self.game.constants.WIDTH - box_width) // 2
@@ -113,6 +122,8 @@ class FileSelectScreen:
             (start_x + box_width - 25, btn_y, "Quit")
         ]
 
+        self.button_visual_ids = []
+
         for index, button in enumerate(self.button_positions):
             button_text = self.game.canvas.create_text(
                 button[0],
@@ -123,6 +134,7 @@ class FileSelectScreen:
                 anchor="center"
             )
             self.active_ui_elements.append(button_text)
+            self.button_visual_ids.append(button_text)
 
         # Footer text
         footer_text = self.game.canvas.create_text(
@@ -135,4 +147,79 @@ class FileSelectScreen:
         )
         self.active_ui_elements.append(footer_text)
 
+        # Create the soul/selector sprite
+        self.menu_soul = self.game.canvas.create_image(0, 0, image=self.game.player_sprite)
+        self.active_ui_elements.append(self.menu_soul)
         
+        self.update_visuals()
+
+    def update_visuals(self):
+        """
+        Calculates the exact screen coordinates for the SOUL cursor based on the 
+        current menu_index state, then moves the canvas image component to match.
+        """
+        box_height = 85
+
+        if self.menu_index <= 2: # Highlighting save box
+            coords = self.ui_positions[self.menu_index]
+            target_x = coords[0] + 30
+            target_y = coords[1] + box_height // 2
+
+        else: # Player is highlighting menu buttons
+            i = self.menu_index - 3 # Menu button index (0: Copy, 1: Erase, 2: Quit)
+            button_info = self.button_positions[i]
+            target_x = self.game.canvas.bbox(self.button_visual_ids[i])[0] - 20
+            target_y = button_info[1]
+
+        self.game.canvas.coords(self.menu_soul, target_x, target_y)
+
+        for index, slot in enumerate(self.slot_visual_ids):
+            if self.menu_index == index:
+                self.game.canvas.itemconfig(slot['box'], outline="white")
+                self.game.canvas.itemconfig(slot['name'], fill="white")
+                self.game.canvas.itemconfig(slot['location'], fill="white")
+                self.game.canvas.itemconfig(slot['time'], fill="white")
+            else:
+                self.game.canvas.itemconfig(slot['box'], outline="gray")
+                self.game.canvas.itemconfig(slot['name'], fill="gray")
+                self.game.canvas.itemconfig(slot['location'], fill="gray")
+                self.game.canvas.itemconfig(slot['time'], fill="gray")
+        for index, button in enumerate(self.button_visual_ids):
+            if self.menu_index == index + 3:
+                self.game.canvas.itemconfig(button, fill="white")
+            else:
+                self.game.canvas.itemconfig(button, fill="gray")
+
+    def handle_input(self):
+        input_mgr = self.game.input_manager
+        moved = False
+
+        if input_mgr.is_just_pressed(Action.UP):
+            if self.menu_index >= 3:
+                self.menu_index = 2
+                moved = True
+            elif self.menu_index > 0:
+                self.menu_index -= 1
+                moved = True
+
+        if input_mgr.is_just_pressed(Action.DOWN):
+            if self.menu_index >= 3:
+                pass
+            else:
+                self.menu_index += 1
+                moved = True
+
+        if input_mgr.is_just_pressed(Action.LEFT):
+            if self.menu_index > 3:
+                self.menu_index -= 1
+                moved = True
+        
+        if input_mgr.is_just_pressed(Action.RIGHT):
+            if 3 <= self.menu_index < 5:
+                self.menu_index += 1
+                moved = True
+
+        if moved:
+            sound = mixer.Sound(file="sounds/undertale_sounds/snd_squeak.wav")
+            sound.play()
+            self.update_visuals()

@@ -44,6 +44,16 @@ class InputManager:
             return self.pressed_this_frame["x"] or self.pressed_this_frame["X"]
         if action == Action.MENU:
             return self.pressed_this_frame["c"] or self.pressed_this_frame["C"]
+        
+        if action == Action.UP:
+            return self.pressed_this_frame["Up"]
+        if action == Action.DOWN:
+            return self.pressed_this_frame["Down"]
+        if action == Action.LEFT:
+            return self.pressed_this_frame["Left"]
+        if action == Action.RIGHT:
+            return self.pressed_this_frame["Right"]
+
         return False
 
     def update(self):
