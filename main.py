@@ -17,7 +17,7 @@ class Main:
         """
 
         root = tkinter.Tk()
-        root.title("Undertale Blue")
+        root.title("Deltatale")
         root.geometry(f"{constants.WIDTH}x{constants.HEIGHT}")
         root.resizable(False, False)
 
@@ -33,6 +33,9 @@ class Main:
         root.bind("<KeyPress>", self.input_manager.press_key)
         root.bind("<KeyRelease>", self.input_manager.release_key)
 
+        # Load Sprites
+        self.player_sprite = tkinter.PhotoImage(file="sprites/SOUL.png")
+
         self.state = GameState.MENU # Possible states: MENU, PLAYING, BATTLE, GAMEOVER
 
         self.setup_menu() # Enter the main menu
@@ -45,12 +48,13 @@ class Main:
         self.menu_text = self.canvas.create_text(
             constants.WIDTH // 2,
             constants.HEIGHT // 2,
-            text="UNDERTALE Blue\n\nPress [Z] or [Enter] to start.",
+            text="Deltatale\n\nPress [Z] or [Enter] to start.",
             fill="white",
             justify="center",
             font=("Determination Sans", 26, "normal")
         )
         sound = mixer.Sound("assets/menu_theme.mp3")
+        sound.set_volume(0.15)
         sound.play(loops=-1)
 
     def start_game(self):
@@ -60,10 +64,10 @@ class Main:
 
         self.player_x = constants.WIDTH // 2
         self.player_y = constants.HEIGHT - 80
-        self.player = self.canvas.create_rectangle(
-            self.player_x - 8, self.player_y - 8, 
-            self.player_x + 8, self.player_y + 8, 
-            fill="blue", outline=""
+        self.player = self.canvas.create_image(
+            self.player_x, 
+            self.player_x, 
+            image=self.player_sprite
         )
 
     def game_loop(self):
