@@ -1,4 +1,4 @@
-from action import Action
+from src.core.enums import Action
 
 class InputManager:
     """

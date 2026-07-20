@@ -1,6 +1,13 @@
 from pygame import mixer
-from action import Action
-from tkinter import PhotoImage
+from src.core.enums import Action
+from tkinter import PhotoImage, messagebox
+from enum import Enum, auto
+
+class ActionMode(Enum):
+    SELECT = auto()
+    COPY_FROM = auto()
+    COPY_TO = auto()
+    ERASE = auto()
 
 class FileSelectScreen:
     """
@@ -20,6 +27,7 @@ class FileSelectScreen:
         self.active_ui_elements = []
         self.ui_positions = []
         
+        self.current_mode = ActionMode.SELECT
         self.setup_layout()
 
     def setup_layout(self):
@@ -61,11 +69,17 @@ class FileSelectScreen:
         start_y = 100
         spacing = 95
 
-        save_slots = [
-            {"name": "[EMPTY]", "location": "------", "time": "--:--", "isEmpty": True},
-            {"name": "[EMPTY]", "location": "------", "time": "--:--", "isEmpty": True},
-            {"name": "[EMPTY]", "location": "------", "time": "--:--", "isEmpty": True}
-        ]
+        save_slots = []
+        for i in range(0, 3):
+            try:
+                save_slots.append(self.game.save_system.load_file(i))
+            except RuntimeError as e:
+                self.game.root.destroy()
+                messagebox.showerror(
+                    "An error has occured.",
+                    f"{e}"
+                )
+                exit(1)
 
         # Create the save slot boxes & their texts
         self.slot_visual_ids = []
@@ -99,7 +113,7 @@ class FileSelectScreen:
             time_text = self.game.canvas.create_text(
                 x2 - 60,
                 y1 + 25,
-                text=f"{slot['time']}",
+                text=self.playtime_to_str(slot['playtime']),
                 fill="gray",
                 font=("Determination Sans", 24, "normal"),
                 anchor="e"
@@ -230,3 +244,30 @@ class FileSelectScreen:
             sound = mixer.Sound(file="sounds/undertale_sounds/snd_squeak.wav")
             sound.play()
             self.update_visuals()
+
+    def playtime_to_str(self, num):
+        playtime = int(num)
+        minutes = 0
+        seconds = 0
+
+        while playtime > 0:
+            if playtime > 60:
+                playtime -= 60
+                minutes += 1
+            else:
+                seconds = playtime
+                playtime = 0
+        
+        minutes_str = minutes
+        if minutes < 10:
+            minutes_str = f"0{minutes}"
+        if minutes == 0:
+            minutes_str = "--"
+
+        seconds_str = seconds
+        if seconds < 10:
+            seconds_str = f"0{seconds}"
+        if seconds == 0:
+            seconds_str = "--"
+
+        return f"{minutes_str}:{seconds_str}"

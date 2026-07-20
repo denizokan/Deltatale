@@ -1,10 +1,10 @@
 import tkinter
 from PIL import Image, ImageTk
-from constants import Constants
-from action import Action
-from gamestate import GameState
-from input_manager import InputManager
-from file_select import FileSelectScreen
+from src.core.constants import Constants
+from src.core.enums import Action, GameState
+from src.core.input_manager import InputManager
+from src.screens.file_select import FileSelectScreen
+from src.systems.savesystem import SaveSystem
 from pygame import mixer
 
 class Main:
@@ -33,6 +33,7 @@ class Main:
         # Initialize Managers
         self.input_manager = InputManager()
         mixer.init()
+        self.save_system = SaveSystem()
 
         root.bind("<KeyPress>", self.input_manager.press_key)
         root.bind("<KeyRelease>", self.input_manager.release_key)
