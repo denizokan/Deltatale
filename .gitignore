@@ -4,6 +4,9 @@ venv/
 __pycache__/
 *.pyc
 
+sprites/DELTARUNE Sprites/
+sprites/UNDERTALE Sprites/
+
 .DS_Store
 
 .env
