@@ -1,5 +1,6 @@
 from pygame import mixer
 from action import Action
+from tkinter import PhotoImage
 
 class FileSelectScreen:
     """
@@ -136,7 +137,7 @@ class FileSelectScreen:
             self.active_ui_elements.append(button_text)
             self.button_visual_ids.append(button_text)
 
-        # Footer text
+        # Footer text & Kris/Susie
         footer_text = self.game.canvas.create_text(
             self.game.constants.WIDTH - 5,
             self.game.constants.HEIGHT - 15,
@@ -145,7 +146,13 @@ class FileSelectScreen:
             font=("Determination Sans", 16, "normal"),
             anchor="e"
         )
-        self.active_ui_elements.append(footer_text)
+        self.kris_sprite_image = PhotoImage(file="sprites/DELTARUNE Sprites/Characters/Playable Characters/Kris/Ch1/Light World/spr_krisd_0.png").zoom(2)
+        kris_sprite = self.game.canvas.create_image(self.game.constants.WIDTH // 2 - 30, self.game.constants.HEIGHT - 8, image=self.kris_sprite_image)
+
+        self.susie_sprite_image = PhotoImage(file="sprites/DELTARUNE Sprites/Characters/Playable Characters/Susie/Ch1/Light World/Walk/spr_susied_0.png").zoom(2)
+        susie_sprite = self.game.canvas.create_image(self.game.constants.WIDTH // 2 + 30, self.game.constants.HEIGHT - 8, image=self.susie_sprite_image)
+
+        self.active_ui_elements.extend([footer_text, kris_sprite, susie_sprite])
 
         # Create the soul/selector sprite
         self.menu_soul = self.game.canvas.create_image(0, 0, image=self.game.player_sprite)
