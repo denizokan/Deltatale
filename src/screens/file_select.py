@@ -24,8 +24,12 @@ class FileSelectScreen:
         """
         self.game = main_game
         self.menu_index = 0
+        self.selected_slot_index = None
+        self.prompt_index = 0
         self.active_ui_elements = []
+        self.prompt_ui_elements = []
         self.ui_positions = []
+        self.slot_visual_ids = []
         
         self.current_mode = ActionMode.SELECT
         self.setup_layout()
@@ -64,7 +68,7 @@ class FileSelectScreen:
         self.active_ui_elements.append(title_text)
 
         # --- Box Variables ---
-        box_width = self.game.constants.WIDTH // 1.7
+        box_width = self.game.constants.WIDTH // 1.65
         box_height = 85
         start_y = 100
         spacing = 95
@@ -82,8 +86,6 @@ class FileSelectScreen:
                 exit(1)
 
         # Create the save slot boxes & their texts
-        self.slot_visual_ids = []
-        
         for index, slot in enumerate(save_slots):
             x1 = (self.game.constants.WIDTH - box_width) // 2
             x2 = x1 + box_width
@@ -110,7 +112,7 @@ class FileSelectScreen:
                 font=("Determination Sans", 24, "normal"),
                 anchor="w"
             )
-            time_text = self.game.canvas.create_text(
+            playtime_text = self.game.canvas.create_text(
                 x2 - 60,
                 y1 + 25,
                 text=self.playtime_to_str(slot['playtime']),
@@ -119,12 +121,12 @@ class FileSelectScreen:
                 anchor="e"
             )
 
-            self.active_ui_elements.extend([name_text, location_text, time_text])
+            self.active_ui_elements.extend([name_text, location_text, playtime_text])
             self.slot_visual_ids.append({
                 "box": save_slot_box,
                 "name": name_text,
                 "location": location_text,
-                "time": time_text
+                "playtime": playtime_text
             })
 
         # Copy, Erase, Quit Buttons
@@ -181,6 +183,25 @@ class FileSelectScreen:
         """
         box_height = 85
 
+        # --- If player is in a confirmation screen ---
+        if self.selected_slot_index is not None:
+            button_id = self.prompt_ui_elements[self.prompt_index + 1]
+            coords = self.ui_positions[self.selected_slot_index]
+            target_x = self.game.canvas.bbox(button_id)[0] - 20
+            target_y = coords[1] + 60
+
+            self.game.canvas.coords(self.menu_soul, target_x, target_y)
+
+            button_elements = self.prompt_ui_elements[1:]
+            for index, button in enumerate(button_elements):
+                if self.prompt_index == index:
+                    self.game.canvas.itemconfig(button, fill="white")
+                else:
+                    self.game.canvas.itemconfig(button, fill="gray")
+
+            return
+        # ------------------
+
         if self.menu_index <= 2: # Highlighting save box
             coords = self.ui_positions[self.menu_index]
             target_x = coords[0] + 30
@@ -199,12 +220,12 @@ class FileSelectScreen:
                 self.game.canvas.itemconfig(slot['box'], outline="white")
                 self.game.canvas.itemconfig(slot['name'], fill="white")
                 self.game.canvas.itemconfig(slot['location'], fill="white")
-                self.game.canvas.itemconfig(slot['time'], fill="white")
+                self.game.canvas.itemconfig(slot['playtime'], fill="white")
             else:
                 self.game.canvas.itemconfig(slot['box'], outline="gray")
                 self.game.canvas.itemconfig(slot['name'], fill="gray")
                 self.game.canvas.itemconfig(slot['location'], fill="gray")
-                self.game.canvas.itemconfig(slot['time'], fill="gray")
+                self.game.canvas.itemconfig(slot['playtime'], fill="gray")
         for index, button in enumerate(self.button_visual_ids):
             if self.menu_index == index + 3:
                 self.game.canvas.itemconfig(button, fill="white")
@@ -212,8 +233,57 @@ class FileSelectScreen:
                 self.game.canvas.itemconfig(button, fill="gray")
 
     def handle_input(self):
+        """
+        This function gets triggered every game tick if the player is currently
+        in the file select screen. Listens for keyboard inputs.
+        """
         input_mgr = self.game.input_manager
         moved = False
+
+        # --- If player is in a confirmation screen ---
+        if self.selected_slot_index is not None:
+            if input_mgr.is_just_pressed(Action.LEFT):
+                if self.prompt_index == 1:
+                    self.prompt_index -= 1
+                    moved = True
+            
+            if input_mgr.is_just_pressed(Action.RIGHT):
+                if self.prompt_index == 0:
+                    self.prompt_index += 1
+                    moved = True
+
+            if moved:
+                mixer.Sound(file="sounds/undertale_sounds/snd_squeak.wav").play()
+                self.update_visuals()
+
+            if input_mgr.is_just_pressed(Action.CONFIRM):
+                if self.prompt_index == 0: # Start the game / Do the action
+                    mixer.Sound("sounds/undertale_sounds/snd_select.wav").play()
+                    pass
+                else:
+                    mixer.Sound("sounds/deltarune_sounds/snd_swing.wav").play()
+                    for element in self.prompt_ui_elements:
+                        self.active_ui_elements.remove(element)
+                        self.game.canvas.delete(element)
+                    self.prompt_index = 0
+                    self.prompt_ui_elements.clear()
+                    self.restore_slot_info(self.selected_slot_index)
+                    self.selected_slot_index = None
+                self.update_visuals()
+
+            if input_mgr.is_just_pressed(Action.CANCEL):
+                mixer.Sound("sounds/deltarune_sounds/snd_swing.wav").play()
+                for element in self.prompt_ui_elements:
+                    self.active_ui_elements.remove(element)
+                    self.game.canvas.delete(element)
+                self.prompt_index = 0
+                self.prompt_ui_elements.clear()
+                self.restore_slot_info(self.selected_slot_index)
+                self.selected_slot_index = None
+                self.update_visuals()
+
+            return
+        # --------------------
 
         if input_mgr.is_just_pressed(Action.UP):
             if self.menu_index >= 3:
@@ -241,11 +311,120 @@ class FileSelectScreen:
                 moved = True
 
         if moved:
-            sound = mixer.Sound(file="sounds/undertale_sounds/snd_squeak.wav")
-            sound.play()
+            mixer.Sound(file="sounds/undertale_sounds/snd_squeak.wav").play()
+            self.update_visuals()
+        
+        # Check for Confirm, Cancel Key Presses
+        if input_mgr.is_just_pressed(Action.CONFIRM):
+            mixer.Sound("sounds/undertale_sounds/snd_select.wav").play()
+
+            if 0 <= self.menu_index <= 2: # Selected a save file
+                self.show_confirmation_prompt(self.menu_index)
+            elif self.menu_index == 3: # Selected Copy
+                pass
+            elif self.menu_index == 4: # Selected Erase
+                pass
+            elif self.menu_index == 5: # Selected Quit
+                self.game.root.destroy()
+                exit()
+
+    def show_confirmation_prompt(self, slot_index):
+        """This function gets triggered whenever a save slot gets selected or is about to be changed."""
+        if self.current_mode == ActionMode.SELECT: # Starting, loading into a save
+            self.selected_slot_index = slot_index
+            for element in self.slot_visual_ids[slot_index]:
+                if element == "box": continue
+                self.active_ui_elements.remove(self.slot_visual_ids[slot_index][element])
+                self.game.canvas.delete(self.slot_visual_ids[slot_index][element])
+            
+            coords = self.ui_positions[slot_index]
+            if self.game.save_system.exists(slot_index):
+                start_text = self.game.canvas.create_text(
+                    self.game.constants.WIDTH // 2,
+                    coords[1] + 25,
+                    text=f"Continue DELTATALE on slot {slot_index + 1}?",
+                    fill="white",
+                    font=("Determination Sans", 24, "normal"),
+                    anchor="center"
+                )
+            else:
+                start_text = self.game.canvas.create_text(
+                    self.game.constants.WIDTH // 2,
+                    coords[1] + 25,
+                    text=f"Start DELTATALE from slot {slot_index + 1}?",
+                    fill="white",
+                    font=("Determination Sans", 24, "normal"),
+                    anchor="center"
+                )
+
+            # Buttons
+            yes_button = self.game.canvas.create_text(
+                coords[0] + 80,
+                coords[1] + 60,
+                text="Yes",
+                fill="white",
+                font=("Determination Sans", 24, "normal"),
+                anchor="w"
+            )
+            no_button = self.game.canvas.create_text(
+                coords[2] - 80,
+                coords[1] + 60,
+                text="Go Back",
+                fill="gray",
+                font=("Determination Sans", 24, "normal"),
+                anchor = "e"
+            )
+            self.prompt_ui_elements.extend([start_text, yes_button, no_button])
+            self.active_ui_elements.extend([start_text, yes_button, no_button])
             self.update_visuals()
 
+        elif self.current_mode == ActionMode.COPY_TO: # Overriding a save
+            pass
+
+        elif self.current_mode == ActionMode.ERASE: # Erasing a save
+            pass
+
+    def restore_slot_info(self, slot_index):
+        """Restores the save data information for a specific save slot after backing out from a confirmation menu."""
+        coords = self.ui_positions[slot_index]
+        save_slot = self.game.save_system.load_file(slot_index)
+
+        name_text = self.game.canvas.create_text(
+            coords[0] + 60,
+            coords[1] + 25,
+            text=f"{save_slot['name']}",
+            fill="white",
+            font=("Determination Sans", 24, "normal"),
+            anchor="w"
+        )
+        location_text = self.game.canvas.create_text(
+            coords[0] + 60,
+            coords[1] + 60,
+            text=f"{save_slot['location']}",
+            fill="white",
+            font=("Determination Sans", 24, "normal"),
+            anchor="w"
+        )
+        playtime_text = self.game.canvas.create_text(
+            coords[2] - 60,
+            coords[1] + 25,
+            text=self.playtime_to_str(save_slot['playtime']),
+            fill="white",
+            font=("Determination Sans", 24, "normal"),
+            anchor="e"
+        )
+
+        self.active_ui_elements.extend([name_text, location_text, playtime_text])
+        box_id = self.slot_visual_ids[slot_index]["box"]
+        self.slot_visual_ids[slot_index] = {
+            "box": box_id,
+            "name": name_text,
+            "location": location_text,
+            "playtime": playtime_text
+        }
+
     def playtime_to_str(self, num):
+        """This function takes an integer and converts it into MM:SS format."""
         playtime = int(num)
         minutes = 0
         seconds = 0
