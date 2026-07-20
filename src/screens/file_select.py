@@ -26,6 +26,7 @@ class FileSelectScreen:
         self.menu_index = 0
         self.selected_slot_index = None
         self.prompt_index = 0
+        self.title_text_id = None
         self.active_ui_elements = []
         self.prompt_ui_elements = []
         self.ui_positions = []
@@ -65,6 +66,7 @@ class FileSelectScreen:
             font=("Determination Sans", 24, "normal"),
             anchor="w"
         )
+        self.title_text_id = title_text
         self.active_ui_elements.append(title_text)
 
         # --- Box Variables ---
@@ -183,6 +185,19 @@ class FileSelectScreen:
         """
         box_height = 85
 
+        # --- If copying mode is active ---
+        if self.current_mode == ActionMode.COPY_FROM:
+            self.game.canvas.itemconfig(self.title_text_id, text="Select a file to copy.")
+            self.game.canvas.itemconfig(self.button_visual_ids[0], text="Cancel")
+
+        if self.current_mode == ActionMode.COPY_TO:
+            self.game.canvas.itemconfig(self.title_text_id, text="Select a slot to copy TO.")
+            self.game.canvas.itemconfig(self.button_visual_ids[0], text="Cancel")
+
+        if self.current_mode == ActionMode.SELECT:
+            self.game.canvas.itemconfig(self.title_text_id, text="Please select a file.", fill="white")
+            self.game.canvas.itemconfig(self.button_visual_ids[0], text="Copy")
+
         # --- If player is in a confirmation screen ---
         if self.selected_slot_index is not None:
             button_id = self.prompt_ui_elements[self.prompt_index + 1]
@@ -286,19 +301,84 @@ class FileSelectScreen:
         # --------------------
 
         if input_mgr.is_just_pressed(Action.UP):
-            if self.menu_index >= 3:
-                self.menu_index = 2
-                moved = True
-            elif self.menu_index > 0:
-                self.menu_index -= 1
-                moved = True
+            if self.menu_index >= 3: # On the buttons
+                if self.current_mode == ActionMode.COPY_FROM:
+                    eligable_slot = None
+                    for i in range(2, -1, -1):
+                        if self.game.save_system.exists(i):
+                            eligable_slot = i
+                            break
+                    if eligable_slot != None:
+                        self.menu_index = eligable_slot
+                        moved = True
+
+                elif self.current_mode == ActionMode.COPY_TO:
+                    eligable_slot = None
+                    for i in range(2, -1, -1):
+                        if self.copying_file_index != i:
+                            eligable_slot = i
+                            break
+                    if eligable_slot != None:
+                        self.menu_index = eligable_slot
+                        moved = True
+                
+                else:
+                    self.menu_index = 2
+                    moved = True
+            elif self.menu_index > 0: # Index 1 or 2
+                if self.current_mode == ActionMode.COPY_FROM:
+                    eligable_slot = None
+                    for i in range(self.menu_index - 1, -1, -1):
+                        if self.game.save_system.exists(i):
+                            eligable_slot = i
+                            break
+                    if eligable_slot != None:
+                        self.menu_index = eligable_slot
+                        moved = True
+
+                elif self.current_mode == ActionMode.COPY_TO:
+                    eligable_slot = None
+                    for i in range(self.menu_index - 1, -1, -1):
+                        if self.copying_file_index != i:
+                            eligable_slot = i
+                            break
+                    if eligable_slot != None:
+                        self.menu_index = eligable_slot
+                        moved = True
+                
+                else:
+                    self.menu_index -= 1
+                    moved = True
 
         if input_mgr.is_just_pressed(Action.DOWN):
             if self.menu_index >= 3:
                 pass
+
             else:
-                self.menu_index += 1
-                moved = True
+                if self.current_mode == ActionMode.COPY_FROM:
+                    eligable_slot = None
+                    for i in range(self.menu_index + 1, 3):
+                        if self.game.save_system.exists(i):
+                            eligable_slot = i
+                    moved = True
+                    self.menu_index = 3
+                    if eligable_slot != None:
+                        self.menu_index = eligable_slot
+
+                elif self.current_mode == ActionMode.COPY_TO:
+                    eligable_slot = None
+                    for i in range(self.menu_index + 1, 3):
+                        if self.copying_file_index != i:
+                            eligable_slot = i
+                            break
+                    moved = True
+                    self.menu_index = 3
+                    if eligable_slot != None:
+                        self.menu_index = eligable_slot
+                
+                else:
+                    self.menu_index += 1
+                    moved = True
 
         if input_mgr.is_just_pressed(Action.LEFT):
             if self.menu_index > 3:
@@ -316,17 +396,53 @@ class FileSelectScreen:
         
         # Check for Confirm, Cancel Key Presses
         if input_mgr.is_just_pressed(Action.CONFIRM):
-            mixer.Sound("sounds/undertale_sounds/snd_select.wav").play()
-
             if 0 <= self.menu_index <= 2: # Selected a save file
+                mixer.Sound("sounds/undertale_sounds/snd_select.wav").play()
+                if self.current_mode == ActionMode.COPY_FROM:
+                    self.copying_file_index = self.menu_index
+                    for i in range(3):
+                        if i != self.copying_file_index:
+                            self.menu_index = i
+                            break
+                    self.current_mode = ActionMode.COPY_TO
+                    self.update_visuals()
+                    return
                 self.show_confirmation_prompt(self.menu_index)
-            elif self.menu_index == 3: # Selected Copy
-                pass
+            elif self.menu_index == 3: # Selected Copy/Cancel
+                if self.current_mode == ActionMode.COPY_FROM or self.current_mode == ActionMode.COPY_TO:
+                    mixer.Sound("sounds/undertale_sounds/snd_select.wav").play()
+                    self.current_mode = ActionMode.SELECT
+                    self.menu_index = 0
+                    self.update_visuals()
+                    return
+
+                is_eligable = False
+                for index in range(3):
+                    if self.game.save_system.exists(index):
+                        is_eligable = True
+
+                if not is_eligable:
+                    mixer.Sound("sounds/deltarune_sounds/snd_swing.wav").play()
+                    return
+
+                mixer.Sound("sounds/undertale_sounds/snd_select.wav").play()
+                self.current_mode = ActionMode.COPY_FROM
+                self.menu_index = 0
+                self.update_visuals()
+
             elif self.menu_index == 4: # Selected Erase
                 pass
+
             elif self.menu_index == 5: # Selected Quit
                 self.game.root.destroy()
                 exit()
+
+        if input_mgr.is_just_pressed(Action.CANCEL):
+            if self.current_mode == ActionMode.COPY_FROM or self.current_mode == ActionMode.COPY_TO:
+                mixer.Sound("sounds/deltarune_sounds/snd_swing.wav").play()
+                self.current_mode = ActionMode.SELECT
+                self.update_visuals()
+                return
 
     def show_confirmation_prompt(self, slot_index):
         """This function gets triggered whenever a save slot gets selected or is about to be changed."""
