@@ -15,14 +15,17 @@ class SaveSystem:
         """Returns the file path of a save file with index."""
         return os.path.join(self.save_dir, f"save_{slot_index}.json")
     
-    def save_file(self, slot_index, data):
-        """Dumps the memory into a save file with slot index."""
-        file_path = self.get_save_path(slot_index)
-        with open(file_path, "w") as file:
-            json.dump(data, file, indent=4)
-    
     def exists(self, slot_index):
         return os.path.exists(self.get_save_path(slot_index))
+    
+    def save_file(self, slot_index, data):
+        """Dumps the memory into a save file with slot index."""
+        try:
+            file_path = self.get_save_path(slot_index)
+            with open(file_path, "w") as file:
+                json.dump(data, file, indent=4)
+        except OSError as e:
+            raise RuntimeError(f"Cannot access save file {slot_index}.") from e
 
     def load_file(self, slot_index):
         """Reads and returns a save file with slot index. If the file with slot index does not exist, returns an empty save slot."""
@@ -41,3 +44,14 @@ class SaveSystem:
             return data
         except Exception as e:
             raise RuntimeError(f"Save file {slot_index} is corrupted or inaccessible.") from e
+        
+    def delete_file(self, slot_index):
+        if not self.exists(slot_index):
+            return
+        
+        save_path = self.get_save_path(slot_index)
+        try:
+            os.remove(save_path)
+        except OSError as e:
+            raise RuntimeError(f"Cannot access & delete save file {slot_index}.") from e
+        
