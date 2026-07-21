@@ -388,6 +388,7 @@ class FileSelectScreen:
 
                 if eligable_index == None:
                     mixer.Sound("sounds/deltarune_sounds/snd_swing.wav").play()
+                    self.game.canvas.itemconfig(self.title_text_id, text="No files to copy.")
                     return
 
                 mixer.Sound("sounds/undertale_sounds/snd_select.wav").play()
@@ -411,6 +412,7 @@ class FileSelectScreen:
 
                 if eligable_index == None:
                     mixer.Sound("sounds/deltarune_sounds/snd_swing.wav").play()
+                    self.game.canvas.itemconfig(self.title_text_id, text="No files to erase.")
                     return
                 
                 mixer.Sound("sounds/undertale_sounds/snd_select.wav").play()
