@@ -14,6 +14,8 @@ class InputManager:
             "Return": False
         }
         self.pressed_this_frame = {k: False for k in self.keys}
+        self.action_stack = []
+
 
     def press_key(self, event):
         """Callback for keyboard press."""
@@ -22,19 +24,36 @@ class InputManager:
                 self.pressed_this_frame[event.keysym] = True
             self.keys[event.keysym] = True
 
+        if event.keysym in ["Up", "Down", "Left", "Right"]:
+            if not event.keysym in self.action_stack:
+                self.action_stack.append(event.keysym)
+
+
     def release_key(self, event):
         """Callback for keyboard release."""
         if event.keysym in self.keys:
             self.keys[event.keysym] = False
             self.pressed_this_frame[event.keysym] = False
 
+        if event.keysym in self.action_stack:
+            self.action_stack.remove(event.keysym)
+
+    
+    def get_active_direction(self):
+        if len(self.action_stack) != 0:
+            return self.action_stack[-1]
+        return None
+
+
     def is_pressed(self, action):
         """Checks if a key is being held down continuously (Good for Movement)."""
-        if action == Action.UP:    return self.keys["Up"]
-        if action == Action.DOWN:  return self.keys["Down"]
-        if action == Action.LEFT:  return self.keys["Left"]
-        if action == Action.RIGHT: return self.keys["Right"]
+        if action == Action.CANCEL:    return self.keys["x"] or self.keys["X"]
+        if action == Action.UP:        return self.keys["Up"]
+        if action == Action.DOWN:      return self.keys["Down"]
+        if action == Action.LEFT:      return self.keys["Left"]
+        if action == Action.RIGHT:     return self.keys["Right"]
         return False
+
 
     def is_just_pressed(self, action):
         """Checks if a button was freshly tapped on this frame (Good for Menus)."""
@@ -55,6 +74,7 @@ class InputManager:
             return self.pressed_this_frame["Right"]
 
         return False
+
 
     def update(self):
         """Clears out the single-press triggers. MUST be called at the end of every frame loop."""

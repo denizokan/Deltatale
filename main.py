@@ -2,7 +2,8 @@ import tkinter
 from PIL import Image, ImageTk
 from src.core.constants import Constants
 from src.core.enums import Action, GameState
-from src.core.input_manager import InputManager
+from src.core.input import InputManager
+from src.core.transition import TransitionManager
 from src.core.player import Player
 from src.screens.file_select import FileSelectScreen
 from src.systems.savesystem import SaveSystem
@@ -35,6 +36,7 @@ class Main:
         self.input_manager = InputManager()
         mixer.init()
         self.save_system = SaveSystem()
+        self.transition = TransitionManager(self)
 
         root.bind("<KeyPress>", self.input_manager.press_key)
         root.bind("<KeyRelease>", self.input_manager.release_key)
@@ -104,9 +106,12 @@ class Main:
         """Transition from file selection screen to the game."""
         self.file_select_screen = None
         self.state = GameState.PLAYING
-
-        # TODO: Read save data and decide starting x and y positions.
+        
+        # TODO: Get x, y from save index.
         self.player = Player(self, 300, 200)
+        
+        self.transition.fade_from_black(speed=8)
+        
 
     def game_loop(self):
         # State: INTRO -> Waiting for confirm to go to File Select
