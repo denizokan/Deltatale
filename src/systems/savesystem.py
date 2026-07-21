@@ -46,6 +46,7 @@ class SaveSystem:
             raise RuntimeError(f"Save file {slot_index} is corrupted or inaccessible.") from e
         
     def delete_file(self, slot_index):
+        """Deletes a save file with slot index."""
         if not self.exists(slot_index):
             return
         
