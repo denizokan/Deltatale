@@ -9,8 +9,8 @@
     "spawns": [
         {
             "from_room": "room_area1",
-            "x": 159,
-            "y": 406,
+            "x": 318,
+            "y": 812,
             "facing": "up"
         }
     ],
@@ -19,20 +19,20 @@
         {
             "type": "out",
             "x1": 0,
-            "y1": 415,
-            "x2": 320,
-            "y2": 419,
+            "y1": 830,
+            "x2": 640,
+            "y2": 838,
             "target_room": "room_area1"
         }
     ],
 
-    "triggers:": [
+    "triggers": [
         {
             "id": "flowey_first_interaction",
             "x1": 0,
-            "y1": 375,
-            "x2": 320,
-            "y2": 382
+            "y1": 750,
+            "x2": 640,
+            "y2": 764
         }
     ],
 

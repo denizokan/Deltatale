@@ -1,10 +1,13 @@
 import tkinter
+from tkinter import messagebox
 from PIL import Image, ImageTk
 from src.core.constants import Constants
 from src.core.enums import Action, GameState
 from src.core.input import InputManager
 from src.core.transition import TransitionManager
 from src.core.player import Player
+from src.core.room import Room
+from src.core.camera import Camera
 from src.screens.file_select import FileSelectScreen
 from src.systems.savesystem import SaveSystem
 from pygame import mixer
@@ -37,6 +40,7 @@ class Main:
         mixer.init()
         self.save_system = SaveSystem()
         self.transition = TransitionManager(self)
+        self.camera = Camera()
 
         root.bind("<KeyPress>", self.input_manager.press_key)
         root.bind("<KeyRelease>", self.input_manager.release_key)
@@ -54,11 +58,13 @@ class Main:
         self.game_loop() # Start the game loop
         root.mainloop()
     
+
     def clear_screen(self):
         """Helper to wipe out any UI elements from the previous state."""
         for element in self.active_ui_elements:
             self.canvas.delete(element)
         self.active_ui_elements.clear()
+
 
     def setup_intro(self):
         """Shows the Logo, instructions, and plays the introductory sound."""
@@ -98,16 +104,46 @@ class Main:
 
         self.root.after(3000, show_text)
 
+
     def setup_file_select(self):
         """Transition from intro to the separate File Selection class module."""
         self.clear_screen()
         self.state = GameState.FILE_SELECT
         self.file_select_screen = FileSelectScreen(self)
 
+
     def start_game(self, index):
         """Transition from file selection screen to the game."""
+
         # TODO: Get x, y from save index.
-        self.player = Player(self, 300, 200, "right")
+        if not self.save_system.exists(index):
+            data = self.save_system.create_blank_save()
+            try:
+                self.save_system.save_file(index, data)
+            except RuntimeError as e:
+                self.root.destroy()
+                messagebox.showerror(
+                    "An error has occured.",
+                    f"{e}"
+                )
+                exit(1)
+        
+        data = self.save_system.load_file(index)
+        self.current_room = Room(self, data["room"])
+
+        save_point_x = self.current_room.room_data.get("save_point_x")
+        if save_point_x is None:
+            # It's a room without a save point, or a brand new game!
+            spawn_x = 320
+            spawn_y = 240
+            spawn_facing = "down"
+        else:
+            # Spawn in front of the save point!
+            spawn_x = save_point_x
+            spawn_y = self.current_room.room_data["save_point_y"]
+            spawn_facing = self.current_room.room_data["save_point_facing"]
+
+        self.player = Player(self, spawn_x, spawn_y, spawn_facing)
         
         self.file_select_screen = None
         self.state = GameState.PLAYING
@@ -132,5 +168,6 @@ class Main:
         delay_ms = int(1000 / self.constants.FPS)
         self.root.after(delay_ms, self.game_loop)
     
+
 if __name__ == "__main__":
     main = Main()

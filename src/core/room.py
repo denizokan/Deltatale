@@ -20,7 +20,7 @@ class Room:
 
         # Unpack room data
         bg_image_path = self.room_data["bg_image"]
-        self.bg_image = PhotoImage(file=bg_image_path)
+        self.bg_image = PhotoImage(file=bg_image_path).zoom(2)
 
         if self.room_data["music"] is not None: self.music = mixer.Sound(file=self.room_data["music"])
         
