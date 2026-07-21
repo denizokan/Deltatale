@@ -1,0 +1,45 @@
+{
+    "room_id": "room_",
+    "bg_image": "sprites/raw_rooms/room_.png",
+    "music": null,
+
+    "walls": [
+        {
+            "x1": 0,
+            "y1": 0,
+            "x2": 0,
+            "y2": 0
+        }
+    ],
+
+    "spawns": [
+        {
+            "from_room": "room_ruins_0",
+            "x": 0,
+            "y": 0,
+            "facing": "right"
+        }
+    ],
+
+    "exits": [
+        {
+            "type": "out",
+            "x1": 0,
+            "y1": 0,
+            "x2": 0,
+            "y2": 0,
+            "target_room": "room_"
+        }
+    ],
+
+    "interactables": [
+        {
+            "x1": 0,
+            "y1": 0,
+            "x2": 0,
+            "y2": 0,
+            "type": "sign",
+            "dialogue": ["Only the fearless may proceed.", "Brave ones, foolish ones.", "Both walk not the middle road."]
+        }
+    ]
+}

@@ -6,7 +6,7 @@ __pycache__/
 
 sprites/DELTARUNE Sprites/
 sprites/UNDERTALE Sprites/
-data/
+save_*.json
 
 .DS_Store
 

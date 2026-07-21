@@ -104,12 +104,11 @@ class Main:
 
     def start_game(self, index):
         """Transition from file selection screen to the game."""
+        # TODO: Get x, y from save index.
+        self.player = Player(self, 300, 200, "right")
+        
         self.file_select_screen = None
         self.state = GameState.PLAYING
-        
-        # TODO: Get x, y from save index.
-        self.player = Player(self, 300, 200)
-        
         self.transition.fade_from_black(speed=8)
         
 
