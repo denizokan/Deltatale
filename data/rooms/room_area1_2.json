@@ -1,0 +1,40 @@
+{
+    "room_id": "room_area1_2",
+    "bg_image": "sprites/raw_rooms/room_area1_2.png",
+    "music": null,
+
+    "walls": [
+    ],
+
+    "spawns": [
+        {
+            "from_room": "room_area1",
+            "x": 159,
+            "y": 406,
+            "facing": "up"
+        }
+    ],
+
+    "exits": [
+        {
+            "type": "out",
+            "x1": 0,
+            "y1": 415,
+            "x2": 320,
+            "y2": 419,
+            "target_room": "room_area1"
+        }
+    ],
+
+    "triggers:": [
+        {
+            "id": "flowey_first_interaction",
+            "x1": 0,
+            "y1": 375,
+            "x2": 320,
+            "y2": 382
+        }
+    ],
+
+    "interactables": []
+}

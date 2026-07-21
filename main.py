@@ -46,6 +46,8 @@ class Main:
         self.player_sprite = tkinter.PhotoImage(file="sprites/SOUL.png")
         self.active_ui_elements = []
 
+        self.current_room = None
+
         self.state = GameState.INTRO # Possible states: INTRO, FILE_SELECT, PLAYING, BATTLE, GAMEOVER
         self.setup_intro() # Enter the main menu
 
