@@ -1,5 +1,5 @@
 from pygame import mixer
-from src.core.enums import Action
+from src.core.enums import Action, GameState
 from tkinter import PhotoImage, messagebox
 from enum import Enum, auto
 from PIL import Image, ImageTk
@@ -260,7 +260,7 @@ class FileSelectScreen:
                 self.game.canvas.itemconfig(button, fill="gray")
 
 
-    def handle_input(self):
+    def handle_input(self, input_mgr):
         """
         This function gets triggered every game tick if the player is currently
         in the file select screen. Listens for keyboard inputs.
@@ -269,14 +269,13 @@ class FileSelectScreen:
             return
 
         if self.selected_slot_index is not None:
-            self.handle_prompt_input()
+            self.handle_prompt_input(input_mgr)
         else:
-            self.handle_grid_input()
+            self.handle_grid_input(input_mgr)
 
             
-    def handle_grid_input(self):
+    def handle_grid_input(self, input_mgr):
         """This function handles navigation through the main file select screen."""
-        input_mgr = self.game.input_manager
         moved = False
 
         if input_mgr.is_just_pressed(Action.UP):
@@ -440,9 +439,8 @@ class FileSelectScreen:
                 return
             
 
-    def handle_prompt_input(self):
+    def handle_prompt_input(self, input_mgr):
         """This function handles navigation through confirmation menus."""
-        input_mgr = self.game.input_manager
         moved = False
 
         if input_mgr.is_just_pressed(Action.LEFT):
@@ -657,16 +655,16 @@ class FileSelectScreen:
             delay_ms = int(1000 / self.game.constants.FPS)
             self.game.root.after(delay_ms, self.animate_fade)
         else:
-            self.load_overworld()
+            self.load_game()
 
 
-    def load_overworld(self):
+    def load_game(self):
         """Cleans up the menu elements and launches the actual game."""
         for object in self.active_ui_elements:
             self.game.canvas.delete(object)
             
         print(f"Loading game for slot: {self.selected_slot_index + 1}")
-        # TODO: Initialize the player overworld class
+        self.game.start_game(index=self.selected_slot_index)
 
 
     def playtime_to_str(self, num):
