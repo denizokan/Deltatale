@@ -274,6 +274,32 @@ class FileSelectScreen:
             if input_mgr.is_just_pressed(Action.CONFIRM):
                 if self.prompt_index == 0: # Start the game / Do the action
                     mixer.Sound("sounds/undertale_sounds/snd_select.wav").play()
+                    if self.current_mode == ActionMode.COPY_TO: # Overwriting a slot
+                        try:
+                            data = self.game.save_system.load_file(self.copying_file_index)
+                            self.game.save_system.save_file(self.selected_slot_index, data)
+                        except Exception as e:
+                            raise RuntimeError("A problem occured while trying to copy the file.") from e
+
+                        for element in self.prompt_ui_elements:
+                            self.active_ui_elements.remove(element)
+                            self.game.canvas.delete(element)
+                        self.prompt_index = 0
+                        self.prompt_ui_elements.clear()
+                        self.restore_slot_info(self.selected_slot_index)
+
+                        for element in self.slot_visual_ids[self.selected_slot_index]:
+                            if element == "box": continue
+                            source_text = self.game.canvas.itemcget(self.slot_visual_ids[self.copying_file_index][element], "text")
+                            self.game.canvas.itemconfig(self.slot_visual_ids[self.selected_slot_index][element], text=source_text)
+
+                        self.selected_slot_index = None
+                        self.copying_file_index = None
+                        self.current_mode = ActionMode.SELECT
+                        self.update_visuals()
+                        self.game.canvas.itemconfig(self.title_text_id, text="File copied.")
+                        return
+                    
                     pass
                 else:
                     mixer.Sound("sounds/deltarune_sounds/snd_swing.wav").play()
@@ -284,6 +310,8 @@ class FileSelectScreen:
                     self.prompt_ui_elements.clear()
                     self.restore_slot_info(self.selected_slot_index)
                     self.selected_slot_index = None
+                    self.copying_file_index = None
+                    self.current_mode = ActionMode.SELECT
                 self.update_visuals()
 
             if input_mgr.is_just_pressed(Action.CANCEL):
@@ -295,6 +323,7 @@ class FileSelectScreen:
                 self.prompt_ui_elements.clear()
                 self.restore_slot_info(self.selected_slot_index)
                 self.selected_slot_index = None
+                self.current_mode = ActionMode.SELECT
                 self.update_visuals()
 
             return
@@ -360,6 +389,7 @@ class FileSelectScreen:
                     for i in range(self.menu_index + 1, 3):
                         if self.game.save_system.exists(i):
                             eligable_slot = i
+                            break
                     moved = True
                     self.menu_index = 3
                     if eligable_slot != None:
@@ -407,10 +437,36 @@ class FileSelectScreen:
                     self.current_mode = ActionMode.COPY_TO
                     self.update_visuals()
                     return
+                
+                if self.current_mode == ActionMode.COPY_TO:
+                    self.selected_slot_index = self.menu_index
+                    if self.game.save_system.exists(self.selected_slot_index):
+                        # Override slot?
+                        self.show_confirmation_prompt(self.menu_index)
+                        return
+
+                    try:
+                        data = self.game.save_system.load_file(self.copying_file_index)
+                        self.game.save_system.save_file(self.selected_slot_index, data)
+                    except Exception as e:
+                        raise RuntimeError("A problem occured while trying to copy the file.") from e
+
+                    for element in self.slot_visual_ids[self.selected_slot_index]:
+                        if element == "box": continue
+                        source_text = self.game.canvas.itemcget(self.slot_visual_ids[self.copying_file_index][element], "text")
+                        self.game.canvas.itemconfig(self.slot_visual_ids[self.selected_slot_index][element], text=source_text)
+
+                    self.copying_file_index = None
+                    self.selected_slot_index = None
+                    self.current_mode = ActionMode.SELECT
+                    self.update_visuals()
+                    self.game.canvas.itemconfig(self.title_text_id, text="File copied.")
+                    return
+
                 self.show_confirmation_prompt(self.menu_index)
             elif self.menu_index == 3: # Selected Copy/Cancel
                 if self.current_mode == ActionMode.COPY_FROM or self.current_mode == ActionMode.COPY_TO:
-                    mixer.Sound("sounds/undertale_sounds/snd_select.wav").play()
+                    mixer.Sound("sounds/deltarune_sounds/snd_swing.wav").play()
                     self.current_mode = ActionMode.SELECT
                     self.menu_index = 0
                     self.update_visuals()
@@ -495,7 +551,41 @@ class FileSelectScreen:
             self.update_visuals()
 
         elif self.current_mode == ActionMode.COPY_TO: # Overriding a save
-            pass
+            for element in self.slot_visual_ids[slot_index]:
+                if element == "box": continue
+                self.active_ui_elements.remove(self.slot_visual_ids[slot_index][element])
+                self.game.canvas.delete(self.slot_visual_ids[slot_index][element])
+            
+            coords = self.ui_positions[slot_index]
+            start_text = self.game.canvas.create_text(
+                self.game.constants.WIDTH // 2,
+                coords[1] + 25,
+                text=f"Overwrite file slot {slot_index + 1}?",
+                fill="white",
+                font=("Determination Sans", 24, "normal"),
+                anchor="center"
+            )
+
+            # Buttons
+            yes_button = self.game.canvas.create_text(
+                coords[0] + 80,
+                coords[1] + 60,
+                text="Yes",
+                fill="white",
+                font=("Determination Sans", 24, "normal"),
+                anchor="w"
+            )
+            no_button = self.game.canvas.create_text(
+                coords[2] - 80,
+                coords[1] + 60,
+                text="Go Back",
+                fill="gray",
+                font=("Determination Sans", 24, "normal"),
+                anchor = "e"
+            )
+            self.prompt_ui_elements.extend([start_text, yes_button, no_button])
+            self.active_ui_elements.extend([start_text, yes_button, no_button])
+            self.update_visuals()
 
         elif self.current_mode == ActionMode.ERASE: # Erasing a save
             pass
