@@ -59,14 +59,24 @@ class Room:
         for index, box in enumerate(coords_list):
             x1, y1, x2, y2 = box
             if (x1 <= target_x <= x2 and y1 <= target_y <= y2):
-                self.game.transition.fade_to_black(speed=8, on_complete=lambda: self.load_next_room(index))
+                next_room_id = self.room_data["exits"][index]["target_room"]
+                
+                try:
+                    with open(self.path + next_room_id + ".json", "r") as file:
+                        next_room_peek = json.load(file)
+                    
+                    if self.room_data["music"] != next_room_peek["music"]:
+                        if hasattr(self, "music"):
+                            self.music.fadeout(1500)
+                except Exception as e:
+                    print(f"Warning: Could not read next room music: {e}")
+
+                self.game.transition.fade_to_black(speed=24, on_complete=lambda: self.next_room(next_room_id))
                 break
 
     
-    def next_room(self, exit_index):
+    def next_room(self, next_room_id):
         """Cleans up and moves the player to the next room."""
-        next_room_id = self.room_data["exits"][exit_index]["target_room"]
-
         for element in self.active_ui_elements:
             self.game.canvas.delete(element)
 
@@ -87,11 +97,12 @@ class Room:
         self.game.player.x = spawn_x
         self.game.player.y = spawn_y
         self.game.player.facing = spawn_facing
-
         self.game.player.anim_frame = 0
         self.game.player.anim_timer = 0
-        self.game.player.history.clear()
-        self.game.canvas.itemconfig(self.game.player.kris_sprite, image=self.game.player.kris_sprites[spawn_facing][0])
-        self.game.canvas.itemconfig(self.game.player.susie_sprite, image=self.game.player.susie_sprites[spawn_facing][0])
+        self.game.player.history = [(spawn_x, spawn_y, spawn_facing, 0)] * self.game.player.follow_delay
+
+        self.game.camera.update()
+        self.game.player.draw(spawn_x, spawn_y, spawn_facing, 0)
+        self.game.canvas.coords(self.game.current_room.background, -self.game.camera.x, -self.game.camera.y)
         
-        self.game.transition.fade_from_black()
+        self.game.transition.fade_from_black(speed=24)

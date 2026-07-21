@@ -88,23 +88,35 @@ class Player:
     
     def move(self, dx, dy):
         """Records history, applies movement, and triggers the draw sequence."""
-        self.history.append((self.x, self.y, self.facing, self.anim_frame))
-        if len(self.history) > self.follow_delay:
-            self.history.pop(0)
+        target_x = self.x + dx
+        target_y = self.y + dy
 
-        self.anim_timer += 1
-        if self.anim_timer >= self.anim_speed:
-            self.anim_timer = 0
-            self.anim_frame += 1
-            if self.anim_frame >= 3:
-                self.anim_frame = 0
+        moved = False
 
-        self.x += dx
-        self.y += dy
+        if dx != 0 and self.game.current_room.is_position_free(target_x, self.y):
+            self.x += dx
+            moved = True
+
+        if dy != 0 and self.game.current_room.is_position_free(self.x, target_y):
+            self.y += dy
+            moved = True
+
+        if moved:
+            self.history.append((self.x, self.y, self.facing, self.anim_frame))
+            if len(self.history) > self.follow_delay:
+                self.history.pop(0)
+
+            self.anim_timer += 1
+            if self.anim_timer >= self.anim_speed:
+                self.anim_timer = 0
+                self.anim_frame += 1
+                if self.anim_frame >= 3:
+                    self.anim_frame = 0
 
         sx, sy, s_facing, s_frame = self.history[0]
-
         self.draw(sx, sy, s_facing, s_frame)
+            
+        self.game.current_room.check_exit(self.x, self.y)
 
     def draw(self, sx, sy, s_facing, s_frame):
         """Updates the canvas coordinates and images for all party members."""

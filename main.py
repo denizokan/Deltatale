@@ -147,7 +147,7 @@ class Main:
         
         self.file_select_screen = None
         self.state = GameState.PLAYING
-        self.transition.fade_from_black(speed=8)
+        self.transition.fade_from_black(speed=24)
         
 
     def game_loop(self):
@@ -162,8 +162,9 @@ class Main:
 
         # State: PLAYING -> Handle player movement
         elif self.state == GameState.PLAYING:
-            self.camera.update()
             self.player.update(input_mgr=self.input_manager)
+            self.camera.update()
+            self.canvas.coords(self.current_room.background, -self.camera.x, -self.camera.y)
 
         self.input_manager.update()
         delay_ms = int(1000 / self.constants.FPS)

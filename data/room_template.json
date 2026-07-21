@@ -2,8 +2,6 @@
     "room_id": "room_",
     "bg_image": "sprites/raw_rooms/room_.png",
     "music": null,
-    "camera_offset_x": 0,
-    "camera_offset_y": 0,
     "save_point_x": 0,
     "save_point_y": 0,
     "save_point_facing": "up",
