@@ -109,11 +109,11 @@ class Player:
     def draw(self, sx, sy, s_facing, s_frame):
         """Updates the canvas coordinates and images for all party members."""
         # Update Kris
-        self.game.canvas.coords(self.active_characters[0], self.x, self.y)
+        self.game.canvas.coords(self.active_characters[0], self.x - self.game.camera.x, self.y - self.game.camera.y)
         self.game.canvas.itemconfig(self.active_characters[0], image=self.kris_sprites[self.facing][self.anim_frame])
         
         # Update Susie
-        self.game.canvas.coords(self.active_characters[1], sx, sy)
+        self.game.canvas.coords(self.active_characters[1], sx - self.game.camera.x, sy - self.game.camera.y)
         self.game.canvas.itemconfig(self.active_characters[1], image=self.susie_sprites[s_facing][s_frame])
 
         if self.y > sy: # Kris is below Susie

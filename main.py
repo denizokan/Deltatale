@@ -40,7 +40,6 @@ class Main:
         mixer.init()
         self.save_system = SaveSystem()
         self.transition = TransitionManager(self)
-        self.camera = Camera()
 
         root.bind("<KeyPress>", self.input_manager.press_key)
         root.bind("<KeyRelease>", self.input_manager.release_key)
@@ -144,6 +143,7 @@ class Main:
             spawn_facing = self.current_room.room_data["save_point_facing"]
 
         self.player = Player(self, spawn_x, spawn_y, spawn_facing)
+        self.camera = Camera(self)
         
         self.file_select_screen = None
         self.state = GameState.PLAYING
@@ -162,6 +162,7 @@ class Main:
 
         # State: PLAYING -> Handle player movement
         elif self.state == GameState.PLAYING:
+            self.camera.update()
             self.player.update(input_mgr=self.input_manager)
 
         self.input_manager.update()

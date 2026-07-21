@@ -2,6 +2,7 @@
     "room_id": "room_area1",
     "bg_image": "sprites/raw_rooms/room_area1.png",
     "music": null,
+    "camera_offset_y": 30,
 
     "walls": [
         {"x1": 40, "y1": 358, "x2": 82, "y2": 402},
