@@ -10,7 +10,7 @@ class DialogueSystem:
         self.is_active = False
         self.current_page = 0
         self.visible_char_count = 0
-        self.typewriter_timer = 2
+        self.typewriter_timer = self.game.constants.DEFAULT_TYPEWRITER_TIMER
         self.is_line_complete = False
 
         self.active_text_elements = []
@@ -18,14 +18,14 @@ class DialogueSystem:
 
     def draw_text_box(self, pos):
         if pos == "bottom":
-            x1, x2 = 40, self.game.constants.WIDTH - 40
-            y1, y2 = self.game.constants.HEIGHT - 240, self.game.constants.HEIGHT - 40
+            x1, x2 = 32, self.game.constants.WIDTH - 32
+            y1, y2 = self.game.constants.HEIGHT - 153, self.game.constants.HEIGHT - 13
         elif pos == "top":
-            x1, x2 = 40, self.game.constants.WIDTH - 40
-            y1, y2 = 40, 240
+            x1, x2 = 32, self.game.constants.WIDTH - 32
+            y1, y2 = 20, 140
 
-        self.text_box = self.game.canvas.create_rectangle(x1, y1, x2, y2, fill="black", outline="white", width=4)
-        self.text_id = self.game.canvas.create_text(x1 + 20, y1 + 20, text="", fill="white", font=("Determination Mono", 24, "normal"), anchor="nw")
+        self.text_box = self.game.canvas.create_rectangle(x1, y1, x2, y2, fill="black", outline="white", width=6)
+        self.text_id = self.game.canvas.create_text(x1 + 25, y1 + 17, text="", fill="white", font=("Determination Mono", 27, "normal"), anchor="nw")
         self.active_text_elements.extend([self.text_box, self.text_id])
 
 
@@ -36,7 +36,7 @@ class DialogueSystem:
         # Reset old variables
         self.current_page = 0
         self.visible_char_count = 0
-        self.typewriter_timer = 2
+        self.typewriter_timer = self.game.constants.DEFAULT_TYPEWRITER_TIMER
         self.is_line_complete = False
 
         self.game.current_room.is_paused = True
@@ -60,7 +60,7 @@ class DialogueSystem:
                 return
 
             self.visible_char_count = 0
-            self.typewriter_timer = 2
+            self.typewriter_timer = self.game.constants.DEFAULT_TYPEWRITER_TIMER
             self.is_line_complete = False
             self.game.canvas.itemconfig(self.text_id, text="")
 
@@ -82,12 +82,24 @@ class DialogueSystem:
         self.typewriter_timer -= 1
         if self.typewriter_timer <= 0:
             self.visible_char_count += 1
-            self.typewriter_timer = 2
+            self.typewriter_timer = self.game.constants.DEFAULT_TYPEWRITER_TIMER
 
             current_line = self.text[self.current_page]
             self.game.canvas.itemconfig(self.text_id, text=current_line[0:self.visible_char_count])
 
+            just_typed_char = current_line[self.visible_char_count - 1]
+            if self.visible_char_count < len(current_line):
+                next_char = current_line[self.visible_char_count]
+            else:
+                next_char = ""
+
+            if just_typed_char in [",", ":", ";", ")"]:
+                self.typewriter_timer += 5
+            elif just_typed_char in [".", "!", "?"] and not next_char in [")", '"', "'"]:
+                self.typewriter_timer += 10
+
             if current_line[self.visible_char_count - 1] != " ":
+                self.talk_sound.stop()
                 self.talk_sound.play()
 
             if self.visible_char_count == len(current_line):
@@ -111,7 +123,7 @@ class DialogueSystem:
         """
         sound_folder = "sounds/text_sounds/"
         if sound == TextSound.GENERIC:
-            return sound_folder + "snd_text1.wav"
+            return sound_folder + "snd_txt1.wav"
         if sound == TextSound.SUSIE:
             return sound_folder + "snd_txtsus.wav"
         if sound == TextSound.FLOWEY:

@@ -134,6 +134,7 @@ class Room:
     def play_interactable(self, interactable):
         """Plays the current interactable."""
         if interactable["type"] == "save_point":
+            mixer.Sound(file="sounds/sound_effects/snd_power.wav").play()
             self.game.dialogue_system.start_dialogue(
                 text=interactable["text"],
                 sound=TextSound.GENERIC,
@@ -233,7 +234,21 @@ class Room:
     def _create_rectangle(self, list, color, width):
         coords_list = []
         for element in list:
-            coords = (element["x1"], element["y1"], element["x2"], element["y2"])
+            try:
+                coords = (element["x1"], element["y1"], element["x2"], element["y2"])
+            except KeyError: # Dealing with an interactable
+                if "image_obj" in element:
+                    obj_x, obj_y = element["x"], element["y"]
+                    half_w = element["image_obj"].width() / 2
+                    half_h = element["image_obj"].height() / 2
+                    
+                    x1, y1 = obj_x - half_w, obj_y - half_h
+                    x2, y2 = obj_x + half_w, obj_y + half_h
+    
+                else:
+                    x1, y1 = element["x1"], element["y1"]
+                    x2, y2 = element["x2"], element["y2"]
+                coords = (x1, y1, x2, y2)
             coords_list.append(coords)
 
         for element_box in coords_list:
@@ -271,7 +286,7 @@ class Room:
 
             if element["type"] == "coords_text":
                 self.game.canvas.tag_raise(element["id"])
-                self.game.canvas.itemconfig(element["id"], text=f"{self.game.player.x}, {self.game.player.y}")
+                self.game.canvas.itemconfig(element["id"], text=f"{self.game.player.x:.2f}, {self.game.player.y:.2f}")
 
             elif element["type"] == "rect":
                 x1, y1, x2, y2 = element["coords"]

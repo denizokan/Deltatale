@@ -170,8 +170,8 @@ class Main:
         # State: PLAYING -> Handle player movement
         elif self.state == GameState.PLAYING:
             if self.dialogue_system.is_active: # If dialogue is active
-                self.dialogue_system.update()
                 self.dialogue_system.handle_input(self.input_manager)
+                self.dialogue_system.update()
             else:
                 self.player.update(input_mgr=self.input_manager)
                 self.camera.update()
