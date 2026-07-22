@@ -2,6 +2,7 @@ import json
 import os
 from tkinter import PhotoImage
 from pygame import mixer
+from src.core.enums import TextSound
 
 class Room:
     """Initializes a room."""
@@ -126,8 +127,19 @@ class Room:
                 x2, y2 = interactable["x2"], interactable["y2"]
 
             if x1 <= reach[0] <= x2 and y1 <= reach[1] <= y2:
-                print(f"Interacted with object: {interactable['type']}")
+                self.play_interactable(interactable)
                 break
+
+
+    def play_interactable(self, interactable):
+        """Plays the current interactable."""
+        if interactable["type"] == "save_point":
+            self.game.dialogue_system.start_dialogue(
+                text=interactable["text"],
+                sound=TextSound.GENERIC,
+                pos="bottom",
+                on_complete=lambda: print("TODO: Save screen")
+            )
 
     
     def next_room(self, next_room_id):

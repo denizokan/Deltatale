@@ -1,5 +1,5 @@
 from pygame import mixer
-from src.core.enums import Action
+from src.core.enums import Action, TextSound
 
 class DialogueSystem:
     """This class is used for rendering text."""
@@ -108,15 +108,13 @@ class DialogueSystem:
     def _get_sound_path(self, sound):
         """
         Returns the sound file path for the specified sound.
-        Accepted values:
-          - "generic", "susie", "flowey", "toriel"...
         """
         sound_folder = "sounds/text_sounds/"
-        if sound == "generic":
+        if sound == TextSound.GENERIC:
             return sound_folder + "snd_text1.wav"
-        if sound == "susie":
+        if sound == TextSound.SUSIE:
             return sound_folder + "snd_txtsus.wav"
-        if sound == "flowey":
+        if sound == TextSound.FLOWEY:
             return sound_folder + "snd_floweytalk1.wav"
-        if sound == "toriel":
+        if sound == TextSound.FLOWEY:
             return sound_folder + "snd_txttor.wav"

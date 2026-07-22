@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, auto
 
 class Action(Enum):
     """
@@ -30,3 +30,14 @@ class GameState(Enum):
     PLAYING = 2
     BATTLE = 3
     GAMEOVER = 4
+
+class TextSound(Enum):
+    """Contains character sounds. Check with TextSound.VALUE"""
+
+    GENERIC = auto()
+    SUSIE = auto()
+    SUSIE_LAUGH = auto()
+    SUSIE_ROAR = auto()
+    SUSIE_SURPRISE = auto()
+    FLOWEY = auto()
+    TORIEL = auto()

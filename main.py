@@ -10,6 +10,7 @@ from src.core.room import Room
 from src.core.camera import Camera
 from src.screens.file_select import FileSelectScreen
 from src.systems.savesystem import SaveSystem
+from src.systems.dialoguesystem import DialogueSystem
 from pygame import mixer
 
 class Main:
@@ -40,6 +41,7 @@ class Main:
         mixer.init()
         self.save_system = SaveSystem()
         self.transition = TransitionManager(self)
+        self.dialogue_system = DialogueSystem(self)
 
         root.bind("<KeyPress>", self.input_manager.press_key)
         root.bind("<KeyRelease>", self.input_manager.release_key)
