@@ -2,7 +2,9 @@ import tkinter
 from PIL import Image, ImageTk
 from src.core.constants import Constants
 from src.core.enums import Action, GameState
-from src.core.input_manager import InputManager
+from src.core.input import InputManager
+from src.core.transition import TransitionManager
+from src.core.player import Player
 from src.screens.file_select import FileSelectScreen
 from src.systems.savesystem import SaveSystem
 from pygame import mixer
@@ -34,6 +36,7 @@ class Main:
         self.input_manager = InputManager()
         mixer.init()
         self.save_system = SaveSystem()
+        self.transition = TransitionManager(self)
 
         root.bind("<KeyPress>", self.input_manager.press_key)
         root.bind("<KeyRelease>", self.input_manager.release_key)
@@ -99,19 +102,16 @@ class Main:
         self.state = GameState.FILE_SELECT
         self.file_select_screen = FileSelectScreen(self)
 
-    def start_game(self):
-        """Transition from file selection to active gameplay."""
-        self.clear_screen()
+    def start_game(self, index):
+        """Transition from file selection screen to the game."""
+        self.file_select_screen = None
         self.state = GameState.PLAYING
-
-        self.player_x = self.constants.WIDTH // 2
-        self.player_y = self.constants.HEIGHT - 80
         
-        self.player = self.canvas.create_image(
-            self.player_x, 
-            self.player_y, 
-            image=self.player_sprite
-        )
+        # TODO: Get x, y from save index.
+        self.player = Player(self, 300, 200)
+        
+        self.transition.fade_from_black(speed=8)
+        
 
     def game_loop(self):
         # State: INTRO -> Waiting for confirm to go to File Select
@@ -121,18 +121,11 @@ class Main:
 
         # State: FILE_SELECT -> Waiting for confirm to start playing
         elif self.state == GameState.FILE_SELECT:
-            self.file_select_screen.handle_input()
+            self.file_select_screen.handle_input(input_mgr=self.input_manager)
 
         # State: PLAYING -> Handle player movement
         elif self.state == GameState.PLAYING:
-            dx = 0
-            dy = 0
-            if self.input_manager.is_pressed(Action.UP):    dy = -self.constants.SOUL_SPEED
-            if self.input_manager.is_pressed(Action.DOWN):  dy = self.constants.SOUL_SPEED
-            if self.input_manager.is_pressed(Action.LEFT):  dx = -self.constants.SOUL_SPEED
-            if self.input_manager.is_pressed(Action.RIGHT): dx = self.constants.SOUL_SPEED
-            if (dx != 0 or dy != 0):
-                self.canvas.move(self.player, dx, dy)
+            self.player.update(input_mgr=self.input_manager)
 
         self.input_manager.update()
         delay_ms = int(1000 / self.constants.FPS)

@@ -37,7 +37,6 @@ class FileSelectScreen:
 
         self.menu_theme = mixer.Sound(file="sounds/menu_theme.mp3")
         self.menu_theme.play(loops=-1)
-        self.is_transitioning = False
 
         self.setup_layout()
 
@@ -260,23 +259,22 @@ class FileSelectScreen:
                 self.game.canvas.itemconfig(button, fill="gray")
 
 
-    def handle_input(self):
+    def handle_input(self, input_mgr):
         """
         This function gets triggered every game tick if the player is currently
         in the file select screen. Listens for keyboard inputs.
         """
-        if self.is_transitioning:
+        if self.game.transition.is_transitioning:
             return
 
         if self.selected_slot_index is not None:
-            self.handle_prompt_input()
+            self.handle_prompt_input(input_mgr)
         else:
-            self.handle_grid_input()
+            self.handle_grid_input(input_mgr)
 
             
-    def handle_grid_input(self):
+    def handle_grid_input(self, input_mgr):
         """This function handles navigation through the main file select screen."""
-        input_mgr = self.game.input_manager
         moved = False
 
         if input_mgr.is_just_pressed(Action.UP):
@@ -440,9 +438,8 @@ class FileSelectScreen:
                 return
             
 
-    def handle_prompt_input(self):
+    def handle_prompt_input(self, input_mgr):
         """This function handles navigation through confirmation menus."""
-        input_mgr = self.game.input_manager
         moved = False
 
         if input_mgr.is_just_pressed(Action.LEFT):
@@ -628,45 +625,17 @@ class FileSelectScreen:
 
     def start_game_transition(self):
         """Initiates a true smooth fade-to-black sequence."""
-        self.is_transitioning = True
         self.menu_theme.fadeout(1500)
-
-        self.fade_alpha = 0
-        self.fade_canvas_image = None
-        self.fade_image_ref = None
+        self.game.transition.fade_to_black(speed=8, on_complete=lambda: self.load_game())
         
-        self.animate_fade()
 
-
-    def animate_fade(self):
-        """Generates a black image with increasing opacity every frame."""
-        self.fade_alpha += 8
-        if self.fade_alpha > 255:
-            self.fade_alpha = 255
-            
-        img = Image.new('RGBA', (self.game.constants.WIDTH, self.game.constants.HEIGHT), (0, 0, 0, self.fade_alpha))
-        self.fade_image_ref = ImageTk.PhotoImage(img)
-        
-        if self.fade_canvas_image is None:
-            self.fade_canvas_image = self.game.canvas.create_image(0, 0, image=self.fade_image_ref, anchor="nw")
-            self.active_ui_elements.append(self.fade_canvas_image)
-        else:
-            self.game.canvas.itemconfig(self.fade_canvas_image, image=self.fade_image_ref)
-            
-        if self.fade_alpha < 255:
-            delay_ms = int(1000 / self.game.constants.FPS)
-            self.game.root.after(delay_ms, self.animate_fade)
-        else:
-            self.load_overworld()
-
-
-    def load_overworld(self):
+    def load_game(self):
         """Cleans up the menu elements and launches the actual game."""
         for object in self.active_ui_elements:
             self.game.canvas.delete(object)
             
         print(f"Loading game for slot: {self.selected_slot_index + 1}")
-        # TODO: Initialize the player overworld class
+        self.game.root.after(1000, self.game.start_game(index=self.selected_slot_index))
 
 
     def playtime_to_str(self, num):
