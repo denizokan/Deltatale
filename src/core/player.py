@@ -96,6 +96,10 @@ class Player:
 
         moved = False
 
+        if not self.game.current_room.is_position_free(target_x, self.y):
+            self.anim_frame = 0
+            self.history[0] = (self.history[0][0], self.history[0][1], self.history[0][2], 0)
+
         if dx != 0 and self.game.current_room.is_position_free(target_x, self.y):
             self.x += dx
             moved = True

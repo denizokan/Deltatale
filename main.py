@@ -10,6 +10,7 @@ from src.core.room import Room
 from src.core.camera import Camera
 from src.screens.file_select import FileSelectScreen
 from src.systems.savesystem import SaveSystem
+from src.systems.dialoguesystem import DialogueSystem
 from pygame import mixer
 
 class Main:
@@ -40,6 +41,7 @@ class Main:
         mixer.init()
         self.save_system = SaveSystem()
         self.transition = TransitionManager(self)
+        self.dialogue_system = DialogueSystem(self)
 
         root.bind("<KeyPress>", self.input_manager.press_key)
         root.bind("<KeyRelease>", self.input_manager.release_key)
@@ -167,14 +169,18 @@ class Main:
 
         # State: PLAYING -> Handle player movement
         elif self.state == GameState.PLAYING:
-            self.player.update(input_mgr=self.input_manager)
-            self.camera.update()
-            self.canvas.coords(self.current_room.background, -self.camera.x, -self.camera.y)
+            if self.dialogue_system.is_active: # If dialogue is active
+                self.dialogue_system.handle_input(self.input_manager)
+                self.dialogue_system.update()
+            else:
+                self.player.update(input_mgr=self.input_manager)
+                self.camera.update()
+                self.canvas.coords(self.current_room.background, -self.camera.x, -self.camera.y)
 
-            # Debug mode:
-            if self.input_manager.is_just_pressed(Action.DEBUG):
-                self.current_room.toggle_debug()
-            self.current_room.update_positions()
+                # Debug mode:
+                if self.input_manager.is_just_pressed(Action.DEBUG):
+                    self.current_room.toggle_debug()
+                self.current_room.update_positions()
 
         self.input_manager.update()
         delay_ms = int(1000 / self.constants.FPS)

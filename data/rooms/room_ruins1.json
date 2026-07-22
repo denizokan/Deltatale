@@ -50,8 +50,8 @@
             "sprite": "sprites/objects/spr_savepoint_0.png",
             "save_name": "Ruins - Entrance",
             "text": [
-                "* The shadow of the ruins looms above...\n* Filling you with determination.",
-                "* (HP fully restored.)"
+                "* (A strange light glows.)\n* (It feels like a window to\n  someone staring at a screen.)",
+                "* (You wave. They press 'Z'.)\n* (The synchronization fills you\n  with determination.)"
             ]
         }
     ]
