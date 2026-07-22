@@ -1,0 +1,58 @@
+{
+    "room_id": "room_ruins1",
+    "bg_image": "sprites/raw_rooms/room_ruins1.png",
+    "music": "sounds/mus_ruins.ogg",
+
+    "walls": [
+        {"x1": 0, "y1": 156, "x2": 280, "y2": 196},
+        {"x1": 362, "y1": 156, "x2": 650, "y2": 196}
+    ],
+
+    "spawns": [
+        {
+            "x": 320,
+            "y": 870,
+            "from_room": "room_area1_2",
+            "facing": "up"
+        },
+        {
+            "x": 320,
+            "y": 220,
+            "from_room": "room_ruins2",
+            "facing": "down"
+        }
+    ],
+
+    "exits": [
+        {
+            "x1": 278,
+            "y1": 894,
+            "x2": 362,
+            "y2": 920,
+            "target_room": "room_area1_2"
+        },
+        {
+            "x1": 280,
+            "y1": 148,
+            "x2": 362,
+            "y2": 190,
+            "target_room": "room_ruins2"
+        }
+    ],
+
+    "triggers": [],
+
+    "interactables": [
+        {
+            "x": 320,
+            "y": 320,
+            "type": "save_point",
+            "sprite": "sprites/objects/spr_savepoint_0.png",
+            "save_name": "Ruins - Entrance",
+            "text": [
+                "* The shadow of the ruins looms above...\n* Filling you with determination.",
+                "* (HP fully restored.)"
+            ]
+        }
+    ]
+}

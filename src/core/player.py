@@ -48,9 +48,12 @@ class Player:
 
     def update(self, input_mgr):
         """Handles inputs and modifies the player sprite."""      
-        if self.game.transition.is_transitioning:
+        if self.game.transition.is_transitioning or self.game.current_room.is_paused:
             return
-          
+
+        if input_mgr.is_just_pressed(Action.CONFIRM):
+            self.game.current_room.check_interactable()
+        
         dx, dy = 0, 0
         new_facing = self.facing
 
@@ -117,6 +120,7 @@ class Player:
         self.draw(sx, sy, s_facing, s_frame)
             
         self.game.current_room.check_exit(self.x, self.y)
+
 
     def draw(self, sx, sy, s_facing, s_frame):
         """Updates the canvas coordinates and images for all party members."""

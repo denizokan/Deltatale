@@ -6,8 +6,8 @@ __pycache__/
 
 sprites/DELTARUNE Sprites/
 sprites/UNDERTALE Sprites/
-sounds/undertale_sounds
-sounds/deltarune_sounds
+sounds/undertale_sounds/
+sounds/deltarune_sounds/
 save_*.json
 html_file.txt
 room_template.json

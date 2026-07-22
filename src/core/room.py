@@ -17,6 +17,7 @@ class Room:
             raise RuntimeError(f"An error has occured while trying to read room data for {self.room_id}.") from e
 
         self.active_ui_elements = []
+        self.is_paused = False
         self.debug_mode = False
 
         # Unpack room data
@@ -35,6 +36,15 @@ class Room:
         self.background = self.game.canvas.create_image(0, 0, image=self.bg_image, anchor="nw")
         self.game.canvas.tag_lower(self.background)
         self.active_ui_elements.append(self.background)
+
+        # Draw interactables
+        for interactable in self.interactables:
+            interactable_sprite = PhotoImage(file=interactable["sprite"]).zoom(2)
+            canvas_id = self.game.canvas.create_image(interactable["x"] - self.game.camera.x, interactable["y"] - self.game.camera.y, image=interactable_sprite, anchor="center")
+
+            interactable["image_obj"] = interactable_sprite
+            interactable["canvas_id"] = canvas_id
+            self.active_ui_elements.append(canvas_id)
 
     
     def is_position_free(self, target_x, target_y):
@@ -68,11 +78,45 @@ class Room:
                     
                     if self.room_data["music"] != next_room_peek["music"]:
                         if hasattr(self, "music"):
-                            self.music.fadeout(1500)
+                            self.music.fadeout(500)
                 except Exception as e:
                     print(f"Warning: Could not read next room music: {e}")
 
                 self.game.transition.fade_to_black(speed=24, on_complete=lambda: self.next_room(next_room_id))
+                break
+
+
+    def check_interactable(self):
+        """Checks if the player is currently looking at an interactable. If yes, executes the interactable."""
+        reach_distance = self.game.constants.REACH_DISTANCE
+
+        reach = (self.game.player.x, self.game.player.y)
+        if self.game.player.facing == "up":
+            reach = (self.game.player.x, self.game.player.y - reach_distance)
+        elif self.game.player.facing == "down":
+            reach = (self.game.player.x, self.game.player.y + reach_distance)
+        elif self.game.player.facing == "left":
+            reach = (self.game.player.x - reach_distance, self.game.player.y)
+        elif self.game.player.facing == "right":
+            reach = (self.game.player.x + reach_distance, self.game.player.y)
+
+        coords = []
+        for index, interactable in enumerate(self.interactables):
+            obj_x = interactable["x"]
+            obj_y = interactable["y"]
+
+            if "img_obj" in interactable:
+                half_w = interactable["img_obj"].width() / 2
+                half_h = interactable["img_obj"].height() / 2
+            else:
+                half_w = 20
+                half_h = 20
+
+            x1, y1 = obj_x - half_w, obj_y - half_h
+            x2, y2 = obj_x + half_w, obj_y + half_h
+
+            if x1 <= reach[0] <= x2 and y1 <= reach[1] <= y2:
+                print(f"Interacted with: {interactable['type']}")
                 break
 
     
@@ -106,6 +150,10 @@ class Room:
         self.game.player.draw(spawn_x, spawn_y, spawn_facing, 0)
         self.game.canvas.coords(self.game.current_room.background, -self.game.camera.x, -self.game.camera.y)
 
+        if self.room_data["music"] != self.game.current_room.room_data["music"]:
+            if hasattr(self.game.current_room, "music"):
+                self.game.current_room.music.play(loops=-1)
+
         if self.debug_mode == True: # DEBUG MODE
             self.toggle_debug()
             self.game.current_room.toggle_debug()
@@ -132,6 +180,19 @@ class Room:
             )
             self.game.canvas.tag_raise(debug_text)
             self.debug_elements.append({"id": debug_text, "type": "text", "coords": (text_x, text_y)})
+
+            coords_text_x = self.game.constants.WIDTH - 5
+            coords_text_y = 15
+            coords_text = self.game.canvas.create_text(
+                coords_text_x,
+                coords_text_y,
+                text=f"{self.game.player.x}, {self.game.player.y}",
+                fill="white",
+                font=("Determination Sans", 24, "normal"),
+                anchor="e"
+            )
+            self.game.canvas.tag_raise(coords_text)
+            self.debug_elements.append({"id": coords_text, "type": "coords_text", "coords": (coords_text_x, coords_text_y)})
 
             self._create_rectangle(list=self.walls, color="blue", width=2)
             self._create_circle(list=self.spawns, radius=20, color="green")
@@ -170,15 +231,24 @@ class Room:
             self.debug_elements.append({"id": circle, "type": "circle", "coords": (x, y, radius)})
 
 
-    def update_debug_positions(self):
-        """Updates the debug rectangles/circles positions to respect camera x and y."""
-        if not self.debug_mode:
-            return
+    def update_positions(self):
+        """Updates interactable positions in respect to camera x and y."""
+        for interactable in self.interactables:
+            canvas_id = interactable["canvas_id"]
+            self.game.canvas.coords(canvas_id, interactable["x"] - self.game.camera.x, interactable["y"] - self.game.camera.y)
 
+        if self.debug_mode: self._update_debug_positions() # DEBUG MODE
+            
+
+    def _update_debug_positions(self):
+        """Updates the debug rectangles/circles positions to respect camera x and y."""
         for element in self.debug_elements:
             if element["type"] == "text":
                 self.game.canvas.tag_raise(element["id"])
-                continue
+
+            if element["type"] == "coords_text":
+                self.game.canvas.tag_raise(element["id"])
+                self.game.canvas.itemconfig(element["id"], text=f"{self.game.player.x}, {self.game.player.y}")
 
             elif element["type"] == "rect":
                 x1, y1, x2, y2 = element["coords"]

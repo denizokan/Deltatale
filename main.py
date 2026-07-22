@@ -147,6 +147,10 @@ class Main:
         
         self.file_select_screen = None
         self.state = GameState.PLAYING
+
+        if hasattr(self.current_room, "music"):
+            self.game.current_room.music.play(loops=-1)
+
         self.transition.fade_from_black(speed=24)
         
 
@@ -169,7 +173,7 @@ class Main:
             # Debug mode:
             if self.input_manager.is_just_pressed(Action.DEBUG):
                 self.current_room.toggle_debug()
-            if self.current_room.debug_mode == True: self.current_room.update_debug_positions()
+            self.current_room.update_positions()
 
         self.input_manager.update()
         delay_ms = int(1000 / self.constants.FPS)
