@@ -52,7 +52,21 @@
             "x2": 0,
             "y2": 0,
             "type": "sign",
-            "dialogue": ["Only the fearless may proceed.", "Brave ones, foolish ones.", "Both walk not the middle road."]
+            "sprite": null,
+            "text": [
+                "* Only the fearless may proceed.\n* Brave ones, foolish ones.\n* Both walk not the middle road."
+            ]
+        },
+        {
+            "x": 320,
+            "y": 320,
+            "type": "save_point",
+            "sprite": "sprites/objects/spr_savepoint_0.png",
+            "save_name": "Ruins - Entrance",
+            "text": [
+                "* The shadow of the ruins looms above...\n* Filling you with determination.",
+                "* (HP fully restored.)"
+            ]
         }
     ]
 }

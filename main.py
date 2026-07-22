@@ -113,8 +113,6 @@ class Main:
 
     def start_game(self, index):
         """Transition from file selection screen to the game."""
-
-        # TODO: Get x, y from save index.
         if not self.save_system.exists(index):
             data = self.save_system.create_blank_save()
             try:
@@ -144,12 +142,15 @@ class Main:
 
         self.player = Player(self, spawn_x, spawn_y, spawn_facing)
         self.camera = Camera(self)
+
+        for character in self.player.active_characters:
+            self.canvas.tag_raise(character)
         
         self.file_select_screen = None
         self.state = GameState.PLAYING
 
         if hasattr(self.current_room, "music"):
-            self.game.current_room.music.play(loops=-1)
+            self.current_room.music.play(loops=-1)
 
         self.transition.fade_from_black(speed=24)
         

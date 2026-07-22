@@ -16,4 +16,4 @@ class Constants:
 
         self.PLAYER_SPEED = 4
         self.SOUL_SPEED = 4.5
-        self.REACH_DISTANCE = 60
+        self.REACH_DISTANCE = 30

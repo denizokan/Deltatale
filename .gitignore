@@ -9,8 +9,8 @@ sprites/UNDERTALE Sprites/
 sounds/undertale_sounds/
 sounds/deltarune_sounds/
 save_*.json
-html_file.txt
 room_template.json
+html_file.txt
 room_translator.py
 Rooms.html
 

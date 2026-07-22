@@ -39,23 +39,35 @@ class Room:
 
         # Draw interactables
         for interactable in self.interactables:
-            interactable_sprite = PhotoImage(file=interactable["sprite"]).zoom(2)
-            canvas_id = self.game.canvas.create_image(interactable["x"] - self.game.camera.x, interactable["y"] - self.game.camera.y, image=interactable_sprite, anchor="center")
-
-            interactable["image_obj"] = interactable_sprite
-            interactable["canvas_id"] = canvas_id
-            self.active_ui_elements.append(canvas_id)
+            if interactable["sprite"] != None:
+                interactable_sprite = PhotoImage(file=interactable["sprite"]).zoom(2)
+                interactable["image_obj"] = interactable_sprite
+                canvas_id = self.game.canvas.create_image(interactable["x"] - self.game.camera.x, interactable["y"] - self.game.camera.y, image=interactable_sprite, anchor="center")
+                interactable["canvas_id"] = canvas_id
+                self.active_ui_elements.append(canvas_id)
 
     
     def is_position_free(self, target_x, target_y):
         """Returns 'False' if the next movement spot is occupied."""
-        coords_list = []
         for wall in self.walls:
             coords = (wall["x1"], wall["y1"], wall["x2"], wall["y2"])
-            coords_list.append(coords)
+            x1, y1, x2, y2 = coords            
+            if (x1 <= target_x <= x2 and y1 <= target_y <= y2): return False
 
-        for box in coords_list:
-            x1, y1, x2, y2 = box
+        for interactable in self.interactables:
+            obj_x = interactable["x"]
+            obj_y = interactable["y"]
+
+            if "img_obj" in interactable:
+                half_w = interactable["img_obj"].width() / 2
+                half_h = interactable["img_obj"].height() / 2
+            else:
+                half_w = 30
+                half_h = 30
+
+            x1, y1 = obj_x - half_w, obj_y - half_h
+            x2, y2 = obj_x + half_w, obj_y + half_h
+
             if (x1 <= target_x <= x2 and y1 <= target_y <= y2): return False
 
         return True
@@ -100,23 +112,21 @@ class Room:
         elif self.game.player.facing == "right":
             reach = (self.game.player.x + reach_distance, self.game.player.y)
 
-        coords = []
-        for index, interactable in enumerate(self.interactables):
-            obj_x = interactable["x"]
-            obj_y = interactable["y"]
+        for interactable in self.interactables:
+            if "image_obj" in interactable:
+                obj_x, obj_y = interactable["x"], interactable["y"]
+                half_w = interactable["image_obj"].width() / 2
+                half_h = interactable["image_obj"].height() / 2
+                
+                x1, y1 = obj_x - half_w, obj_y - half_h
+                x2, y2 = obj_x + half_w, obj_y + half_h
 
-            if "img_obj" in interactable:
-                half_w = interactable["img_obj"].width() / 2
-                half_h = interactable["img_obj"].height() / 2
             else:
-                half_w = 20
-                half_h = 20
-
-            x1, y1 = obj_x - half_w, obj_y - half_h
-            x2, y2 = obj_x + half_w, obj_y + half_h
+                x1, y1 = interactable["x1"], interactable["y1"]
+                x2, y2 = interactable["x2"], interactable["y2"]
 
             if x1 <= reach[0] <= x2 and y1 <= reach[1] <= y2:
-                print(f"Interacted with: {interactable['type']}")
+                print(f"Interacted with object: {interactable['type']}")
                 break
 
     
@@ -138,6 +148,7 @@ class Room:
 
         for character in self.game.player.active_characters:
             self.game.canvas.coords(character, spawn_x, spawn_y)
+            self.game.canvas.tag_raise(character)
 
         self.game.player.x = spawn_x
         self.game.player.y = spawn_y
