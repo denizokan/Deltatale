@@ -14,5 +14,6 @@ class Constants:
         self.WIDTH = 640
         self.HEIGHT = 480
 
-        self.PLAYER_SPEED = 4.5
+        self.PLAYER_SPEED = 4
         self.SOUL_SPEED = 4.5
+        self.REACH_DISTANCE = 30

@@ -18,6 +18,8 @@ class Action(Enum):
     LEFT = 8
     RIGHT = 9
 
+    DEBUG = 10
+
 class GameState(Enum):
     """
     All possible game states. Check with GameState.VALUE

@@ -11,13 +11,41 @@ class SaveSystem:
             except Exception as e:
                 print(f"An error has occured while trying to create save file directory: {e}")
     
+
     def get_save_path(self, slot_index):
         """Returns the file path of a save file with index."""
         return os.path.join(self.save_dir, f"save_{slot_index}.json")
     
+
     def exists(self, slot_index):
+        """Returns true if a save slot on the given index exists."""
         return os.path.exists(self.get_save_path(slot_index))
     
+
+    def create_blank_save(self):
+        """Returns a blank save file data."""
+        return {
+            "name": "Kris",
+            "location": "The Beginning",
+            "playtime": 0,
+            "isEmpty": False,
+            "room": "room_area1",
+            "level": 1,
+            "xp": 0,
+            "money": 0,
+            "items": ["Stick"],
+            "weapon": None,
+            "armor": None,
+            "deaths": {},
+            "kills": {},
+            "flags": {
+                "toriel_status": None,  
+                "papyrus_status": None,
+                "undyne_status": None
+            }
+        }
+    
+
     def save_file(self, slot_index, data):
         """Dumps the memory into a save file with slot index."""
         try:
@@ -25,7 +53,8 @@ class SaveSystem:
             with open(file_path, "w") as file:
                 json.dump(data, file, indent=4)
         except OSError as e:
-            raise RuntimeError(f"Cannot access save file {slot_index}.") from e
+            raise RuntimeError(f"Cannot access save file {slot_index}. Please check if the program has permission to write files.") from e
+
 
     def load_file(self, slot_index):
         """Reads and returns a save file with slot index. If the file with slot index does not exist, returns an empty save slot."""
@@ -44,7 +73,8 @@ class SaveSystem:
             return data
         except Exception as e:
             raise RuntimeError(f"Save file {slot_index} is corrupted or inaccessible.") from e
-        
+
+
     def delete_file(self, slot_index):
         """Deletes a save file with slot index."""
         if not self.exists(slot_index):

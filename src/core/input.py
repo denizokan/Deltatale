@@ -11,7 +11,8 @@ class InputManager:
             "z": False, "Z": False,
             "x": False, "X": False,
             "c": False, "C": False,
-            "Return": False
+            "Return": False,
+            "udiaeresis": False, "Udiaeresis": False # Debug keys (ü, Ü)
         }
         self.pressed_this_frame = {k: False for k in self.keys}
         self.action_stack = []
@@ -72,6 +73,9 @@ class InputManager:
             return self.pressed_this_frame["Left"]
         if action == Action.RIGHT:
             return self.pressed_this_frame["Right"]
+
+        if action == Action.DEBUG: # Debug key check
+            return self.pressed_this_frame["udiaeresis"] or self.pressed_this_frame["Udiaeresis"]
 
         return False
 

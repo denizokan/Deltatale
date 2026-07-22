@@ -1,10 +1,13 @@
 import tkinter
+from tkinter import messagebox
 from PIL import Image, ImageTk
 from src.core.constants import Constants
 from src.core.enums import Action, GameState
 from src.core.input import InputManager
 from src.core.transition import TransitionManager
 from src.core.player import Player
+from src.core.room import Room
+from src.core.camera import Camera
 from src.screens.file_select import FileSelectScreen
 from src.systems.savesystem import SaveSystem
 from pygame import mixer
@@ -46,17 +49,21 @@ class Main:
         self.player_sprite = tkinter.PhotoImage(file="sprites/SOUL.png")
         self.active_ui_elements = []
 
+        self.current_room = None
+
         self.state = GameState.INTRO # Possible states: INTRO, FILE_SELECT, PLAYING, BATTLE, GAMEOVER
         self.setup_intro() # Enter the main menu
 
         self.game_loop() # Start the game loop
         root.mainloop()
     
+
     def clear_screen(self):
         """Helper to wipe out any UI elements from the previous state."""
         for element in self.active_ui_elements:
             self.canvas.delete(element)
         self.active_ui_elements.clear()
+
 
     def setup_intro(self):
         """Shows the Logo, instructions, and plays the introductory sound."""
@@ -96,21 +103,56 @@ class Main:
 
         self.root.after(3000, show_text)
 
+
     def setup_file_select(self):
         """Transition from intro to the separate File Selection class module."""
         self.clear_screen()
         self.state = GameState.FILE_SELECT
         self.file_select_screen = FileSelectScreen(self)
 
+
     def start_game(self, index):
         """Transition from file selection screen to the game."""
+        if not self.save_system.exists(index):
+            data = self.save_system.create_blank_save()
+            try:
+                self.save_system.save_file(index, data)
+            except RuntimeError as e:
+                self.root.destroy()
+                messagebox.showerror(
+                    "An error has occured.",
+                    f"{e}"
+                )
+                exit(1)
+        
+        data = self.save_system.load_file(index)
+        self.current_room = Room(self, data["room"])
+
+        save_point_x = self.current_room.room_data.get("save_point_x")
+        if save_point_x is None:
+            # It's a room without a save point, or a brand new game!
+            spawn_x = 320
+            spawn_y = 240
+            spawn_facing = "down"
+        else:
+            # Spawn in front of the save point!
+            spawn_x = save_point_x
+            spawn_y = self.current_room.room_data["save_point_y"]
+            spawn_facing = self.current_room.room_data["save_point_facing"]
+
+        self.player = Player(self, spawn_x, spawn_y, spawn_facing)
+        self.camera = Camera(self)
+
+        for character in self.player.active_characters:
+            self.canvas.tag_raise(character)
+        
         self.file_select_screen = None
         self.state = GameState.PLAYING
-        
-        # TODO: Get x, y from save index.
-        self.player = Player(self, 300, 200)
-        
-        self.transition.fade_from_black(speed=8)
+
+        if hasattr(self.current_room, "music"):
+            self.current_room.music.play(loops=-1)
+
+        self.transition.fade_from_black(speed=24)
         
 
     def game_loop(self):
@@ -126,10 +168,18 @@ class Main:
         # State: PLAYING -> Handle player movement
         elif self.state == GameState.PLAYING:
             self.player.update(input_mgr=self.input_manager)
+            self.camera.update()
+            self.canvas.coords(self.current_room.background, -self.camera.x, -self.camera.y)
+
+            # Debug mode:
+            if self.input_manager.is_just_pressed(Action.DEBUG):
+                self.current_room.toggle_debug()
+            self.current_room.update_positions()
 
         self.input_manager.update()
         delay_ms = int(1000 / self.constants.FPS)
         self.root.after(delay_ms, self.game_loop)
     
+
 if __name__ == "__main__":
     main = Main()

@@ -166,10 +166,10 @@ class FileSelectScreen:
             font=("Determination Sans", 16, "normal"),
             anchor="e"
         )
-        self.kris_sprite_image = PhotoImage(file="sprites/DELTARUNE Sprites/Characters/Playable Characters/Kris/Ch1/Light World/spr_krisd_0.png").zoom(2)
+        self.kris_sprite_image = PhotoImage(file="sprites/characters/kris/spr_krisd_0.png").zoom(2)
         kris_sprite = self.game.canvas.create_image(self.game.constants.WIDTH // 2 - 30, self.game.constants.HEIGHT - 8, image=self.kris_sprite_image)
 
-        self.susie_sprite_image = PhotoImage(file="sprites/DELTARUNE Sprites/Characters/Playable Characters/Susie/Ch1/Light World/Walk/spr_susied_0.png").zoom(2)
+        self.susie_sprite_image = PhotoImage(file="sprites/characters/susie/walk/spr_susied_0.png").zoom(2)
         susie_sprite = self.game.canvas.create_image(self.game.constants.WIDTH // 2 + 30, self.game.constants.HEIGHT - 8, image=self.susie_sprite_image)
 
         self.active_ui_elements.extend([footer_text, kris_sprite, susie_sprite])
@@ -321,13 +321,13 @@ class FileSelectScreen:
                 moved = True
 
         if moved:
-            mixer.Sound(file="sounds/undertale_sounds/snd_squeak.wav").play()
+            mixer.Sound(file="sounds/sound_effects/snd_squeak.wav").play()
             self.update_visuals()
         
         # Check for Confirm, Cancel Key Presses
         if input_mgr.is_just_pressed(Action.CONFIRM):
             if 0 <= self.menu_index <= 2: # Selected a save file
-                mixer.Sound("sounds/undertale_sounds/snd_select.wav").play()
+                mixer.Sound("sounds/sound_effects/snd_select.wav").play()
                 if self.current_mode == ActionMode.COPY_FROM:
                     self.copying_file_index = self.menu_index
                     for i in range(3):
@@ -376,7 +376,7 @@ class FileSelectScreen:
                 self.show_confirmation_prompt(self.menu_index)
             elif self.menu_index == 3: # Selected Copy/Cancel
                 if self.current_mode == ActionMode.COPY_FROM or self.current_mode == ActionMode.COPY_TO:
-                    mixer.Sound("sounds/deltarune_sounds/snd_swing.wav").play()
+                    mixer.Sound("sounds/sound_effects/snd_swing.wav").play()
                     self.current_mode = ActionMode.SELECT
                     self.menu_index = 0
                     self.copying_file_index = None
@@ -391,18 +391,18 @@ class FileSelectScreen:
                         break
 
                 if eligable_index == None:
-                    mixer.Sound("sounds/deltarune_sounds/snd_swing.wav").play()
+                    mixer.Sound("sounds/sound_effects/snd_swing.wav").play()
                     self.game.canvas.itemconfig(self.title_text_id, text="No files to copy.")
                     return
 
-                mixer.Sound("sounds/undertale_sounds/snd_select.wav").play()
+                mixer.Sound("sounds/sound_effects/snd_select.wav").play()
                 self.current_mode = ActionMode.COPY_FROM
                 self.menu_index = eligable_index
                 self.update_visuals()
 
             elif self.menu_index == 4: # Selected Erase/Cancel
                 if self.current_mode == ActionMode.ERASE:
-                    mixer.Sound("sounds/deltarune_sounds/snd_swing.wav").play()
+                    mixer.Sound("sounds/sound_effects/snd_swing.wav").play()
                     self.current_mode = ActionMode.SELECT
                     self.menu_index = 0
                     self.update_visuals()
@@ -415,11 +415,11 @@ class FileSelectScreen:
                         break
 
                 if eligable_index == None:
-                    mixer.Sound("sounds/deltarune_sounds/snd_swing.wav").play()
+                    mixer.Sound("sounds/sound_effects/snd_swing.wav").play()
                     self.game.canvas.itemconfig(self.title_text_id, text="No files to erase.")
                     return
                 
-                mixer.Sound("sounds/undertale_sounds/snd_select.wav").play()
+                mixer.Sound("sounds/sound_effects/snd_select.wav").play()
                 self.current_mode = ActionMode.ERASE
                 self.menu_index = eligable_index
                 self.update_visuals()
@@ -430,7 +430,7 @@ class FileSelectScreen:
 
         if input_mgr.is_just_pressed(Action.CANCEL):
             if self.current_mode == ActionMode.COPY_FROM or self.current_mode == ActionMode.COPY_TO or self.current_mode == ActionMode.ERASE:
-                mixer.Sound("sounds/deltarune_sounds/snd_swing.wav").play()
+                mixer.Sound("sounds/sound_effects/snd_swing.wav").play()
                 self.current_mode = ActionMode.SELECT
                 self.copying_file_index = None
                 self.selected_slot_index = None
@@ -453,12 +453,12 @@ class FileSelectScreen:
                 moved = True
 
         if moved:
-            mixer.Sound(file="sounds/undertale_sounds/snd_squeak.wav").play()
+            mixer.Sound(file="sounds/sound_effects/snd_squeak.wav").play()
             self.update_visuals()
 
         if input_mgr.is_just_pressed(Action.CONFIRM):
             if self.prompt_index == 0: # Start the game / Do the action
-                mixer.Sound("sounds/undertale_sounds/snd_select.wav").play()
+                mixer.Sound("sounds/sound_effects/snd_select.wav").play()
                 if self.current_mode == ActionMode.COPY_TO: # Overwriting a slot
                     try:
                         data = self.game.save_system.load_file(self.copying_file_index)
@@ -495,12 +495,12 @@ class FileSelectScreen:
                 # --- Start the game! ---
                 self.start_game_transition()
             else:
-                mixer.Sound("sounds/undertale_sounds/snd_select.wav").play()
+                mixer.Sound("sounds/sound_effects/snd_select.wav").play()
                 self.close_prompt()
             self.update_visuals()
 
         if input_mgr.is_just_pressed(Action.CANCEL):
-            mixer.Sound("sounds/deltarune_sounds/snd_swing.wav").play()
+            mixer.Sound("sounds/sound_effects/snd_swing.wav").play()
             self.close_prompt()
             self.update_visuals()
         return
