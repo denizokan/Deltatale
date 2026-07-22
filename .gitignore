@@ -7,6 +7,10 @@ __pycache__/
 sprites/DELTARUNE Sprites/
 sprites/UNDERTALE Sprites/
 save_*.json
+html_file.txt
+room_template.json
+room_translator.py
+Rooms.html
 
 .DS_Store
 

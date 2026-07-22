@@ -17,6 +17,7 @@ class Room:
             raise RuntimeError(f"An error has occured while trying to read room data for {self.room_id}.") from e
 
         self.active_ui_elements = []
+        self.debug_mode = False
 
         # Unpack room data
         bg_image_path = self.room_data["bg_image"]
@@ -104,5 +105,86 @@ class Room:
         self.game.camera.update()
         self.game.player.draw(spawn_x, spawn_y, spawn_facing, 0)
         self.game.canvas.coords(self.game.current_room.background, -self.game.camera.x, -self.game.camera.y)
+
+        if self.debug_mode == True: # DEBUG MODE
+            self.toggle_debug()
+            self.game.current_room.toggle_debug()
         
         self.game.transition.fade_from_black(speed=24)
+
+
+    def toggle_debug(self):
+        """Toggles the debug mode on/off. Shows the colission points. 
+        Blue: Walls, Green: Spawn Points, Red: Exit Points, Yellow: Interactables, Pink: Triggers"""
+        if self.debug_mode == False:
+            self.debug_mode = True
+            self.debug_elements = []
+
+            text_x = 10
+            text_y = 20
+            debug_text = self.game.canvas.create_text(
+                text_x,
+                text_y,
+                text="DEBUG MODE",
+                fill="white",
+                font=("Determination Sans", 36, "normal"),
+                anchor="w"
+            )
+            self.game.canvas.tag_raise(debug_text)
+            self.debug_elements.append({"id": debug_text, "type": "text", "coords": (text_x, text_y)})
+
+            self._create_rectangle(list=self.walls, color="blue", width=2)
+            self._create_circle(list=self.spawns, radius=20, color="green")
+            self._create_rectangle(list=self.exits, color="red", width=2)
+            self._create_rectangle(list=self.interactables, color="yellow", width=2)
+            self._create_rectangle(list=self.triggers, color="pink", width=2)
+
+        else:
+            self.debug_mode = False
+            for element in self.debug_elements:
+                self.game.canvas.delete(element["id"])
+            self.debug_elements.clear()
+
+
+    def _create_rectangle(self, list, color, width):
+        coords_list = []
+        for element in list:
+            coords = (element["x1"], element["y1"], element["x2"], element["y2"])
+            coords_list.append(coords)
+
+        for element_box in coords_list:
+            x1, y1, x2, y2 = element_box
+            rectangle = self.game.canvas.create_rectangle(x1 - self.game.camera.x, y1 - self.game.camera.y, x2 - self.game.camera.x, y2 - self.game.camera.y, outline=color, width=width)
+            self.debug_elements.append({"id": rectangle, "type": "rect", "coords": (x1, y1, x2, y2)})
+
+
+    def _create_circle(self, list, radius, color):
+        coords_list = []
+        for element in list:
+            coords = (element["x"], element["y"])
+            coords_list.append(coords)
+
+        for element_coords in coords_list:
+            x, y = element_coords
+            circle = self.game.canvas.create_oval((x - radius) - self.game.camera.x, (y - radius) - self.game.camera.y, (x + radius) - self.game.camera.x, (y + radius) - self.game.camera.y, fill=color)
+            self.debug_elements.append({"id": circle, "type": "circle", "coords": (x, y, radius)})
+
+
+    def update_debug_positions(self):
+        """Updates the debug rectangles/circles positions to respect camera x and y."""
+        if not self.debug_mode:
+            return
+
+        for element in self.debug_elements:
+            if element["type"] == "text":
+                self.game.canvas.tag_raise(element["id"])
+                continue
+
+            elif element["type"] == "rect":
+                x1, y1, x2, y2 = element["coords"]
+                self.game.canvas.coords(element["id"], x1 - self.game.camera.x, y1 - self.game.camera.y, x2 - self.game.camera.x, y2 - self.game.camera.y)
+
+            elif element["type"] == "circle":
+                x, y, radius = element["coords"]
+                x1, y1, x2, y2 = x - radius, y - radius, x + radius, y + radius
+                self.game.canvas.coords(element["id"], x1 - self.game.camera.x, y1 - self.game.camera.y, x2 - self.game.camera.x, y2 - self.game.camera.y)

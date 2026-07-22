@@ -4,35 +4,49 @@
     "music": null,
 
     "walls": [
+        {"x1": 0, "y1": 156, "x2": 280, "y2": 196},
+        {"x1": 362, "y1": 156, "x2": 650, "y2": 196}
     ],
 
     "spawns": [
         {
-            "from_room": "room_area1",
             "x": 320,
-            "y": 710,
+            "y": 680,
+            "from_room": "room_area1",
             "facing": "up"
+        },
+        {
+            "x": 320,
+            "y": 200,
+            "from_room": "room_ruins1",
+            "facing": "down"
         }
     ],
 
     "exits": [
         {
-            "type": "out",
             "x1": 0,
-            "y1": 720,
+            "y1": 684,
             "x2": 640,
-            "y2": 740,
+            "y2": 700,
             "target_room": "room_area1"
+        },
+        {
+            "x1": 280,
+            "y1": 138,
+            "x2": 362,
+            "y2": 172,
+            "target_room": "room_ruins1"
         }
     ],
 
     "triggers": [
         {
-            "id": "flowey_first_interaction",
             "x1": 0,
-            "y1": 680,
+            "y1": 580,
             "x2": 640,
-            "y2": 690
+            "y2": 600,
+            "id": "flowey_first_interaction"
         }
     ],
 

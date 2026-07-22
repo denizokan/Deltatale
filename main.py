@@ -166,6 +166,11 @@ class Main:
             self.camera.update()
             self.canvas.coords(self.current_room.background, -self.camera.x, -self.camera.y)
 
+            # Debug mode:
+            if self.input_manager.is_just_pressed(Action.DEBUG):
+                self.current_room.toggle_debug()
+            if self.current_room.debug_mode == True: self.current_room.update_debug_positions()
+
         self.input_manager.update()
         delay_ms = int(1000 / self.constants.FPS)
         self.root.after(delay_ms, self.game_loop)
