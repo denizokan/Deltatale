@@ -57,13 +57,19 @@ class SaveScreen:
                 return
             
             if self.menu_index == 0: # Player pressed save
-                new_save = self.overwrite_data(self.old_data)
+                new_save = self.overwrite_data(self.old_data, self.interactable)
                 self.save(new_save)
+                return
+
+            if self.menu_index == 1: # Player pressed cancel
+                self.clear()
                 return
         
         if input_mgr.is_just_pressed(Action.CANCEL):
             self.clear()
             return
+
+        if self.saved: return
 
         moved = False
         if input_mgr.is_just_pressed(Action.LEFT):
@@ -72,8 +78,8 @@ class SaveScreen:
                 moved = True
 
         if input_mgr.is_just_pressed(Action.RIGHT):
-            if self.menu_index != 0:
-                self.menu_index -= 1
+            if self.menu_index == 0:
+                self.menu_index += 1
                 moved = True
 
         if moved:
@@ -112,12 +118,13 @@ class SaveScreen:
             target_y = self.box_y1 + 130
             self.game.canvas.coords(self.menu_soul, target_x, target_y)
         else: # Saved the game
-            self.game.canvas.itemconfig(self.ids["name"], color="yellow")
-            self.game.canvas.itemconfig(self.ids["level"], text=f"LV {new_data["level"]}", color="yellow")
-            self.game.canvas.itemconfig(self.ids["playtime"], text=self._playtime_to_str(new_data["playtime"]), color="yellow")
-            self.game.canvas.itemconfig(self.ids["location"], text=new_data["location"], color="yellow")
+            self.game.canvas.itemconfig(self.ids["name"], fill="yellow")
+            self.game.canvas.itemconfig(self.ids["level"], text=f"LV {new_data["level"]}", fill="yellow")
+            self.game.canvas.itemconfig(self.ids["playtime"], text=self._playtime_to_str(new_data["playtime"]), fill="yellow")
+            self.game.canvas.itemconfig(self.ids["location"], text=new_data["location"], fill="yellow")
+            self.game.canvas.delete(self.menu_soul)
             self.game.canvas.delete(self.button_ids[1])
-            self.game.canvas.itemconfig(self.button_ids[0], text="File saved.", color="yellow")
+            self.game.canvas.itemconfig(self.button_ids[0], text="File saved.", fill="yellow")
             
 
     def overwrite_data(self, old_data, interactable):
@@ -259,15 +266,15 @@ class SaveScreen:
                 playtime = 0
 
         minutes_str = minutes
+        if minutes == 0 and seconds == 0:
+            minutes_str = "--"
         if minutes < 10:
             minutes_str = f"0{minutes}"
-        if minutes == 0:
-            minutes_str = "--"
 
         seconds_str = seconds
+        if seconds == 0 and minutes == 0:
+            seconds_str = "--"
         if seconds < 10:
             seconds_str = f"0{seconds}"
-        if seconds == 0:
-            seconds_str = "--"
 
         return f"{minutes_str}:{seconds_str}"

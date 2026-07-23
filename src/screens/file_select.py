@@ -652,15 +652,15 @@ class FileSelectScreen:
                 playtime = 0
         
         minutes_str = minutes
+        if minutes == 0 and seconds == 0:
+            minutes_str = "--"
         if minutes < 10:
             minutes_str = f"0{minutes}"
-        if minutes == 0:
-            minutes_str = "--"
-
+        
         seconds_str = seconds
+        if seconds == 0 and minutes == 0:
+            seconds_str = "--"
         if seconds < 10:
             seconds_str = f"0{seconds}"
-        if seconds == 0:
-            seconds_str = "--"
 
         return f"{minutes_str}:{seconds_str}"
