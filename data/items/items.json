@@ -1,0 +1,40 @@
+{
+    "weapons": [
+        {
+            "id": "pencil",
+            "name": "Pencil",
+            "short_name": "Pencil",
+            "description": "A dull lead pencil. Good for taking notes or poking things.",
+            "attack": 1
+        }
+    ],
+
+    "armors": [
+        {
+            "id": "bandage",
+            "name": "Bandage",
+            "short_name": "Bandage",
+            "description": "It has already been used several times.",
+            "defense": 1
+        }
+    ],
+
+    "healing_items": [
+        {
+            "id": "butterscotch_pie",
+            "name": "Butterscotch",
+            "short_name": "Bscoth Pie",
+            "description": "Butterscotch-cinnamon pie, one slice.",
+            "heal_amount": 99
+        }
+    ],
+
+    "key_items": [
+        {
+            "id": "cell_phone",
+            "name": "Cell Phone",
+            "short_name": "Cell Phone",
+            "description": "It receives calls, but the service is non-existent."
+        }
+    ]
+}

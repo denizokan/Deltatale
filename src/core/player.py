@@ -3,7 +3,7 @@ from src.core.enums import Action
 
 class Player:
     """
-    Handles player overworld movement and tracks the player position.
+    Handles player overworld movement and tracks stats.
     """
 
     def __init__(self, main_game, start_x, start_y, start_facing):
@@ -13,6 +13,13 @@ class Player:
         self.facing = start_facing
 
         self.speed = self.game.constants.PLAYER_SPEED
+
+        # Stats (TODO: Scale later)
+        self.level = 1
+        self.exp = 0
+        self.hp = 20
+        self.money = 0
+        # -----
 
         self.active_characters = []
         self.active_ui_elements = []
@@ -53,6 +60,9 @@ class Player:
 
         if input_mgr.is_just_pressed(Action.CONFIRM):
             self.game.current_room.check_interactable()
+
+        if input_mgr.is_just_pressed(Action.MENU):
+            self.game.menu_screen.open_menu(index=0)
         
         dx, dy = 0, 0
         new_facing = self.facing
