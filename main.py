@@ -8,6 +8,7 @@ from src.core.transition import TransitionManager
 from src.core.player import Player
 from src.core.room import Room
 from src.core.camera import Camera
+from src.screens.menu_screen import MenuScreen
 from src.screens.save_screen import SaveScreen
 from src.screens.file_select import FileSelectScreen
 from src.systems.savesystem import SaveSystem
@@ -42,6 +43,7 @@ class Main:
         mixer.init()
         self.save_system = SaveSystem()
         self.save_screen = SaveScreen(self)
+        self.menu_screen = MenuScreen(self)
         self.transition = TransitionManager(self)
         self.dialogue_system = DialogueSystem(self)
 
@@ -201,6 +203,8 @@ class Main:
                 self.dialogue_system.update()
             elif self.save_screen.is_active: # If save screen is active
                 self.save_screen.handle_input(self.input_manager)
+            elif self.menu_screen.is_active:
+                self.menu_screen.handle_input(self.input_manager)
             else:
                 self.player.update(input_mgr=self.input_manager)
                 self.camera.update()
