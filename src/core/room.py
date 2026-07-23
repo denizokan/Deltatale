@@ -40,6 +40,7 @@ class Room:
 
         # Draw interactables
         for interactable in self.interactables:
+            interactable["interaction_count"] = 0
             if interactable["sprite"] != None:
                 if len(interactable["sprite"]) > 1: # Its animated
                     interactable["image_obj"] = []
@@ -146,10 +147,16 @@ class Room:
 
     def play_interactable(self, interactable):
         """Plays the current interactable."""
+        count = interactable["interaction_count"]
+        interactable["interaction_count"] += 1
+        text_groups = interactable["text"]
+
+        selected_index = min(count, len(text_groups) - 1)
+        chosen_dialogue = text_groups[selected_index]
         if interactable["type"] == Interactable.SAVE_POINT.value:
             mixer.Sound(file="sounds/sound_effects/snd_power.wav").play()
             self.game.dialogue_system.start_dialogue(
-                text=interactable["text"],
+                text=chosen_dialogue,
                 on_complete=lambda: print("TODO: Save screen")
             )
 

@@ -55,48 +55,80 @@
             "sprite": ["sprites/objects/spr_savepoint_0.png", "sprites/objects/spr_savepoint_1.png"],
             "save_name": "Ruins - Entrance",
             "text": [
-                {
-                    "speaker": null,
-                    "dialogue": "* The faint smell of ozone and\n  blasted weed lingers in the air.",
-                    "face": null,
-                    "sound": "GENERIC",
-                    "pos": "bottom"
-                },
-                {
-                    "speaker": null,
-                    "dialogue": "* Knowing that your terrifying\n  friend just completely skipped\n  the tutorial...",
-                    "face": null,
-                    "sound": "GENERIC",
-                    "pos": "bottom"
-                },
-                {
-                    "speaker": null,
-                    "dialogue": "* It fills you with determination.",
-                    "face": null,
-                    "sound": "GENERIC",
-                    "pos": "bottom"
-                },
-                {
-                    "speaker": "SUSIE",
-                    "dialogue": "* Great. First we get\n  ambushed by a psychotic\n  dandelion...",
-                    "face": "SUSIE_ANNOYED",
-                    "sound": "SUSIE",
-                    "pos": "bottom"
-                },
-                {
-                    "speaker": "SUSIE",
-                    "dialogue": "* And now you're just\n  standing there reaching\n  out to nothing.",
-                    "face": "SUSIE_UNIMPRESSED",
-                    "sound": "SUSIE",
-                    "pos": "bottom"
-                },
-                {
-                    "speaker": "SUSIE",
-                    "dialogue": "* Are we gonna get moving,\n  or are you just gonna\n  keep touching the air?",
-                    "face": "SUSIE_NEUTRAL",
-                    "sound": "SUSIE",
-                    "pos": "bottom"
-                }
+                [
+                    {
+                        "speaker": null,
+                        "dialogue": "* The faint smell of ozone and\n  blasted weed lingers in the air.",
+                        "face": null,
+                        "sound": "GENERIC",
+                        "pos": "bottom"
+                    },
+                    {
+                        "speaker": null,
+                        "dialogue": "* Knowing that your terrifying\n  friend just completely skipped\n  the tutorial...",
+                        "face": null,
+                        "sound": "GENERIC",
+                        "pos": "bottom"
+                    },
+                    {
+                        "speaker": null,
+                        "dialogue": "* It fills you with determination.",
+                        "face": null,
+                        "sound": "GENERIC",
+                        "pos": "bottom"
+                    }
+                ],
+                [
+                    {
+                        "speaker": null,
+                        "dialogue": "* The faint smell of ozone and\n  blasted weed lingers in the air.",
+                        "face": null,
+                        "sound": "GENERIC",
+                        "pos": "bottom"
+                    },
+                    {
+                        "speaker": null,
+                        "dialogue": "* Knowing that your terrifying\n  friend just completely skipped\n  the tutorial...",
+                        "face": null,
+                        "sound": "GENERIC",
+                        "pos": "bottom"
+                    },
+                    {
+                        "speaker": null,
+                        "dialogue": "* It fills you with determination.",
+                        "face": null,
+                        "sound": "GENERIC",
+                        "pos": "bottom"
+                    },
+                    {
+                        "speaker": "SUSIE",
+                        "dialogue": "* Uh... Kris?\n* Everything good?",
+                        "face": "SUSIE_NEUTRAL",
+                        "sound": "SUSIE",
+                        "pos": "bottom"
+                    },
+                    {
+                        "speaker": "SUSIE",
+                        "dialogue": "* You're just kind of...\n  reaching out to thin air.",
+                        "face": "SUSIE_AWKWARD",
+                        "sound": "SUSIE",
+                        "pos": "bottom"
+                    },
+                    {
+                        "speaker": "SUSIE",
+                        "dialogue": "* ... Did that weird flower\n  give you a concussion or\n  something?",
+                        "face": "SUSIE_ANNOYED",
+                        "sound": "SUSIE",
+                        "pos": "bottom"
+                    },
+                    {
+                        "speaker": "SUSIE",
+                        "dialogue": "* Come on, let's keep\n  moving.",
+                        "face": "SUSIE_SMILE",
+                        "sound": "SUSIE",
+                        "pos": "bottom"
+                    }
+                ]
             ]
         }
     ]

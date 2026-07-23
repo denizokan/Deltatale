@@ -12,6 +12,7 @@ class InputManager:
             "x": False, "X": False,
             "c": False, "C": False,
             "Return": False,
+            "Escape": False,
             "udiaeresis": False, "Udiaeresis": False # Debug keys (ü, Ü)
         }
         self.pressed_this_frame = {k: False for k in self.keys}
@@ -48,6 +49,7 @@ class InputManager:
 
     def is_pressed(self, action):
         """Checks if a key is being held down continuously (Good for Movement)."""
+        if action == Action.QUIT:      return self.keys["Escape"]
         if action == Action.CANCEL:    return self.keys["x"] or self.keys["X"]
         if action == Action.UP:        return self.keys["Up"]
         if action == Action.DOWN:      return self.keys["Down"]
@@ -74,6 +76,8 @@ class InputManager:
         if action == Action.RIGHT:
             return self.pressed_this_frame["Right"]
 
+        if action == Action.QUIT:
+            return self.pressed_this_frame["Escape"]
         if action == Action.DEBUG: # Debug key check
             return self.pressed_this_frame["udiaeresis"] or self.pressed_this_frame["Udiaeresis"]
 

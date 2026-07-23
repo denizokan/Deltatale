@@ -31,6 +31,10 @@ class Main:
         root.geometry(f"{self.constants.WIDTH}x{self.constants.HEIGHT}+{center_x}+{center_y}")
         root.resizable(False, False)
 
+        self.quit_hold_timer = 0
+        self.quit_text_id = None
+        self.MAX_QUIT_TICKS = 45
+
         self.root = root
 
         self.canvas = tkinter.Canvas(root, width=self.constants.WIDTH, height=self.constants.HEIGHT, bg="black", highlightthickness=0)
@@ -170,6 +174,8 @@ class Main:
         
 
     def game_loop(self):
+        self.handle_quit() # Listen for quit inputs
+
         # State: INTRO -> Waiting for confirm to go to File Select
         if self.state == GameState.INTRO:
             if self.input_manager.is_just_pressed(Action.CONFIRM):
@@ -197,6 +203,53 @@ class Main:
         self.input_manager.update()
         delay_ms = int(1000 / self.constants.FPS)
         self.root.after(delay_ms, self.game_loop)
+
+
+    def handle_quit(self):
+        if self.input_manager.is_pressed(Action.QUIT):
+            self.quit_hold_timer += 1
+
+            FADE_TICKS = 15.0
+            fade_progress = min(1.0, self.quit_hold_timer / FADE_TICKS)
+            current_color = self.get_fade_color(fade_progress)
+
+            dot_count = min(3, self.quit_hold_timer // 12)
+            display_str = f"QUITTING{'.' * dot_count}"
+
+            if self.quit_text_id is None:
+                self.quit_text_id = self.canvas.create_text(
+                    10, 20, 
+                    text=display_str, 
+                    fill=current_color, 
+                    font=("Determination Sans", 24), 
+                    anchor="w"
+                )
+            else:
+                self.canvas.itemconfig(
+                    self.quit_text_id, 
+                    text=display_str, 
+                    fill=current_color
+                )
+
+            if self.quit_hold_timer >= self.MAX_QUIT_TICKS:
+                self.root.destroy()
+                exit()
+
+        else:
+            if self.quit_hold_timer > 0:
+                self.quit_hold_timer = 0
+                if self.quit_text_id is not None:
+                    self.canvas.delete(self.quit_text_id)
+                    self.quit_text_id = None
+
+
+    def get_fade_color(self, progress):
+        """
+        Returns a hex gray color based on progress (0.0 = black, 1.0 = white).
+        """
+        progress = max(0.0, min(1.0, progress))
+        val = int(255 * progress)
+        return f"#{val:02x}{val:02x}{val:02x}"
     
 
 if __name__ == "__main__":
