@@ -119,7 +119,7 @@ class FileSelectScreen:
             playtime_text = self.game.canvas.create_text(
                 x2 - 60,
                 y1 + 25,
-                text=self.playtime_to_str(slot['playtime']),
+                text=self._playtime_to_str(slot['playtime']),
                 fill="gray",
                 font=("Determination Sans", 24, "normal"),
                 anchor="e"
@@ -607,7 +607,7 @@ class FileSelectScreen:
         playtime_text = self.game.canvas.create_text(
             coords[2] - 60,
             coords[1] + 25,
-            text=self.playtime_to_str(save_slot['playtime']),
+            text=self._playtime_to_str(save_slot['playtime']),
             fill="white",
             font=("Determination Sans", 24, "normal"),
             anchor="e"
@@ -634,11 +634,10 @@ class FileSelectScreen:
         for object in self.active_ui_elements:
             self.game.canvas.delete(object)
             
-        print(f"Loading game for slot: {self.selected_slot_index + 1}")
         self.game.root.after(1000, self.game.start_game(index=self.selected_slot_index))
 
 
-    def playtime_to_str(self, num):
+    def _playtime_to_str(self, num):
         """This function takes an integer and converts it into MM:SS format."""
         playtime = int(num)
         minutes = 0

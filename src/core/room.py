@@ -157,7 +157,7 @@ class Room:
             mixer.Sound(file="sounds/sound_effects/snd_power.wav").play()
             self.game.dialogue_system.start_dialogue(
                 text=chosen_dialogue,
-                on_complete=lambda: print("TODO: Save screen")
+                on_complete=lambda: self.game.save_screen.show_save_screen(interactable)
             )
 
     

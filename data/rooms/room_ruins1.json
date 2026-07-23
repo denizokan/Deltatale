@@ -53,7 +53,7 @@
             },
             "type": "SAVE_POINT",
             "sprite": ["sprites/objects/spr_savepoint_0.png", "sprites/objects/spr_savepoint_1.png"],
-            "save_name": "Ruins - Entrance",
+            "location": "Ruins - Entrance",
             "text": [
                 [
                     {

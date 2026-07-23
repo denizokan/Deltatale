@@ -8,6 +8,7 @@ from src.core.transition import TransitionManager
 from src.core.player import Player
 from src.core.room import Room
 from src.core.camera import Camera
+from src.screens.save_screen import SaveScreen
 from src.screens.file_select import FileSelectScreen
 from src.systems.savesystem import SaveSystem
 from src.systems.dialoguesystem import DialogueSystem
@@ -31,10 +32,6 @@ class Main:
         root.geometry(f"{self.constants.WIDTH}x{self.constants.HEIGHT}+{center_x}+{center_y}")
         root.resizable(False, False)
 
-        self.quit_hold_timer = 0
-        self.quit_text_id = None
-        self.MAX_QUIT_TICKS = 45
-
         self.root = root
 
         self.canvas = tkinter.Canvas(root, width=self.constants.WIDTH, height=self.constants.HEIGHT, bg="black", highlightthickness=0)
@@ -44,11 +41,18 @@ class Main:
         self.input_manager = InputManager()
         mixer.init()
         self.save_system = SaveSystem()
+        self.save_screen = SaveScreen(self)
         self.transition = TransitionManager(self)
         self.dialogue_system = DialogueSystem(self)
 
         root.bind("<KeyPress>", self.input_manager.press_key)
         root.bind("<KeyRelease>", self.input_manager.release_key)
+
+        self.quit_hold_timer = 0
+        self.quit_text_id = None
+        self.MAX_QUIT_TICKS = 45
+        self.playtime_ticks = 30
+        self.playtime = 0
 
         # Load Sprites
         self.logo_sprite = tkinter.PhotoImage(file="assets/LOGO.png")
@@ -56,6 +60,7 @@ class Main:
         self.active_ui_elements = []
 
         self.current_room = None
+        self.selected_file_index = None
 
         self.state = GameState.INTRO # Possible states: INTRO, FILE_SELECT, PLAYING, BATTLE, GAMEOVER
         self.setup_intro() # Enter the main menu
@@ -130,6 +135,8 @@ class Main:
                     f"{e}"
                 )
                 exit(1)
+
+        self.selected_file_index = index
         
         data = self.save_system.load_file(index)
         self.camera = Camera(self)
@@ -187,9 +194,13 @@ class Main:
 
         # State: PLAYING -> Handle player movement
         elif self.state == GameState.PLAYING:
+            self.update_playtime()
+            
             if self.dialogue_system.is_active: # If dialogue is active
                 self.dialogue_system.handle_input(self.input_manager)
                 self.dialogue_system.update()
+            elif self.save_screen.is_active: # If save screen is active
+                self.save_screen.handle_input(self.input_manager)
             else:
                 self.player.update(input_mgr=self.input_manager)
                 self.camera.update()
@@ -205,7 +216,16 @@ class Main:
         self.root.after(delay_ms, self.game_loop)
 
 
+    def update_playtime(self):
+        """Adds 1 to playtime every 30 game ticks while player is playing."""
+        self.playtime_ticks -= 1
+        if self.playtime_ticks <= 0:
+            self.playtime += 1
+            self.playtime_ticks = 30
+
+
     def handle_quit(self):
+        """Handles ESC key press."""
         if self.input_manager.is_pressed(Action.QUIT):
             self.quit_hold_timer += 1
 

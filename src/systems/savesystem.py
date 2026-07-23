@@ -38,11 +38,7 @@ class SaveSystem:
             "armor": None,
             "deaths": {},
             "kills": {},
-            "flags": {
-                "toriel_status": None,  
-                "papyrus_status": None,
-                "undyne_status": None
-            }
+            "flags": {}
         }
     
 
