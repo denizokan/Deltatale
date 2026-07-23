@@ -25,7 +25,7 @@ class DialogueSystem:
             y1, y2 = 20, 140
 
         self.text_box = self.game.canvas.create_rectangle(x1, y1, x2, y2, fill="black", outline="white", width=6)
-        self.text_id = self.game.canvas.create_text(x1 + 25, y1 + 17, text="", fill="white", font=("Determination Mono", 27, "normal"), anchor="nw")
+        self.text_id = self.game.canvas.create_text(x1 + 25, y1 + 13, text="", fill="white", font=("Determination Mono", 26, "normal"), anchor="nw")
         self.active_text_elements.extend([self.text_box, self.text_id])
 
 

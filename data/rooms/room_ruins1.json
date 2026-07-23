@@ -45,7 +45,7 @@
     "interactables": [
         {
             "x": 320,
-            "y": 320,
+            "y": 400,
             "type": "save_point",
             "sprite": "sprites/objects/spr_savepoint_0.png",
             "save_name": "Ruins - Entrance",
