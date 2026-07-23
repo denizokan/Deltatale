@@ -209,7 +209,7 @@ class Main:
                 # Debug mode:
                 if self.input_manager.is_just_pressed(Action.DEBUG):
                     self.current_room.toggle_debug()
-                self.current_room.update_positions()
+            self.current_room.update_positions()
 
         self.input_manager.update()
         delay_ms = int(1000 / self.constants.FPS)

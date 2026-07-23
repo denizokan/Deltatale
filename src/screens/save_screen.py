@@ -247,7 +247,7 @@ class SaveScreen:
         self.interactable = None
         self.old_data = None
         self.new_save = None
-        self.saved = None
+        self.saved = False
         self.menu_soul = None
 
 
