@@ -1,5 +1,6 @@
 from tkinter import messagebox
 from pygame import mixer
+from src.core.enums import Action
 
 class MenuScreen:
     """The menu gets triggered if the player presses the [C] key."""
@@ -13,6 +14,7 @@ class MenuScreen:
         self.layer_index = 0
 
         self.active_ui_elements = []
+        self.button_ids = []
 
 
     def open_menu(self, index=0):
@@ -21,21 +23,49 @@ class MenuScreen:
 
         self._draw_main_boxes(index=0)
         self._draw_menu_text()
+        self.update_visuals()
 
 
     def close_menu(self, index=0):
         """Closes the menu with given index. If index is 0, everything is closed."""
-        pass
+        if index == 0: self.clear()
 
 
     def handle_input(self, input_mgr):
         """Handles keyboard inputs while a menu is open."""
-        pass
+        if input_mgr.is_just_pressed(Action.MENU):
+            self.close_menu(index=0)
+            return
+        
+        if input_mgr.is_just_pressed(Action.CANCEL):
+            self.close_menu(self.layer_index)
+            return
+
+        if self.layer_index == 0: # Player is on the ITEM/STAT/CELL selection
+            moved = False
+
+            if input_mgr.is_just_pressed(Action.DOWN):
+                if self.menu_index != 2:
+                    self.menu_index += 1
+                    moved = True
+
+            if input_mgr.is_just_pressed(Action.UP):
+                if self.menu_index != 0:
+                    self.menu_index -= 1
+                    moved = True
+
+            if moved:
+                mixer.Sound(file="sounds/sound_effects/snd_squeak.wav").play()
+                self.update_visuals()
 
 
     def update_visuals(self):
         """Updates selection regarding to keypresses."""
-        pass
+        if self.layer_index == 0: # Player is on the ITEM/STAT/CELL selection
+            x1, y1, x2, y2 = self.game.canvas.bbox(self.button_ids[self.menu_index])
+            target_x = x1 - 20
+            target_y = y1 + ((y2 - y1) // 2) + 3
+            self.game.canvas.coords(self.menu_soul, target_x, target_y)
 
 
     def _draw_main_boxes(self, index):
@@ -56,7 +86,7 @@ class MenuScreen:
         self.action_x1 = self.margin
         self.action_y1 = self.stats_y2 + 15
         self.action_x2 = self.stats_x2
-        self.action_y2 = self.action_y1 + 140
+        self.action_y2 = self.action_y1 + 155
         
         action_box = self.game.canvas.create_rectangle(
             self.action_x1, self.action_y1, self.action_x2, self.action_y2,
@@ -126,16 +156,18 @@ class MenuScreen:
         # Draw the buttons
         for index, item in enumerate(["ITEM", "STAT", "CELL"]):
             button = self.game.canvas.create_text(
-                self.action_x1 + 50, self.action_y1 + 30 + (37 * index),
+                self.action_x1 + 50, self.action_y1 + 35 + (40 * index),
                 text=item,
                 fill="white",
-                font=("Determination Mono", 26, "normal"),
+                font=("Determination Mono", 27, "normal"),
                 anchor="w"
             )
+            self.button_ids.append(button)
             self.active_ui_elements.append(button)
 
         # Draw the soul
         self.menu_soul = self.game.canvas.create_image(0, 0, image=self.game.player_sprite)
+        self.active_ui_elements.append(self.menu_soul)
 
 
     def _draw_stats(self):
@@ -159,6 +191,8 @@ class MenuScreen:
             self.game.canvas.delete(element)
 
         self.active_ui_elements.clear()
+        self.button_ids.clear()
         self.is_active = False
+        self.menu_soul = None
         self.menu_index = 0
         self.layer_index = 0
