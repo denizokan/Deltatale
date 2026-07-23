@@ -2,7 +2,7 @@ import tkinter
 from tkinter import messagebox
 from PIL import Image, ImageTk
 from src.core.constants import Constants
-from src.core.enums import Action, GameState
+from src.core.enums import Action, GameState, Interactable
 from src.core.input import InputManager
 from src.core.transition import TransitionManager
 from src.core.player import Player
@@ -128,31 +128,43 @@ class Main:
                 exit(1)
         
         data = self.save_system.load_file(index)
+        self.camera = Camera(self)
         self.current_room = Room(self, data["room"])
 
-        save_point_x = self.current_room.room_data.get("save_point_x")
-        if save_point_x is None:
+        spawn_info = None
+        for interactable in self.current_room.interactables:
+            if interactable["type"] == Interactable.SAVE_POINT.value:
+                spawn_info = interactable["spawn_info"]
+                break
+
+        if spawn_info is None:
             # It's a room without a save point, or a brand new game!
             spawn_x = 320
             spawn_y = 240
             spawn_facing = "down"
         else:
             # Spawn in front of the save point!
-            spawn_x = save_point_x
-            spawn_y = self.current_room.room_data["save_point_y"]
-            spawn_facing = self.current_room.room_data["save_point_facing"]
+            spawn_x = spawn_info["spawn_x"]
+            spawn_y = spawn_info["spawn_y"]
+            spawn_facing = spawn_info["spawn_facing"]
 
         self.player = Player(self, spawn_x, spawn_y, spawn_facing)
-        self.camera = Camera(self)
+        self.camera.update()
+        self.player.draw(spawn_x, spawn_y, spawn_facing, 0)
 
         for character in self.player.active_characters:
             self.canvas.tag_raise(character)
+
+        if spawn_facing == "down":
+            self.canvas.tag_raise(self.player.active_characters[0]) # Put Kris at top
+        if spawn_facing == "up":
+            self.canvas.tag_raise(self.player.active_characters[0]) # Put Susie at top
         
         self.file_select_screen = None
         self.state = GameState.PLAYING
 
         if hasattr(self.current_room, "music"):
-            self.current_room.music.play(loops=-1)
+            self.root.after(1000, lambda: self.current_room.music.play(loops=-1))
 
         self.transition.fade_from_black(speed=24)
         

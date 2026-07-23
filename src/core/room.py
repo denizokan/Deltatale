@@ -2,7 +2,7 @@ import json
 import os
 from tkinter import PhotoImage
 from pygame import mixer
-from src.core.enums import TextSound
+from src.core.enums import TextSound, Interactable
 
 class Room:
     """Initializes a room."""
@@ -41,9 +41,18 @@ class Room:
         # Draw interactables
         for interactable in self.interactables:
             if interactable["sprite"] != None:
-                interactable_sprite = PhotoImage(file=interactable["sprite"]).zoom(2)
-                interactable["image_obj"] = interactable_sprite
-                canvas_id = self.game.canvas.create_image(interactable["x"] - self.game.camera.x, interactable["y"] - self.game.camera.y, image=interactable_sprite, anchor="center")
+                if len(interactable["sprite"]) > 1: # Its animated
+                    interactable["image_obj"] = []
+                    interactable["frame_index"] = 0
+                    interactable["timer"] = 5
+                    for sprite in interactable["sprite"]:
+                        interactable_sprite = PhotoImage(file=sprite).zoom(2)
+                        interactable["image_obj"].append(interactable_sprite)
+                    canvas_id = self.game.canvas.create_image(interactable["x"] - self.game.camera.x, interactable["y"] - self.game.camera.y, image=interactable["image_obj"][0], anchor="center")
+                else:
+                    interactable_sprite = PhotoImage(file=interactable["sprite"]).zoom(2)
+                    interactable["image_obj"] = interactable_sprite
+                    canvas_id = self.game.canvas.create_image(interactable["x"] - self.game.camera.x, interactable["y"] - self.game.camera.y, image=interactable_sprite, anchor="center")
                 interactable["canvas_id"] = canvas_id
                 self.active_ui_elements.append(canvas_id)
 
@@ -116,8 +125,12 @@ class Room:
         for interactable in self.interactables:
             if "image_obj" in interactable:
                 obj_x, obj_y = interactable["x"], interactable["y"]
-                half_w = interactable["image_obj"].width() / 2
-                half_h = interactable["image_obj"].height() / 2
+                if len(interactable["image_obj"]) > 1: # Animated
+                    half_w = interactable["image_obj"][interactable["frame_index"]].width() / 2
+                    half_h = interactable["image_obj"][interactable["frame_index"]].height() / 2
+                else:
+                    half_w = interactable["image_obj"].width() / 2
+                    half_h = interactable["image_obj"].height() / 2
                 
                 x1, y1 = obj_x - half_w, obj_y - half_h
                 x2, y2 = obj_x + half_w, obj_y + half_h
@@ -133,12 +146,10 @@ class Room:
 
     def play_interactable(self, interactable):
         """Plays the current interactable."""
-        if interactable["type"] == "save_point":
+        if interactable["type"] == Interactable.SAVE_POINT.value:
             mixer.Sound(file="sounds/sound_effects/snd_power.wav").play()
             self.game.dialogue_system.start_dialogue(
                 text=interactable["text"],
-                sound=TextSound.GENERIC,
-                pos="bottom",
                 on_complete=lambda: print("TODO: Save screen")
             )
 
@@ -239,8 +250,12 @@ class Room:
             except KeyError: # Dealing with an interactable
                 if "image_obj" in element:
                     obj_x, obj_y = element["x"], element["y"]
-                    half_w = element["image_obj"].width() / 2
-                    half_h = element["image_obj"].height() / 2
+                    if len(element["image_obj"]) > 1:
+                        half_w = element["image_obj"][element["frame_index"]].width() / 2
+                        half_h = element["image_obj"][element["frame_index"]].height() / 2
+                    else:
+                        half_w = element["image_obj"].width() / 2
+                        half_h = element["image_obj"].height() / 2
                     
                     x1, y1 = obj_x - half_w, obj_y - half_h
                     x2, y2 = obj_x + half_w, obj_y + half_h
@@ -270,9 +285,17 @@ class Room:
 
 
     def update_positions(self):
-        """Updates interactable positions in respect to camera x and y."""
+        """Updates interactable indexes & positions in respect to camera x and y."""
         for interactable in self.interactables:
             canvas_id = interactable["canvas_id"]
+            if len(interactable["image_obj"]) > 0:
+                interactable["timer"] -= 1
+                if interactable["timer"] <= 0:
+                    interactable["frame_index"] += 1
+                    if interactable["frame_index"] > len(interactable["image_obj"]) - 1:
+                        interactable["frame_index"] = 0
+                    interactable["timer"] = 5
+                    self.game.canvas.itemconfig(canvas_id, image=interactable["image_obj"][interactable["frame_index"]])
             self.game.canvas.coords(canvas_id, interactable["x"] - self.game.camera.x, interactable["y"] - self.game.camera.y)
 
         if self.debug_mode: self._update_debug_positions() # DEBUG MODE
