@@ -43,8 +43,8 @@ class MenuScreen:
         # Stats Box
         self.stats_x1 = self.margin
         self.stats_y1 = self.margin
-        self.stats_x2 = self.margin + 150
-        self.stats_y2 = self.margin + 120
+        self.stats_x2 = self.margin + 140
+        self.stats_y2 = self.margin + 110
         
         stats_box = self.game.canvas.create_rectangle(
             self.stats_x1, self.stats_y1, self.stats_x2, self.stats_y2,
@@ -56,7 +56,7 @@ class MenuScreen:
         self.action_x1 = self.margin
         self.action_y1 = self.stats_y2 + 15
         self.action_x2 = self.stats_x2
-        self.action_y2 = self.action_y1 + 180
+        self.action_y2 = self.action_y1 + 140
         
         action_box = self.game.canvas.create_rectangle(
             self.action_x1, self.action_y1, self.action_x2, self.action_y2,
@@ -95,41 +95,41 @@ class MenuScreen:
         ]
 
         name_text = self.game.canvas.create_text(
-            self.margin + 10, self.margin + 10,
+            self.margin + 10, self.margin + 20,
             text=data["name"],
             fill="white",
-            font=("Determination Mono", 24, "normal"),
+            font=("Determination Mono", 26, "normal"),
             anchor="w"
         )
         self.active_ui_elements.append(name_text)
 
         for index, item in enumerate(["LV", "HP", "G"]):
             text = self.game.canvas.create_text(
-                self.margin + 10, self.margin + 10 + (10 * index),
+                self.margin + 10, self.margin + 30 + (20 * (index + 1)),
                 text=item,
                 fill="white",
-                font=("Determination Mono", 12, "normal"),
+                font=("Determination Mono", 18, "normal"),
                 anchor="w"
             )
             self.active_ui_elements.append(text)
 
         for index, item in enumerate(stats):
             text = self.game.canvas.create_text(
-                self.margin + 30, self.margin + 10 + (10 * index),
+                self.margin + 50, self.margin + 30 + (20 * (index + 1)),
                 text=item,
                 fill="white",
-                font=("Determination Mono", 12, "normal"),
+                font=("Determination Mono", 18, "normal"),
                 anchor="w"
             )
             self.active_ui_elements.append(text)
 
         # Draw the buttons
-        for index, item in enumerate(["ITEM", "STATS", "CELL"]):
+        for index, item in enumerate(["ITEM", "STAT", "CELL"]):
             button = self.game.canvas.create_text(
-                self.actionx1 + 30, self.action_y1 + 20 + (20 * index),
+                self.action_x1 + 50, self.action_y1 + 30 + (37 * index),
                 text=item,
                 fill="white",
-                font=("Determination Mono", 24, "normal"),
+                font=("Determination Mono", 26, "normal"),
                 anchor="w"
             )
             self.active_ui_elements.append(button)
