@@ -64,7 +64,7 @@ class Main:
         self.current_room = None
         self.selected_file_index = None
 
-        self.state = GameState.INTRO # Possible states: INTRO, FILE_SELECT, PLAYING, BATTLE, GAMEOVER
+        self.state = GameState.INTRO # Possible states: INTRO, FILE_SELECT, PLAYING, CUTSCENE, BATTLE, GAMEOVER
         self.setup_intro() # Enter the main menu
 
         self.game_loop() # Start the game loop
