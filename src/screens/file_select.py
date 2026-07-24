@@ -218,6 +218,9 @@ class FileSelectScreen:
 
             self.game.canvas.coords(self.menu_soul, target_x, target_y)
 
+            if self.current_mode == ActionMode.COPY_TO or self.current_mode == ActionMode.ERASE:
+                self.game.canvas.itemconfig(self.slot_visual_ids[self.selected_slot_index]['box'], outline="red")
+
             button_elements = self.prompt_ui_elements[1:]
             for index, button in enumerate(button_elements):
                 if self.prompt_index == index:
@@ -526,6 +529,7 @@ class FileSelectScreen:
             prompt_msg = f"Overwrite file slot {slot_index + 1}?"
         elif self.current_mode == ActionMode.ERASE:
             prompt_msg = f"Permanently erase file slot {slot_index + 1}?"
+            self.game
         else:
             if self.game.save_system.exists(slot_index):
                 prompt_msg = f"Continue DELTATALE on slot {slot_index + 1}?"
