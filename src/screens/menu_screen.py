@@ -159,7 +159,7 @@ class MenuScreen:
                 self.action_x1 + 50, self.action_y1 + 35 + (40 * index),
                 text=item,
                 fill="white",
-                font=("Determination Mono", 27, "normal"),
+                font=("Determination Mono", 26, "normal"),
                 anchor="w"
             )
             self.button_ids.append(button)
