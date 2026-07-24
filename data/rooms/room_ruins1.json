@@ -102,21 +102,21 @@
                     },
                     {
                         "speaker": "SUSIE",
-                        "dialogue": "* Uh... Kris?\\n* Everything \\c[yellow]good\\c[white]?",
+                        "dialogue": "* Uh... Kris?\\n* Everything good?",
                         "face": "SUSIE_NEUTRAL",
                         "sound": "SUSIE",
                         "pos": "bottom"
                     },
                     {
                         "speaker": "SUSIE",
-                        "dialogue": "* You're just kind of...\\n  \\sp[5]reaching out to thin air.",
+                        "dialogue": "* You're just kind of...\\n  reaching out to thin air.",
                         "face": "SUSIE_AWKWARD",
                         "sound": "SUSIE",
                         "pos": "bottom"
                     },
                     {
                         "speaker": "SUSIE",
-                        "dialogue": "* ... \\sp[5]\\s[1]Did that weird flower\\n  give you a \\d[30]concussion or\\n  something?",
+                        "dialogue": "* ... Did that weird flower\\n  give you a concussion or\\n  something?",
                         "face": "SUSIE_ANNOYED",
                         "sound": "SUSIE",
                         "pos": "bottom"

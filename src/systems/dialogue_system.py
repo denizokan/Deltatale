@@ -230,7 +230,7 @@ class DialogueSystem:
                 is_command = True
             
             if value["type"] == "shake":
-                self.shake_intensity = value["value"]
+                self.shake_intensity = float(value["value"])
                 if self.shake_intensity > 0: self.is_shaking = True
                 else: self.is_shaking = False
                 is_command = True
