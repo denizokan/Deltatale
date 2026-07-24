@@ -11,3 +11,5 @@ class CutsceneManager:
         self.cutscene_registry = {
             "flowey_first_interaction": FloweyIntroCutscene
         }
+
+        
