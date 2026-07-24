@@ -11,8 +11,8 @@ from src.core.camera import Camera
 from src.screens.menu_screen import MenuScreen
 from src.screens.save_screen import SaveScreen
 from src.screens.file_select import FileSelectScreen
-from src.systems.savesystem import SaveSystem
-from src.systems.dialoguesystem import DialogueSystem
+from src.systems.save_system import SaveSystem
+from src.systems.dialogue_system import DialogueSystem
 from pygame import mixer
 
 class Main:

@@ -147,17 +147,23 @@ class Room:
 
     def play_interactable(self, interactable):
         """Plays the current interactable."""
-        count = interactable["interaction_count"]
-        interactable["interaction_count"] += 1
-        text_groups = interactable["text"]
+        count = interactable.get("interaction_count", 0)
+        interactable["interaction_count"] = count + 1
 
-        selected_index = min(count, len(text_groups) - 1)
-        chosen_dialogue = text_groups[selected_index]
-        if interactable["type"] == Interactable.SAVE_POINT.value:
+        raw_text_data = interactable.get("text", [])
+
+        if interactable.get("type") == Interactable.SAVE_POINT.value:
             mixer.Sound(file="sounds/sound_effects/snd_power.wav").play()
+            
             self.game.dialogue_system.start_dialogue(
-                text=chosen_dialogue,
+                text=raw_text_data,
+                interaction_index=count,
                 on_complete=lambda: self.game.save_screen.show_save_screen(interactable)
+            )
+        else:
+            self.game.dialogue_system.start_dialogue(
+                text=raw_text_data,
+                interaction_index=count
             )
 
     

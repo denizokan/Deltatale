@@ -38,14 +38,21 @@ class DialogueSystem:
             self.active_text_elements.extend([self.text_box, self.text_id])
 
 
-    def start_dialogue(self, text, on_complete=None):
+    def start_dialogue(self, text, interaction_index=0, on_complete=None):
         """Freezes the player inputs and starts displaying dialogue."""
         if self.is_active: raise RuntimeError("Cannot start a new dialogue because another one is already being shown.")
 
         # Reset old variables
         self.close_dialogue()
 
-        self.text = text
+        if isinstance(text, dict):
+            self.text = [text]
+        elif isinstance(text, list) and len(text) > 0 and isinstance(text[0], list):
+            clamped_index = min(interaction_index, len(text) - 1)
+            self.text = text[clamped_index]
+        else:
+            self.text = text
+
         self.on_complete_callback = on_complete
 
         self.load_page(0)
