@@ -43,34 +43,48 @@ class Character(Enum):
 
 class Portraits(Enum):
     """Contains character portraits. Check with Portraits.VALUE"""
-    _portraits_folder: ClassVar[str] = "sprites/characters/susie/portraits"
+    _portraits_folder: ClassVar[str] = "sprites/characters"
 
     # Susie
-    SUSIE_NEUTRAL = f"{_portraits_folder}/spr_face_s0_0.png"
-    SUSIE_SMILE = f"{_portraits_folder}/spr_face_s1_0.png"
-    SUSIE_SMIRK = f"{_portraits_folder}/spr_face_s2_0.png"
-    SUSIE_MANIAC = f"{_portraits_folder}/spr_face_s3_0.png"
-    SUSIE_GRIN = f"{_portraits_folder}/spr_face_s4_0.png"
-    SUSIE_SWEAT_NEUTRAL = f"{_portraits_folder}/spr_face_s5_0.png"
-    SUSIE_SWEAT_SMILE = f"{_portraits_folder}/spr_face_s6_0.png"
-    SUSIE_SWEAT_MANIAC = f"{_portraits_folder}/spr_face_s7_0.png"
-    SUSIE_ANNOYED = f"{_portraits_folder}/spr_face_s8_0.png"
-    SUSIE_SWEAT_MANIAC_NO_EYE = f"{_portraits_folder}/spr_face_s9_0.png"
-    SUSIE_PISSED = f"{_portraits_folder}/spr_face_sA_0.png"
-    SUSIE_ROAR = f"{_portraits_folder}/spr_face_sB_0.png"
-    SUSIE_ROAR2 = f"{_portraits_folder}/spr_face_sB_1.png"
-    SUSIE_LOOK_AWAY = f"{_portraits_folder}/spr_face_sC_0.png"
-    SUSIE_SMILE_SIDE = f"{_portraits_folder}/spr_face_sD_0.png"
-    SUSIE_UNIMPRESSED = f"{_portraits_folder}/spr_face_susie_alt_1.png"
-    SUSIE_HAPPY_TEETH = f"{_portraits_folder}/spr_face_susie_alt_2.png"
-    SUSIE_UNIMPRESSED_SMIRK = f"{_portraits_folder}/spr_face_susie_alt_3.png"
-    SUSIE_UNHAPPY_SMIRK = f"{_portraits_folder}/spr_face_susie_alt_4.png"
-    SUSIE_DERANGED = f"{_portraits_folder}/spr_face_susie_alt_5.png"
-    SUSIE_AWKWARD = f"{_portraits_folder}/spr_face_susie_alt_6.png"
-    SUSIE_HAPPY = f"{_portraits_folder}/spr_face_susie_alt_7.png"
-    SUSIE_SMIRK_AWKWARD = f"{_portraits_folder}/spr_face_susie_alt_8.png"
-    SUSIE_UNIMPRESSED_SMIRK2 = f"{_portraits_folder}/spr_face_susie_alt_9.png"
+    SUSIE_NEUTRAL = f"{_portraits_folder}/susie/portraits/susie_neutral.png"
+    SUSIE_SMILE = f"{_portraits_folder}/susie/portraits/susie_smile.png"
+    SUSIE_SMIRK = f"{_portraits_folder}/susie/portraits/susie_smirk.png"
+    SUSIE_MANIAC = f"{_portraits_folder}/susie/portraits/susie_maniac.png"
+    SUSIE_GRIN = f"{_portraits_folder}/susie/portraits/susie_grin.png"
+    SUSIE_SWEAT_NEUTRAL = f"{_portraits_folder}/susie/portraits/susie_sweat_neutral.png"
+    SUSIE_SWEAT_SMILE = f"{_portraits_folder}/susie/portraits/susie_sweat_smile.png"
+    SUSIE_SWEAT_MANIAC = f"{_portraits_folder}/susie/portraits/susie_sweat_maniac.png"
+    SUSIE_ANNOYED = f"{_portraits_folder}/susie/portraits/susie_annoyed.png"
+    SUSIE_SWEAT_MANIAC_NO_EYE = f"{_portraits_folder}/susie/portraits/susie_sweat_maniac_no_eye.png"
+    SUSIE_PISSED = f"{_portraits_folder}/susie/portraits/susie_pissed.png"
+    SUSIE_ROAR = f"{_portraits_folder}/susie/portraits/susie_roar.png"
+    SUSIE_ROAR_2 = f"{_portraits_folder}/susie/portraits/susie_roar_2.png"
+    SUSIE_LOOK_AWAY = f"{_portraits_folder}/susie/portraits/susie_look_away.png"
+    SUSIE_SMILE_SIDE = f"{_portraits_folder}/susie/portraits/susie_smile_side.png"
+    SUSIE_UNIMPRESSED = f"{_portraits_folder}/susie/portraits/susie_unimpressed.png"
+    SUSIE_UNIMPRESSED_2 = f"{_portraits_folder}/susie/portraits/susie_unimpressed_2.png"
+    SUSIE_HAPPY_TEETH = f"{_portraits_folder}/susie/portraits/susie_happy_teeth.png"
+    SUSIE_UNIMPRESSED_SMIRK = f"{_portraits_folder}/susie/portraits/susie_unimpressed_smirk.png"
+    SUSIE_UNIMPRESSED_SMIRK_2 = f"{_portraits_folder}/susie/portraits/susie_unimpressed_smirk_2.png"
+    SUSIE_UNHAPPY_SMIRK = f"{_portraits_folder}/susie/portraits/susie_unhappy_smirk.png"
+    SUSIE_DERANGED = f"{_portraits_folder}/susie/portraits/susie_deranged.png"
+    SUSIE_AWKWARD = f"{_portraits_folder}/susie/portraits/susie_awkward.png"
+    SUSIE_HAPPY = f"{_portraits_folder}/susie/portraits/susie_happy.png"
+    SUSIE_SMIRK_AWKWARD = f"{_portraits_folder}/susie/portraits/susie_smirk_awkward.png"
 
+    # Flowey
+    FLOWEY_NEUTRAL = f"{_portraits_folder}/flowey/portraits/flowey_neutral.png"
+    FLOWEY_SMILE = f"{_portraits_folder}/flowey/portraits/flowey_smile.png"
+    FLOWEY_WINK = f"{_portraits_folder}/flowey/portraits/flowey_wink.png"
+    FLOWEY_SMILE_ANNOYED = f"{_portraits_folder}/flowey/portraits/flowey_smile_annoyed.png"
+    FLOWEY_PISSED = f"{_portraits_folder}/flowey/portraits/flowey_pissed.png"
+    FLOWEY_ANGRY = f"{_portraits_folder}/flowey/portraits/flowey_angry.png"
+    FLOWEY_WORRIED = f"{_portraits_folder}/flowey/portraits/flowey_worried.png"
+    FLOWEY_SAD = f"{_portraits_folder}/flowey/portraits/flowey_sad.png"
+    FLOWEY_SCARED = f"{_portraits_folder}/flowey/portraits/flowey_scared.png"
+    FLOWEY_SCARY = f"{_portraits_folder}/flowey/portraits/flowey_scary.png"
+    FLOWEY_MANIAC = f"{_portraits_folder}/flowey/portraits/flowey_maniac.png"
+    FLOWEY_MANIAC_2 = f"{_portraits_folder}/flowey/portraits/flowey_maniac_2.png"
 
 
 class TextSound(Enum):
@@ -82,7 +96,10 @@ class TextSound(Enum):
     #SUSIE_LAUGH = auto()
     #SUSIE_ROAR = auto()
     #SUSIE_SURPRISE = auto()
+
     FLOWEY = f"{_sound_folder}/snd_floweytalk1.wav"
+    FLOWEY_EVIL = f"{_sound_folder}/snd_floweytalk2.wav"
+
     TORIEL = f"{_sound_folder}/snd_txttor.wav"
 
 class Interactable(Enum):

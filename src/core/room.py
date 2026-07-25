@@ -82,6 +82,11 @@ class Room:
             if (x1 <= target_x <= x2 and y1 <= target_y <= y2): return False
 
         return True
+
+
+    def check_trigger(self):
+        """Checks if the player has stepped on a cutscene trigger."""
+        pass
     
 
     def check_exit(self, target_x, target_y):

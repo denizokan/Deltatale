@@ -197,16 +197,25 @@ class Main:
         # State: PLAYING -> Handle player movement
         elif self.state == GameState.PLAYING:
             self.update_playtime()
+
+            if self.cutscene_manager.is_active:
+                self.cutscene_manager.update()
             
             if self.dialogue_system.is_active: # If dialogue is active
                 self.dialogue_system.handle_input(self.input_manager)
                 self.dialogue_system.update()
+
             elif self.save_screen.is_active: # If save screen is active
                 self.save_screen.handle_input(self.input_manager)
+
             elif self.menu_screen.is_active:
                 self.menu_screen.handle_input(self.input_manager)
+
             else:
-                self.player.update(input_mgr=self.input_manager)
+                is_cinematic = self.cutscene_manager.is_active and self.cutscene_manager.blocks_player
+                if not is_cinematic:
+                    self.player.update(input_mgr=self.input_manager)
+                    
                 self.camera.update()
                 self.canvas.coords(self.current_room.background, -self.camera.x, -self.camera.y)
 

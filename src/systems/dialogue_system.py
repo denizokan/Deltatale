@@ -111,6 +111,8 @@ class DialogueSystem:
 
         if input_mgr.is_just_pressed(Action.CANCEL):
             if self.is_line_complete: return
+            for token in self.tokenized_text[self.token_index]:
+                if token["type"] == "skip": return
             self.is_line_complete = True
             self._print_remaining_text()
             self.talk_sound.play()
@@ -154,6 +156,15 @@ class DialogueSystem:
                 elif token["type"] == "newline":
                     self.text_coords = (self.og_text_coords[0], self.text_coords[1])
                     self.cursor_y += 1
+                elif token["type"] == "skip":
+                    self.current_page += 1
+                    if self.current_page >= len(self.text):
+                        self.close_dialogue(isDone=True)
+                        return
+                    
+                    self.close_dialogue()
+                    self.load_page(self.current_page)
+                    return
                 
                 self.token_index += 1
                 
@@ -358,6 +369,9 @@ class DialogueSystem:
         Newlines:
         \\n            : Moves the virtual cursor to the beginning of the next line.
 
+        Skips:
+        \\sk           : Skips to the next dialogue automatically without player input.
+
         Example Usage:
         --------------
         Raw String:
@@ -400,6 +414,13 @@ class DialogueSystem:
                 commands.append({
                     "command": "newline",
                     "index": (index, index + 1),
+                    "value": None
+                })
+
+            elif char == "\\" and "".join([text_list[index + 1], text_list[index + 2]]) == "sk": # Skip
+                commands.append({
+                    "command": "skip",
+                    "index": (index, index + 2),
                     "value": None
                 })
 
