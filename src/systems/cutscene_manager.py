@@ -24,23 +24,20 @@ class CutsceneManager:
         self.cutscene_cls = self.cutscene_registry.get(cutscene_id, None)
         if self.cutscene_cls == None: raise RuntimeError(f"No cutscene found with ID {cutscene_id}.")
 
-        self.game.state = GameState.CUTSCENE
-        self.active_cutscene = cutscene_id
-        self.cutscene_cls(self.game, self)
+        self.active_cutscene = self.cutscene_cls(self.game, self)
 
 
     def update(self):
         """Runs every game tick to update cutscene timeline."""
         if self.active_cutscene == None: return
 
-        self.cutscene_cls.update()
+        self.active_cutscene.update()
 
 
     def stop_cutscene(self):
         """Ends the current cutscene and hands control to the player manager classes."""
         if self.active_cutscene == None and self.cutscene_cls == None: return
 
-        self.game.state = GameState.PLAYING
         self.active_cutscene = None
         self.cutscene_cls = None
 

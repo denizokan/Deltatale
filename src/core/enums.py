@@ -29,9 +29,8 @@ class GameState(Enum):
     INTRO = 0
     FILE_SELECT = 1
     PLAYING = 2
-    CUTSCENE = 3
-    BATTLE = 4
-    GAMEOVER = 5
+    BATTLE = 3
+    GAMEOVER = 4
 
 class Character(Enum):
     """Contains all characters. Check with Character.VALUE"""

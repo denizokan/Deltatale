@@ -13,6 +13,7 @@ from src.screens.save_screen import SaveScreen
 from src.screens.file_select import FileSelectScreen
 from src.systems.save_system import SaveSystem
 from src.systems.dialogue_system import DialogueSystem
+from src.systems.cutscene_manager import CutsceneManager
 from pygame import mixer
 
 class Main:
@@ -45,6 +46,7 @@ class Main:
         self.save_screen = SaveScreen(self)
         self.menu_screen = MenuScreen(self)
         self.transition = TransitionManager(self)
+        self.cutscene_manager = CutsceneManager(self)
         self.dialogue_system = DialogueSystem(self)
 
         root.bind("<KeyPress>", self.input_manager.press_key)
@@ -64,7 +66,7 @@ class Main:
         self.current_room = None
         self.selected_file_index = None
 
-        self.state = GameState.INTRO # Possible states: INTRO, FILE_SELECT, PLAYING, CUTSCENE, BATTLE, GAMEOVER
+        self.state = GameState.INTRO # Possible states: INTRO, FILE_SELECT, PLAYING, BATTLE, GAMEOVER
         self.setup_intro() # Enter the main menu
 
         self.game_loop() # Start the game loop
@@ -198,7 +200,7 @@ class Main:
         elif self.state == GameState.PLAYING:
             self.update_playtime()
 
-            if self.cutscene_manager.is_active:
+            if self.cutscene_manager.active_cutscene != None:
                 self.cutscene_manager.update()
             
             if self.dialogue_system.is_active: # If dialogue is active
@@ -212,10 +214,10 @@ class Main:
                 self.menu_screen.handle_input(self.input_manager)
 
             else:
-                is_cinematic = self.cutscene_manager.is_active and self.cutscene_manager.blocks_player
+                is_cinematic = self.cutscene_manager.active_cutscene != None and self.cutscene_manager.blocks_player
                 if not is_cinematic:
                     self.player.update(input_mgr=self.input_manager)
-                    
+
                 self.camera.update()
                 self.canvas.coords(self.current_room.background, -self.camera.x, -self.camera.y)
 

@@ -134,6 +134,7 @@ class Player:
         self.draw(sx, sy, s_facing, s_frame)
             
         self.game.current_room.check_exit(self.x, self.y)
+        self.game.current_room.check_trigger(self.x, self.y)
 
 
     def draw(self, sx, sy, s_facing, s_frame):

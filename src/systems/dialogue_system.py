@@ -111,7 +111,7 @@ class DialogueSystem:
 
         if input_mgr.is_just_pressed(Action.CANCEL):
             if self.is_line_complete: return
-            for token in self.tokenized_text[self.token_index]:
+            for token in self.tokenized_text[self.token_index:]:
                 if token["type"] == "skip": return
             self.is_line_complete = True
             self._print_remaining_text()
@@ -124,12 +124,12 @@ class DialogueSystem:
 
         # Update shaking text:
         for text in self.shaking_text_ids:
-            id = text["id"]
+            item_id = text["id"]
             x, y = text["pos"]
             intensity = text["intensity"]
             new_x = uniform(x - intensity, x + intensity)
             new_y = uniform(y - intensity, y + intensity)
-            self.game.canvas.coords(id, new_x, new_y)
+            self.game.canvas.coords(item_id, new_x, new_y)
         # --------------------
 
         if self.is_line_complete: return
@@ -154,8 +154,8 @@ class DialogueSystem:
                     self.token_index += 1
                     return
                 elif token["type"] == "newline":
-                    self.text_coords = (self.og_text_coords[0], self.text_coords[1])
                     self.cursor_y += 1
+                    self.text_coords = (self.og_text_coords[0], self.og_text_coords[1] + (self.cursor_y * 35))
                 elif token["type"] == "skip":
                     self.current_page += 1
                     if self.current_page >= len(self.text):
@@ -196,9 +196,8 @@ class DialogueSystem:
                         "intensity": float(self.shake_intensity)
                     })
 
-                x1, y1, x2, y2 = self.game.canvas.bbox(text_id)
-                spacing = x2 - x1 - 2.8
-                self.text_coords = (x + spacing, self.og_text_coords[1] + (self.cursor_y * 35))
+                fixed_char_width = 15 
+                self.text_coords = (x + fixed_char_width, self.og_text_coords[1] + (self.cursor_y * 35))
 
                 # Apply pauses
                 if self.typewriter_delay == self.game.constants.DEFAULT_TYPEWRITER_TIMER:
@@ -213,7 +212,7 @@ class DialogueSystem:
 
                     if just_typed_char in [",", ":", ";", ")"]:
                         self.typewriter_timer += 5
-                    elif just_typed_char in [".", "!", "?"] and not next_char in [".", ")", '"', "'"]:
+                    elif just_typed_char in [".", "!", "?"] and not next_char in [".", "?", "!", ")", '"', "'"]:
                         self.typewriter_timer += 10
                 # ------------
 
@@ -248,8 +247,8 @@ class DialogueSystem:
             
             # Print the letter
             if value["type"] == "newline":
-                self.text_coords = (self.og_text_coords[0], self.text_coords[1])
                 self.cursor_y += 1
+                self.text_coords = (self.og_text_coords[0], self.og_text_coords[1] + (self.cursor_y * 35))
                 is_command = True
             
             if is_command:
@@ -276,9 +275,8 @@ class DialogueSystem:
                         "intensity": float(self.shake_intensity)
                     })
             
-                x1, y1, x2, y2 = self.game.canvas.bbox(text_id)
-                spacing = x2 - x1 - 2.8
-                self.text_coords = (x + spacing, self.og_text_coords[1] + (self.cursor_y * 35))
+                fixed_char_width = 15
+                self.text_coords = (x + fixed_char_width, self.og_text_coords[1] + (self.cursor_y * 35))
             
                 if self.token_index == len(self.tokenized_text) - 1:
                     self.is_line_complete = True
