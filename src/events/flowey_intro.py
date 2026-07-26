@@ -182,7 +182,7 @@ class FloweyIntroCutscene:
         def _fade_frame(frame_index):
             if frame_index < len(ghost_array):
                 self.game.canvas.itemconfig(ghost_id, image=ghost_array[frame_index])
-                self.game.root.after(30, lambda: _fade_frame(frame_index + 1))
+                self.game.root.after(40, lambda: _fade_frame(frame_index + 1))
             else:
                 self.game.canvas.delete(ghost_id)
 

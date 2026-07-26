@@ -9,7 +9,7 @@
         },
         {
             "speaker": "FLOWEY",
-            "dialogue": "* Hmm...\\n* You're new to the\\n  underground-\\d[5]\\sk",
+            "dialogue": "* Hmm...\\n* You're new to the\\n  underground-\\d[3]\\sk",
             "face": "FLOWEY_SMILE",
             "sound": "FLOWEY",
             "pos": "top"
@@ -51,7 +51,14 @@
         },
         {
             "speaker": "SUSIE",
-            "dialogue": "* Look, we don't give a\\n  crap about your little\\n  'tutorial'.",
+            "dialogue": "* We're not interested.",
+            "face": "SUSIE_ANNOYED",
+            "sound": "SUSIE",
+            "pos": "top"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* ... Now, will you move\\n  aside or will I have to\\n  do it by force?",
             "face": "SUSIE_ANNOYED",
             "sound": "SUSIE",
             "pos": "top"
@@ -86,7 +93,7 @@
         },
         {
             "speaker": "SUSIE",
-            "dialogue": "* A dumb little flower\\n  teaching self-defense? I\\n  don't have time for this.",
+            "dialogue": "* A dumb little flower\\n  teaching self-defense?\\n* I'm good, thanks.",
             "face": "SUSIE_GRIN",
             "sound": "SUSIE",
             "pos": "top"
@@ -123,7 +130,7 @@
         },
         {
             "speaker": "FLOWEY",
-            "dialogue": "* Look, I might look like a\\n  flower, but-\\d[5]\\sk",
+            "dialogue": "* Look, I might look like a\\n  flower, but-\\d[3]\\sk",
             "face": "FLOWEY_NEUTRAL",
             "sound": "FLOWEY",
             "pos": "top"
