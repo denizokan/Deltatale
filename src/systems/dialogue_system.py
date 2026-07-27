@@ -29,6 +29,7 @@ class DialogueSystem:
         self.typewriter_timer = self.game.constants.DEFAULT_TYPEWRITER_TIMER
         self.is_line_complete = False
 
+        self.actors = None
         self.active_text_elements = []
         self.shaking_text_ids = []
 
@@ -54,7 +55,7 @@ class DialogueSystem:
             self.text_coords = (x1 + 25, y1 + 13)
 
 
-    def start_dialogue(self, text, interaction_index=0, on_complete=None):
+    def start_dialogue(self, text, interaction_index=0, actors=None, on_complete=None):
         """Freezes the player inputs and starts displaying dialogue."""
         if self.is_active: raise RuntimeError("Cannot start a new dialogue because another one is already being shown.")
 
@@ -69,6 +70,7 @@ class DialogueSystem:
         else:
             self.text = text
 
+        self.actors = actors
         self.on_complete_callback = on_complete
 
         self.load_page(0)
@@ -80,6 +82,16 @@ class DialogueSystem:
     def load_page(self, index):
         page_data = self.text[index]
         self.close_dialogue()
+
+        current_speaker = page_data.get("speaker", "NONE")
+
+        if self.actors:
+            for actor, interactable in self.actors.items():
+                if current_speaker == actor:
+                    interactable["is_speaking"] = True
+                else:
+                    interactable["is_speaking"] = False
+
         self.talk_sound = mixer.Sound(file=self._get_sound_path(TextSound[page_data["sound"]]))
         self.draw_text_box(page_data)
 
@@ -221,6 +233,9 @@ class DialogueSystem:
                     self.talk_sound.play()
 
                 if self.token_index == len(self.tokenized_text) - 1:
+                    if self.actors:
+                        for interactable in self.actors.values():
+                            interactable["is_speaking"] = False
                     self.is_line_complete = True
                     return
 
@@ -279,6 +294,9 @@ class DialogueSystem:
                 self.text_coords = (x + fixed_char_width, self.og_text_coords[1] + (self.cursor_y * 35))
             
                 if self.token_index == len(self.tokenized_text) - 1:
+                    if self.actors:
+                        for interactable in self.actors.values():
+                            interactable["is_speaking"] = False
                     self.is_line_complete = True
                     break
             
@@ -306,12 +324,17 @@ class DialogueSystem:
         self.visible_char_count = 0
         self.typewriter_timer = self.game.constants.DEFAULT_TYPEWRITER_TIMER
         self.is_line_complete = False
+
+        if self.actors:
+            for interactable in self.actors.values():
+                interactable["is_speaking"] = False
         
         for element in self.active_text_elements:
             self.game.canvas.delete(element)
         self.active_text_elements = []
 
         if isDone:
+            self.actors = None
             self.current_page = 0
             self.is_active = False
             self.game.current_room.is_paused = False

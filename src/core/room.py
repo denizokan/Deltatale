@@ -168,6 +168,8 @@ class Room:
         interactable["interaction_count"] = count + 1
 
         raw_text_data = interactable.get("text", [])
+        if len(raw_text_data) == 0:
+            return
 
         if interactable.get("type") == Interactable.SAVE_POINT.value:
             mixer.Sound(file="sounds/sound_effects/snd_power.wav").play()
@@ -176,6 +178,12 @@ class Room:
                 text=raw_text_data,
                 interaction_index=count,
                 on_complete=lambda: self.game.save_screen.show_save_screen(interactable)
+            )
+        elif interactable.get("type") == Interactable.NPC.value:
+            self.game.dialogue_system.start_dialogue(
+                text=raw_text_data,
+                interaction_index=count,
+                actors={interactable["name"]: interactable}
             )
         else:
             self.game.dialogue_system.start_dialogue(
@@ -317,15 +325,31 @@ class Room:
     def update_positions(self):
         """Updates interactable indexes & positions in respect to camera x and y."""
         for interactable in self.interactables:
+            if interactable.get("is_battling", False): continue
             canvas_id = interactable["canvas_id"]
             if len(interactable["image_obj"]) > 0:
-                interactable["timer"] -= 1
-                if interactable["timer"] <= 0:
-                    interactable["frame_index"] += 1
-                    if interactable["frame_index"] > len(interactable["image_obj"]) - 1:
-                        interactable["frame_index"] = 0
-                    interactable["timer"] = 5
-                    self.game.canvas.itemconfig(canvas_id, image=interactable["image_obj"][interactable["frame_index"]])
+                if interactable["type"] == "SAVE_POINT":
+                    interactable["timer"] -= 1
+                    if interactable["timer"] <= 0:
+                        interactable["frame_index"] += 1
+                        if interactable["frame_index"] > len(interactable["image_obj"]) - 1:
+                            interactable["frame_index"] = 0
+                        interactable["timer"] = 5
+                        self.game.canvas.itemconfig(canvas_id, image=interactable["image_obj"][interactable["frame_index"]])
+                elif interactable["type"] == "NPC":
+                    if interactable.get("is_speaking", False):
+                        interactable["timer"] -= 1
+                        if interactable["timer"] <= 0:
+                            interactable["frame_index"] += 1
+                            if interactable["frame_index"] > len(interactable["image_obj"]) - 1:
+                                interactable["frame_index"] = 0
+                            interactable["timer"] = 5
+                            
+                            self.game.canvas.itemconfig(canvas_id, image=interactable["image_obj"][interactable["frame_index"]])
+                    else:
+                        if interactable.get("frame_index", 0) != 0:
+                            interactable["frame_index"] = 0
+                            self.game.canvas.itemconfig(canvas_id, image=interactable["image_obj"][0])
             self.game.canvas.coords(canvas_id, interactable["x"] - self.game.camera.x, interactable["y"] - self.game.camera.y)
 
         if self.debug_mode: self._update_debug_positions() # DEBUG MODE

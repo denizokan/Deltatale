@@ -105,3 +105,4 @@ class Interactable(Enum):
     """Contains all interactables. Check with Interactable.VALUE"""
 
     SAVE_POINT = "SAVE_POINT"
+    NPC = "NPC"
