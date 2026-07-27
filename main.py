@@ -184,7 +184,7 @@ class Main:
             self.root.after(1000, lambda: self.current_room.music.play(loops=-1))
 
         if spawn_info == None:
-            self.cutscene_manager.play_cutscene("first_room")
+            self.root.after(1000, self.cutscene_manager.play_cutscene("first_room"))
             return
         
         self.transition.fade_from_black(speed=24)
