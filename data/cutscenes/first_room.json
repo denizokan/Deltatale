@@ -1,0 +1,94 @@
+{
+    "pilot": [
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* Ugh... my head.",
+            "face": null,
+            "sound": "SUSIE",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* Kris? Are you good?",
+            "face": null,
+            "sound": "SUSIE",
+            "pos": "bottom"
+        }
+    ],
+    "waking_up": [
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* Man, where the hell are\\n  we again?",
+            "face": "SUSIE_NEUTRAL",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* Wait. Look at us.\\n* We're still in our normal\\n  clothes.",
+            "face": "SUSIE_NEUTRAL",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* So... This ISN'T a Dark\\n  World?",
+            "face": "SUSIE_NEUTRAL",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        }
+    ],
+    "axe_realization": [
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* Oh cool. I still have my\\n  axe.",
+            "face": "SUSIE_NEUTRAL",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        }
+    ],
+    "after_realization": [
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* But... how? This thing\\n  turns into a hairbrush or\\n  whatever when we leave.",
+            "face": "SUSIE_NEUTRAL",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* The air down here... it\\n  feels weird. Like my\\n  pockets are buzzing.",
+            "face": "SUSIE_NEUTRAL",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* ...",
+            "face": "SUSIE_NEUTRAL",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* Actually, you know what?\\n* Who cares how it works.",
+            "face": "SUSIE_NEUTRAL",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* Free axe!",
+            "face": "SUSIE_HAPPY",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* C'mon Kris, let's go find\\n  a way out of this dump.",
+            "face": "SUSIE_NEUTRAL",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        }
+    ]
+}

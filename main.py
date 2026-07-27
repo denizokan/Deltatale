@@ -153,7 +153,7 @@ class Main:
                 break
 
         if spawn_info is None:
-            # It's a room without a save point, or a brand new game!
+            # It's a brand new game
             spawn_x = 320
             spawn_y = 240
             spawn_facing = "down"
@@ -174,6 +174,8 @@ class Main:
             self.canvas.tag_raise(self.player.active_characters[0]) # Put Kris at top
         if spawn_facing == "up":
             self.canvas.tag_raise(self.player.active_characters[0]) # Put Susie at top
+
+        self.canvas.tag_raise(self.transition.fade_canvas_image)
         
         self.file_select_screen = None
         self.state = GameState.PLAYING
@@ -181,6 +183,10 @@ class Main:
         if hasattr(self.current_room, "music"):
             self.root.after(1000, lambda: self.current_room.music.play(loops=-1))
 
+        if spawn_info == None:
+            self.cutscene_manager.play_cutscene("first_room")
+            return
+        
         self.transition.fade_from_black(speed=24)
         
 

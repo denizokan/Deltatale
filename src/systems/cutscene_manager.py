@@ -1,5 +1,6 @@
 import json
 from src.core.enums import GameState
+from src.events.first_room import FirstRoomCutscene
 from src.events.flowey_intro import FloweyIntroCutscene
 
 class CutsceneManager:
@@ -13,6 +14,7 @@ class CutsceneManager:
         self.blocks_player = True
 
         self.cutscene_registry = {
+            "first_room": FirstRoomCutscene,
             "flowey_first_interaction": FloweyIntroCutscene
         }
 
