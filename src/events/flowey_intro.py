@@ -1,6 +1,9 @@
+import math
 from tkinter import PhotoImage, messagebox
 from PIL import Image, ImageTk
 from pygame import mixer
+from src.core.enums import Action
+from src.systems.battle_dialogue import BattleDialogue
 
 class FloweyIntroCutscene:
     def __init__(self, main_game, cutscene_mgr):
@@ -24,14 +27,58 @@ class FloweyIntroCutscene:
         self.music = None
         self.timeline = 0
 
+        self.battle_dialogue = BattleDialogue(self.game)
+        self.battle_started = False
+        self.soul_movement = False
+        self.soul_x = 0
+        self.soul_y = 0
+
+        self._preload_sprites()
+
+
+    def _preload_sprites(self):
+        """Loads and caches all dynamic sprites into memory once during initialization."""
+        self.kris_attack_sprites = [
+            PhotoImage(file=f"sprites/battle/attack/kris/spr_krisb_attack_{i}.png").zoom(2)
+            for i in range(7)
+        ]
+        self.susie_attack_sprites = [
+            PhotoImage(file=f"sprites/battle/attack/susie/spr_susieb_attack_{i}.png").zoom(2)
+            for i in range(6)
+        ]
+        self.kris_idle_sprites = [
+            PhotoImage(file=f"sprites/battle/idle/kris/spr_krisb_idle_{i}.png").zoom(2)
+            for i in range(6)
+        ]
+        self.susie_idle_sprites = [
+            PhotoImage(file=f"sprites/battle/idle/susie/spr_susieb_idle_{i}.png").zoom(2)
+            for i in range(4)
+        ]
+
+        self.player_sprite = PhotoImage(file="sprites/SOUL.png")
+
+        # Ghost references
+        self.kris_ghosts = self._generate_faded_ghosts("sprites/characters/kris/walk/spr_krisr_0.png")
+        self.susie_ghosts = self._generate_faded_ghosts("sprites/characters/susie/walk/spr_susier_0.png")
+        self.pulse_frames = self._generate_pulse_frames("sprites/SOUL.png", base_zoom=2, max_zoom=4.5, frames=12)
+
+        # Sound effects & musics
+        self.snd_laz = mixer.Sound(file="sounds/sound_effects/snd_laz_c.wav")
+        self.snd_weapon = mixer.Sound(file="sounds/sound_effects/snd_weaponpull.wav")
+        self.flowey_music = mixer.Sound("sounds/mus_flowey.ogg")
+        self.battle_mus = mixer.Sound(file="sounds/battle.ogg")
+
+        # Battle UI
+        self.battle_lower_ui = PhotoImage(file="sprites/battle/ui/flowey_fight_lower_ui.png")
+        self.battle_tp_ui = PhotoImage(file="sprites/battle/ui/flowey_fight_tp_bar.png")
+
 
     def update(self):
         if self.is_waiting: return
 
         if self.status == "greeting":
             self.is_waiting = True
-            self.music = mixer.Sound("sounds/mus_flowey.ogg")
-            self.music.play(-1)
+            self.flowey_music.play(-1)
             self.game.dialogue_system.start_dialogue(
                 self.dialogue_data['greeting'],
                 on_complete=lambda: self.resume_timeline(self.status),
@@ -54,6 +101,34 @@ class FloweyIntroCutscene:
                 actors={"FLOWEY": self.flowey_interactable}
             )
 
+        elif self.status == "battle":
+            self.handle_soul_movement()
+
+            if not self.battle_dialogue.is_active:
+                self.battle_dialogue.start_dialogue(
+                    self.dialogue_data['battle'],
+                    on_complete=lambda: self.resume_timeline(self.status),
+                    actors={"FLOWEY": self.flowey_interactable}
+                )
+
+            if self.battle_dialogue.is_active:
+                self.battle_dialogue.handle_input(self.game.input_manager)
+                self.battle_dialogue.update()
+
+        elif self.status == "spawn_bullets":
+            self.handle_soul_movement()
+
+            if not self.battle_dialogue.is_active:
+                self.game.root.after(300, lambda: self.battle_dialogue.start_dialogue(
+                    self.dialogue_data['spawn_bullets'],
+                    on_complete=lambda: self.resume_timeline(self.status),
+                    actors={"FLOWEY": self.flowey_interactable}
+                ))
+
+            if self.battle_dialogue.is_active:
+                self.battle_dialogue.handle_input(self.game.input_manager)
+                self.battle_dialogue.update()
+
 
     def advance_phase(self, next_status):
         """Helper to transition states and wake up the update loop."""
@@ -63,7 +138,7 @@ class FloweyIntroCutscene:
 
     def resume_timeline(self, from_status):
         if from_status == "greeting":
-            self.music.fadeout(1500)
+            self.flowey_music.fadeout(1500)
             self.game.root.after(2500, lambda: self.advance_phase("heated_up"))
 
         elif from_status == "heated_up":
@@ -71,14 +146,69 @@ class FloweyIntroCutscene:
             self.game.root.after(500, lambda: self.advance_phase("pre_battle"))
 
         elif from_status == "pre_battle": 
-            print("TODO: Battle start")
-            self.game.root.after(100, lambda: self.start_battle())
+            self.game.root.after(100, lambda: self.init_battle())
+
+        elif from_status == "battle": # spawn bullets
+            self.advance_phase("spawn_bullets")
+            self.game.root.after(100, lambda: self.spawn_bullets())
+
+        elif from_status == "spawn_bullets": # refuse bullets
+            self.move_bullets()
+            self.game.root.after(100, lambda: self.advance_phase("refuse_bullets"))
+
+        elif from_status == "refuse_bullets": # music_stop
+            self.battle_mus.fadeout(1000)
+            self.game.root.after(1500, lambda: self.advance_phase("music_stop"))
+
+        elif from_status == "music_stop": # susie_angry
+            self.play_susie_attack_animation()
+            self.game.root.after(500, lambda: self.advance_phase("susie_angry"))
+
+        elif from_status == "susie_angry": # die
+            self.spawn_bullets_around_soul()
+            self.game.root.after(500, lambda: self.advance_phase("die"))
+
+        elif from_status == "die": # yeah_whatever
+            self.fire_rude_buster()
+            self.game.root.after(500, lambda: self.advance_phase("yeah_whatever"))
+
+        elif from_status == "yeah_whatever": # post_battle
+            self.end_battle()
+            self.game.root.after(1000, lambda: self.advance_phase("post_battle"))
+
+        elif from_status == "post_battle": # post_battle
+            self.game.cutscene_manager.stop_cutscene()
 
 
     # BATTLE CODE
 
     def start_battle(self):
-        # TODO: Start scripted battle
+        self.status = "battle"
+        self.battle_mus.play(-1)
+
+        self.show_battle_ui()
+        self.play_idle_animation("kris")
+        self.play_idle_animation("susie")
+
+        self.spawn_battle_rectangle()
+
+        kris_id = self.game.player.active_characters[0]
+        kx, ky = self.game.canvas.coords(kris_id)[:2]
+        chest_x = kx - 30
+        chest_y = ky - 50
+
+        self.player_soul = self.game.canvas.create_image(chest_x, chest_y, image=self.player_sprite)
+        self.move_soul((chest_x, chest_y), (self.game.constants.WIDTH // 2, self.game.constants.HEIGHT // 2 - 50), 15)
+        self.play_chest_pulse()
+
+        self.advance_phase("battle")
+
+
+    def end_battle(self):
+        pass
+
+
+    def init_battle(self):
         self.flowey_interactable["is_battling"] = True
         self.game.canvas.itemconfig(
             self.game.player.active_characters[0],
@@ -91,42 +221,92 @@ class FloweyIntroCutscene:
         self.move_characters_to_battle_positions()
 
 
-    def play_kris_battle_animation(self):
-        self.kris_attack_sprites = [PhotoImage(file="sprites/battle/attack/kris/spr_krisb_attack_0.png").zoom(2), PhotoImage(file="sprites/battle/attack/kris/spr_krisb_attack_1.png").zoom(2), PhotoImage(file="sprites/battle/attack/kris/spr_krisb_attack_2.png").zoom(2), PhotoImage(file="sprites/battle/attack/kris/spr_krisb_attack_3.png").zoom(2), PhotoImage(file="sprites/battle/attack/kris/spr_krisb_attack_4.png").zoom(2), PhotoImage(file="sprites/battle/attack/kris/spr_krisb_attack_5.png").zoom(2), PhotoImage(file="sprites/battle/attack/kris/spr_krisb_attack_6.png").zoom(2)]
+    def handle_soul_movement(self):
+        target_x, target_y = self.soul_x, self.soul_y
 
+        if self.game.input_manager.is_pressed(Action.UP):
+            target_y = self.soul_y - self.game.constants.SOUL_SPEED
+        if self.game.input_manager.is_pressed(Action.DOWN):
+            target_y = self.soul_y + self.game.constants.SOUL_SPEED
+        if self.game.input_manager.is_pressed(Action.LEFT):
+            target_x = self.soul_x - self.game.constants.SOUL_SPEED
+        if self.game.input_manager.is_pressed(Action.RIGHT):
+            target_x = self.soul_x + self.game.constants.SOUL_SPEED
+
+        box_width = 160
+        box_height = 160
+        box_x, box_y = self.game.constants.WIDTH // 2, self.game.constants.HEIGHT // 2 - 50
+        x1, y1 = box_x - box_width/2, box_y - box_height/2,
+        x2, y2 = box_x + box_width/2, box_y + box_height/2,
+
+        soul_radius = 8
+        offset = 4 
+
+        min_x = x1 + offset + soul_radius
+        max_x = x2 - offset - soul_radius
+        min_y = y1 + offset + soul_radius
+        max_y = y2 - offset - soul_radius
+
+        if target_x < min_x:
+            target_x = min_x
+        elif target_x > max_x:
+            target_x = max_x
+
+        if target_y < min_y:
+            target_y = min_y
+        elif target_y > max_y:
+            target_y = max_y
+
+        if target_x != self.soul_x or target_y != self.soul_y:
+            self.soul_x, self.soul_y = target_x, target_y
+            self.draw_soul()
+
+
+    def draw_soul(self):
+        self.game.canvas.coords(self.player_soul, self.soul_x, self.soul_y)
+
+
+    def spawn_bullets(self):
+        pass
+
+
+    def move_bullets(self):
+        pass
+
+
+    def spawn_bullets_around_soul(self):
+        pass
+
+
+    def fire_rude_buster(self):
+        pass
+
+
+    def play_battle_intro(self):
         def _play_next_frame(frame_index):
+            if self.status == "battle": return
+
             if frame_index < len(self.kris_attack_sprites):
                 self.game.canvas.itemconfig(
                     self.game.player.active_characters[0], 
                     image=self.kris_attack_sprites[frame_index]
                 )
-                self.game.root.after(100, lambda: _play_next_frame(frame_index + 1))
-            else:
-                self.play_idle_animation("kris")
 
-        _play_next_frame(0)
-
-
-    def play_susie_battle_animation(self):
-        self.susie_attack_sprites = [PhotoImage(file="sprites/battle/attack/susie/spr_susieb_attack_0.png").zoom(2), PhotoImage(file="sprites/battle/attack/susie/spr_susieb_attack_1.png").zoom(2), PhotoImage(file="sprites/battle/attack/susie/spr_susieb_attack_2.png").zoom(2), PhotoImage(file="sprites/battle/attack/susie/spr_susieb_attack_3.png").zoom(2), PhotoImage(file="sprites/battle/attack/susie/spr_susieb_attack_4.png").zoom(2), PhotoImage(file="sprites/battle/attack/susie/spr_susieb_attack_5.png").zoom(2)]
-
-        def _play_next_frame(frame_index):
             if frame_index < len(self.susie_attack_sprites):
                 self.game.canvas.itemconfig(
                     self.game.player.active_characters[1], 
                     image=self.susie_attack_sprites[frame_index]
                 )
-                self.game.root.after(100, lambda: _play_next_frame(frame_index + 1))
-            else:
-                self.play_idle_animation("susie")
+
+            if frame_index > 6:
+                return
+            self.game.root.after(100, lambda: _play_next_frame(frame_index + 1))
 
         _play_next_frame(0)
 
 
     def play_susie_attack_animation(self):
-        self.susie_attack_sprites = [PhotoImage(file="sprites/battle/attack/susie/spr_susieb_attack_0.png").zoom(2), PhotoImage(file="sprites/battle/attack/susie/spr_susieb_attack_1.png").zoom(2), PhotoImage(file="sprites/battle/attack/susie/spr_susieb_attack_2.png").zoom(2), PhotoImage(file="sprites/battle/attack/susie/spr_susieb_attack_3.png").zoom(2), PhotoImage(file="sprites/battle/attack/susie/spr_susieb_attack_4.png").zoom(2), PhotoImage(file="sprites/battle/attack/susie/spr_susieb_attack_5.png").zoom(2)]
-
-        mixer.Sound(file="sounds/sound_effects/snd_laz_c.wav").play()
+        self.snd_laz.play()
 
         def _play_next_frame(frame_index):
             if frame_index < len(self.susie_attack_sprites):
@@ -142,15 +322,15 @@ class FloweyIntroCutscene:
     def play_idle_animation(self, char):
         if char == "kris":
             char_index = 0
-            self.kris_idle_sprites = [PhotoImage(file="sprites/battle/idle/kris/spr_krisb_idle_0.png").zoom(2), PhotoImage(file="sprites/battle/idle/kris/spr_krisb_idle_1.png").zoom(2), PhotoImage(file="sprites/battle/idle/kris/spr_krisb_idle_2.png").zoom(2), PhotoImage(file="sprites/battle/idle/kris/spr_krisb_idle_3.png").zoom(2), PhotoImage(file="sprites/battle/idle/kris/spr_krisb_idle_4.png").zoom(2), PhotoImage(file="sprites/battle/idle/kris/spr_krisb_idle_5.png").zoom(2)]
             active_sprites = self.kris_idle_sprites
             
         elif char == "susie":
             char_index = 1
-            self.susie_idle_sprites = [PhotoImage(file="sprites/battle/idle/susie/spr_susieb_idle_0.png").zoom(2), PhotoImage(file="sprites/battle/idle/susie/spr_susieb_idle_1.png").zoom(2), PhotoImage(file="sprites/battle/idle/susie/spr_susieb_idle_2.png").zoom(2), PhotoImage(file="sprites/battle/idle/susie/spr_susieb_idle_3.png").zoom(2)]
             active_sprites = self.susie_idle_sprites
 
         def _play_next_frame(frame_index):
+            if not self.status == "battle" and not self.status == "spawn_bullets": return
+
             if frame_index > len(active_sprites) - 1:
                 frame_index = 0
 
@@ -176,9 +356,6 @@ class FloweyIntroCutscene:
         sx, sy = self.game.canvas.coords(susie_id)[:2]
         fx, fy = self.game.canvas.coords(flowey_id)[:2]
 
-        self.kris_ghosts = self._generate_faded_ghosts("sprites/characters/kris/walk/spr_krisr_0.png")
-        self.susie_ghosts = self._generate_faded_ghosts("sprites/characters/susie/walk/spr_susier_0.png")
-
         total_steps = 15
 
         def _slide_frame(step):
@@ -202,14 +379,53 @@ class FloweyIntroCutscene:
 
                 self.game.root.after(16, lambda: _slide_frame(step + 1))
             else:
-                mixer.Sound(file="sounds/sound_effects/snd_weaponpull.wav").play()
+                self.snd_weapon.play()
 
                 # Draw swords
-                self.play_susie_battle_animation()
-                self.play_kris_battle_animation()
-                # self.game.canvas.itemconfig(kris_id, image=self.kris_battle_idle)
+                self.play_battle_intro()
+                self.game.root.after(450, self.start_battle)
           
         _slide_frame(0)
+
+
+    def show_battle_ui(self):
+        lower_ui_start_y = self.game.constants.HEIGHT + 150
+        lower_ui_target_y = self.game.constants.HEIGHT
+        lower_ui_x = self.game.constants.WIDTH // 2
+
+        tp_ui_start_x = -100
+        tp_ui_target_x = 10
+        tp_ui_y = 50
+
+        self.lower_ui_id = self.game.canvas.create_image(
+            lower_ui_x, lower_ui_start_y, 
+            image=self.battle_lower_ui, anchor="s"
+        )
+        self.tp_ui_id = self.game.canvas.create_image(
+            tp_ui_start_x, tp_ui_y, 
+            image=self.battle_tp_ui, anchor="nw"
+        )
+
+        total_frames = 20
+
+        def _animate_ui(frame):
+            if frame <= total_frames:
+                t = frame / total_frames
+
+                ease_t = 1 - (1 - t)**3
+
+                current_lower_y = lower_ui_start_y + (lower_ui_target_y - lower_ui_start_y) * ease_t
+                current_tp_x = tp_ui_start_x + (tp_ui_target_x - tp_ui_start_x) * ease_t
+
+                self.game.canvas.coords(self.lower_ui_id, lower_ui_x, current_lower_y)
+                self.game.canvas.coords(self.tp_ui_id, current_tp_x, tp_ui_y)
+
+                self.game.root.after(16, lambda: _animate_ui(frame + 1))
+            else:
+                self.game.canvas.coords(self.lower_ui_id, lower_ui_x, lower_ui_target_y)
+                self.game.canvas.coords(self.tp_ui_id, tp_ui_target_x, tp_ui_y)
+
+        _animate_ui(0)
 
 
     def _generate_faded_ghosts(self, image_path, zoom=2, frames=6):
@@ -242,3 +458,187 @@ class FloweyIntroCutscene:
                 self.game.canvas.delete(ghost_id)
 
         _fade_frame(0)
+
+
+    def move_soul(self, start_coords, end_coords, frames):
+        """Moves the player soul to the given coordinates over x frames."""
+        start_x, start_y = start_coords
+        end_x, end_y = end_coords
+        self.soul_movement = True
+
+        def _animate_soul(frame_index):
+            if frame_index <= frames:
+                t = frame_index / frames
+                
+                ease_t = 1 - (1 - t)**3
+                
+                cur_x = start_x + (end_x - start_x) * ease_t
+                cur_y = start_y + (end_y - start_y) * ease_t
+                
+                self.game.canvas.coords(self.player_soul, cur_x, cur_y)
+                self.soul_x, self.soul_y = cur_x, cur_y
+                self.game.root.after(int(1000 / self.game.constants.FPS), lambda: _animate_soul(frame_index + 1))
+            else:
+                self.soul_movement = False
+                self.game.canvas.coords(self.player_soul, end_x, end_y)
+                self.soul_x, self.soul_y = end_x, end_y
+
+        _animate_soul(0)
+
+
+    def spawn_battle_rectangle(self):
+        """Spawns the battle box using a solid expanding void and hollow fading trails."""
+        target_width = 160
+        target_height = 160
+        box_x, box_y = self.game.constants.WIDTH // 2, self.game.constants.HEIGHT // 2 - 50
+
+        total_frames = 20
+
+        self._dark_overlay_frames = []
+        max_darkness = 200
+        
+        for i in range(total_frames + 1):
+            t = i / total_frames
+            ease_t = 1 - (1 - t)**3 
+            alpha = int(max_darkness * ease_t)
+            
+            img = Image.new("RGBA", (self.game.constants.WIDTH, self.game.constants.HEIGHT), (0, 0, 0, alpha))
+            self._dark_overlay_frames.append(ImageTk.PhotoImage(img))
+
+        self.dark_overlay_id = self.game.canvas.create_image(
+            0, 0, 
+            image=self._dark_overlay_frames[0], 
+            anchor="nw"
+        )
+        
+        try:
+            self.game.canvas.tag_raise(self.dark_overlay_id, self.game.current_room.background)
+        except AttributeError:
+            self.game.canvas.tag_lower(self.dark_overlay_id)
+            self.game.canvas.tag_raise(self.dark_overlay_id)
+
+        self.main_anim_poly = self.game.canvas.create_polygon(
+            0, 0, 0, 0, 0, 0, 0, 0,
+            outline="#00ff00",
+            fill="black",
+            width=2
+        )
+        self.game.canvas.tag_lower(self.main_anim_poly, self.game.player.active_characters[0])
+
+        def _get_rotated_corners(cx, cy, w, h, angle):
+            """Calculates the 4 corners of a rotated rectangle."""
+            hw, hh = w / 2, h / 2
+            corners = [(-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh)]
+            rotated_coords = []
+            
+            for x_off, y_off in corners:
+                rx = x_off * math.cos(angle) - y_off * math.sin(angle)
+                ry = x_off * math.sin(angle) + y_off * math.cos(angle)
+                rotated_coords.extend([cx + rx, cy + ry])
+                
+            return rotated_coords
+
+        def _spawn_fading_ghost(coords):
+            """Spawns a hollow polygon that fades itself out."""
+            poly_id = self.game.canvas.create_polygon(
+                *coords,
+                outline="#00ff00",
+                fill="",
+                width=4
+            )
+            self.game.canvas.tag_raise(poly_id, self.main_anim_poly)
+            
+            fade_colors = ["#00cc00", "#009900", "#006600", "#003300", "delete"]
+            def _fade_step(step_index):
+                if step_index < len(fade_colors):
+                    color = fade_colors[step_index]
+                    if color == "delete":
+                        self.game.canvas.delete(poly_id)
+                    else:
+                        self.game.canvas.itemconfig(poly_id, outline=color)
+                        self.game.root.after(70, lambda: _fade_step(step_index + 1))
+                        
+            self.game.root.after(70, lambda: _fade_step(0))
+
+        def _play_anim_frame(frame_index):
+            if frame_index <= total_frames:
+                t = frame_index / total_frames
+                ease_t = 1 - (1 - t)**3
+
+                self.game.canvas.itemconfig(self.dark_overlay_id, image=self._dark_overlay_frames[frame_index])
+                
+                current_w = target_width * ease_t
+                current_h = target_height * ease_t
+                current_angle = math.pi * (1 - ease_t)
+
+                coords = _get_rotated_corners(box_x, box_y, current_w, current_h, current_angle)
+                
+                self.game.canvas.coords(self.main_anim_poly, *coords)
+                
+                if t < 0.35:
+                    _spawn_fading_ghost(coords)
+
+                self.game.root.after(25, lambda: _play_anim_frame(frame_index + 1))
+            else:
+                self.game.canvas.delete(self.main_anim_poly)
+    
+                self.battle_box_id = self.game.canvas.create_rectangle(
+                    box_x - target_width/2, box_y - target_height/2,
+                    box_x + target_width/2, box_y + target_height/2,
+                    outline="#00ff00",
+                    fill="black",
+                    width=4
+                )
+                
+                self.game.canvas.tag_lower(self.battle_box_id, self.game.player.active_characters[0])
+
+        _play_anim_frame(0)
+
+
+    def play_chest_pulse(self):
+        """Spawns the pulse on Kris's chest."""
+        kris_id = self.game.player.active_characters[0]
+        kx, ky = self.game.canvas.coords(kris_id)[:2]
+        chest_x = kx - 30
+        chest_y = ky - 50
+        
+        pulse_id = self.game.canvas.create_image(
+            chest_x, chest_y, 
+            image=self.pulse_frames[0], 
+            anchor="center"
+        )
+        
+        def _play_pulse_frame(frame_index):
+            if frame_index >= len(self.pulse_frames):
+                self.game.canvas.delete(pulse_id)
+                return
+                
+            self.game.canvas.itemconfig(pulse_id, image=self.pulse_frames[frame_index])
+            self.game.root.after(40, lambda: _play_pulse_frame(frame_index + 1))
+            
+        _play_pulse_frame(0)
+
+
+    def _generate_pulse_frames(self, image_path, base_zoom=2, max_zoom=5, frames=15):
+        """Pre-renders an expanding, fading pulse effect for the SOUL."""
+        original = Image.open(image_path).convert("RGBA")
+        base_w, base_h = original.size
+        
+        pulse_frames = []
+        for i in range(frames):
+            t = i / (frames - 1)
+            
+            current_zoom = base_zoom + ((max_zoom - base_zoom) * t)
+            opacity = 1.0 - t
+            
+            new_w = int(base_w * current_zoom)
+            new_h = int(base_h * current_zoom)
+            resized = original.resize((new_w, new_h), Image.NEAREST)
+            
+            r, g, b, a = resized.split()
+            a = a.point(lambda p: int(p * opacity))
+            faded_image = Image.merge("RGBA", (r, g, b, a))
+            
+            pulse_frames.append(ImageTk.PhotoImage(faded_image))
+            
+        return pulse_frames

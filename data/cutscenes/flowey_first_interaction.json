@@ -152,6 +152,188 @@
             "pos": "top"
         }
     ],
+    "battle": [
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* See that heart?",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* That is your \\c[red]SOUL\\c[white].\\n* The very culmination of your\\n  being!",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* Hey Kris, why are we fighting\\n  this idiot?",
+            "face": "SUSIE_ANNOYED",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* No no! We're not fighting.\\n* I don't have the intention\\n  to hurt you.",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* I DO HAVE the intention to\\n  hurt you if you don't make\\n  this quick.",
+            "face": "SUSIE_MANIAC",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* ...",
+            "face": "FLOWEY_NEUTRAL",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* Anyway, your SOUL starts off\\n  weak, but can grow strong if\\n  you gain a lot of \\c[yellow]LV\\c[white].",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* What does \\c[yellow]LV \\c[white]stand for?\\n* Why, \\c[yellow]LOVE \\c[white]of course!",
+            "face": "FLOWEY_WINK",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* (yawn)",
+            "face": "SUSIE_NEUTRAL",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* You want some \\c[yellow]LOVE\\c[white], don't you?",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        }
+    ],
+    "spawn_bullets": [
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* Don't worry, I'll share some!",
+            "face": "FLOWEY_WINK",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* Why do these look like teeth?",
+            "face": "SUSIE_NEUTRAL",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* No, silly!\\n* These are called '\\c[yellow]friendliness\\n  pellets\\c[white]'.",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* Here, try to catch as many\\n  as you can!",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        }
+    ],
+    "refuse_bullets": [
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* Look, weirdo. We don't want\\n  your trash. Can we leave\\n  already?",
+            "face": "SUSIE_UNIMPRESSED",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* But we were just getting\\n  started!",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* The human just needs to-\\d[3]\\sk",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        }
+    ],
+    "music_stop": [
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* I guess you didn't hear what I said.",
+            "face": "SUSIE_NEUTRAL",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        }
+    ],
+    "susie_angry": [
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* GET OUT OF THE GODDAMN WAY BEFORE\\n  I TURN YOU INTO LAWN\\n  CLIPPINGS.",
+            "face": "SUSIE_MANIAC",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* Hahaha... You really are an\\n  idiot, aren't you?",
+            "face": "FLOWEY_SCARY",
+            "sound": "FLOWEY_EVIL",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* You think you're the one\\n  in control here?",
+            "face": "FLOWEY_MANIAC",
+            "sound": "FLOWEY_EVIL",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* In this world, it's \\s[1]KILL\\s[0] or\\n  be \\s[1]KILLED\\s[0].",
+            "face": "FLOWEY_MANIAC",
+            "sound": "FLOWEY_EVIL",
+            "pos": "bottom"
+        }
+    ],
+    "die": [
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* DIE.",
+            "face": "FLOWEY_MANIAC",
+            "sound": "FLOWEY_EVIL",
+            "pos": "bottom"
+        }
+    ],
+    "yeah_whatever": [
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* Yeah, whatever.",
+            "face": "SUSIE_NEUTRAL",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        }
+    ],
     "post_battle": [
         {
             "speaker": "SUSIE",
