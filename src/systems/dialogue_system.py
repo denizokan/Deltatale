@@ -10,6 +10,8 @@ class DialogueSystem:
         self.game = main_game
 
         self.is_active = False
+        self.is_battle = False
+        self.line_spacing = 35
 
         self.cursor_y = 0
         self.token_index = 0
@@ -35,18 +37,26 @@ class DialogueSystem:
 
 
     def draw_text_box(self, page_data):
-        """Draws a blank text box and creates an empty text canvas object."""
-        pos = page_data["pos"]
-        if pos == "bottom":
-            x1, x2 = 32, self.game.constants.WIDTH - 32
-            y1, y2 = self.game.constants.HEIGHT - 155, self.game.constants.HEIGHT - 15
-        elif pos == "top":
-            x1, x2 = 32, self.game.constants.WIDTH - 32
-            y1, y2 = 15, 155
+        """Draws the text box and calculates starting coordinates based on mode."""
+        pos = page_data.get("pos", "bottom")
 
-        self.text_box = self.game.canvas.create_rectangle(x1, y1, x2, y2, fill="black", outline="white", width=6)
-        self.active_text_elements.append(self.text_box)
-        if page_data["face"] != None:
+        if self.is_battle:
+            self.line_spacing = 30
+            x1, x2 = 10, self.game.constants.WIDTH - 10
+            y1, y2 = self.game.constants.HEIGHT - 125, self.game.constants.HEIGHT
+        else:
+            self.line_spacing = 35
+            if pos == "bottom":
+                x1, x2 = 32, self.game.constants.WIDTH - 32
+                y1, y2 = self.game.constants.HEIGHT - 155, self.game.constants.HEIGHT - 15
+            elif pos == "top":
+                x1, x2 = 32, self.game.constants.WIDTH - 32
+                y1, y2 = 15, 155
+            
+            self.text_box = self.game.canvas.create_rectangle(x1, y1, x2, y2, fill="black", outline="white", width=6)
+            self.active_text_elements.append(self.text_box)
+
+        if page_data.get("face") != None:
             self.portrait_sprite = PhotoImage(file=Portraits[page_data["face"]].value).zoom(2)
             self.portrait_id = self.game.canvas.create_image(x1 + 25, y1 + 17, image=self.portrait_sprite, anchor="nw")
             self.active_text_elements.append(self.portrait_id)
@@ -55,12 +65,14 @@ class DialogueSystem:
             self.text_coords = (x1 + 25, y1 + 13)
 
 
-    def start_dialogue(self, text, interaction_index=0, actors=None, on_complete=None):
+    def start_dialogue(self, text, interaction_index=0, actors=None, on_complete=None, is_battle=False):
         """Freezes the player inputs and starts displaying dialogue."""
         if self.is_active: raise RuntimeError("Cannot start a new dialogue because another one is already being shown.")
 
         # Reset old variables
         self.close_dialogue()
+
+        self.is_battle = is_battle
 
         if isinstance(text, dict):
             self.text = [text]
@@ -75,7 +87,8 @@ class DialogueSystem:
 
         self.load_page(0)
 
-        self.game.current_room.is_paused = True
+        if not self.is_battle:
+            self.game.current_room.is_paused = True
         self.is_active = True
 
 
@@ -114,11 +127,11 @@ class DialogueSystem:
             if not self.is_line_complete: return
 
             self.current_page += 1
+            self.close_dialogue()
             if self.current_page >= len(self.text):
                 self.close_dialogue(isDone=True)
                 return
 
-            self.close_dialogue()
             self.load_page(self.current_page)
 
         if input_mgr.is_just_pressed(Action.CANCEL):
@@ -167,7 +180,7 @@ class DialogueSystem:
                     return
                 elif token["type"] == "newline":
                     self.cursor_y += 1
-                    self.text_coords = (self.og_text_coords[0], self.og_text_coords[1] + (self.cursor_y * 35))
+                    self.text_coords = (self.og_text_coords[0], self.og_text_coords[1] + (self.cursor_y * self.line_spacing))
                 elif token["type"] == "skip":
                     self.current_page += 1
                     if self.current_page >= len(self.text):
@@ -209,7 +222,7 @@ class DialogueSystem:
                     })
 
                 fixed_char_width = 15 
-                self.text_coords = (x + fixed_char_width, self.og_text_coords[1] + (self.cursor_y * 35))
+                self.text_coords = (x + fixed_char_width, self.og_text_coords[1] + (self.cursor_y * self.line_spacing))
 
                 # Apply pauses
                 if self.typewriter_delay == self.game.constants.DEFAULT_TYPEWRITER_TIMER:
@@ -263,7 +276,7 @@ class DialogueSystem:
             # Print the letter
             if value["type"] == "newline":
                 self.cursor_y += 1
-                self.text_coords = (self.og_text_coords[0], self.og_text_coords[1] + (self.cursor_y * 35))
+                self.text_coords = (self.og_text_coords[0], self.og_text_coords[1] + (self.cursor_y * self.line_spacing))
                 is_command = True
             
             if is_command:
@@ -291,7 +304,7 @@ class DialogueSystem:
                     })
             
                 fixed_char_width = 15
-                self.text_coords = (x + fixed_char_width, self.og_text_coords[1] + (self.cursor_y * 35))
+                self.text_coords = (x + fixed_char_width, self.og_text_coords[1] + (self.cursor_y * self.line_spacing))
             
                 if self.token_index == len(self.tokenized_text) - 1:
                     if self.actors:
@@ -337,7 +350,8 @@ class DialogueSystem:
             self.actors = None
             self.current_page = 0
             self.is_active = False
-            self.game.current_room.is_paused = False
+            if not self.is_battle:
+                self.game.current_room.is_paused = False
             if self.on_complete_callback != None:
                 self.on_complete_callback()
 

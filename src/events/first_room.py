@@ -5,7 +5,6 @@ class FirstRoomCutscene:
     def __init__(self, main_game, cutscene_mgr):
         self.game = main_game
         self.cutscene_mgr = cutscene_mgr
-        self.is_waiting = False
         self.cutscene_mgr.blocks_player = True
     
         try:
@@ -32,73 +31,65 @@ class FirstRoomCutscene:
         self.game.canvas.coords(self.game.player.active_characters[1], self.susie_spawn_x - self.game.camera.x, self.susie_spawn_y - self.game.camera.y)
         self.game.canvas.itemconfig(self.game.player.active_characters[1], image=self.susie_sprites[1])
     
-        self.status = "pilot"
+        self.status = None
         self.timeline = 0
+
+        self.advance_phase(self.status)
     
     
     def update(self):
-        if self.is_waiting: return
+        pass
     
-        if self.status == "pilot":
-            self.is_waiting = True
+    
+    def advance_phase(self, from_status):
+        if from_status == None: # -> Pilot
+            self.update_status("pilot")
             self.game.dialogue_system.start_dialogue(
                 self.dialogue_data['pilot'],
-                on_complete=lambda: self.resume_timeline(self.status)
-            )
-    
-        elif self.status == "waking_up":
-            self.is_waiting = True
-            self.game.dialogue_system.start_dialogue(
-                self.dialogue_data['waking_up'],
-                on_complete=lambda: self.resume_timeline(self.status)
-            )
-    
-        elif self.status == "axe_realization":
-            self.is_waiting = True
-            self.game.dialogue_system.start_dialogue(
-                self.dialogue_data['axe_realization'],
-                on_complete=lambda: self.resume_timeline(self.status)
+                on_complete=lambda: self.advance_phase(self.status)
             )
 
-        elif self.status == "after_realization":
-            self.is_waiting = True
-            self.game.dialogue_system.start_dialogue(
-                self.dialogue_data['after_realization'],
-                on_complete=lambda: self.resume_timeline(self.status)
-            )
-    
-    
-    def advance_phase(self, next_status):
-        """Helper to transition states and wake up the update loop."""
-        self.status = next_status
-        self.is_waiting = False
-    
-    
-    def resume_timeline(self, from_status):
-        if from_status == "pilot":
+        elif from_status == "pilot": # -> Waking Up
+            self.update_status("waking_up")
             self.game.transition.fade_from_black(speed=12)
             self.game.root.after(2000, lambda: self.play_kris_get_up())
-            self.game.root.after(4000, lambda: self.advance_phase("waking_up"))
+            self.game.root.after(4000, lambda: self.game.dialogue_system.start_dialogue(
+                self.dialogue_data['waking_up'],
+                on_complete=lambda: self.advance_phase(self.status)
+            ))
     
-        elif from_status == "waking_up":
+        elif from_status == "waking_up": # -> Axe Realization
+            self.update_status("axe_realization")
             self.play_susie_attack_animation()
-            self.game.root.after(500, lambda: self.advance_phase("axe_realization"))
+            self.game.root.after(500, lambda: self.game.dialogue_system.start_dialogue(
+                self.dialogue_data['axe_realization'],
+                on_complete=lambda: self.advance_phase(self.status)
+            ))
 
-        elif from_status == "axe_realization":
+        elif from_status == "axe_realization": # -> After Realization
+            self.update_status("after_realization")
             self.game.canvas.itemconfig(
                 self.game.player.active_characters[1], 
                 image=self.susie_sprites[1]
             )
 
-            self.game.root.after(100, lambda: self.advance_phase("after_realization"))
+            self.game.root.after(100, lambda: self.game.dialogue_system.start_dialogue(
+                self.dialogue_data['after_realization'],
+                on_complete=lambda: self.advance_phase(self.status)
+            ))
     
-        elif from_status == "after_realization":
+        elif from_status == "after_realization": # -> Cutscene End
             self.game.canvas.itemconfig(
                 self.game.player.active_characters[0], 
                 image=self.kris_sprites[3]
             )
             self.game.player._move_susie_behind_kris(susie_start_coords=(self.susie_spawn_x, self.susie_spawn_y), kris_facing="down")
             self.game.root.after(1000, lambda: self.game.cutscene_manager.stop_cutscene())
+
+
+    def update_status(self, next_status):
+        """Helper to transition states and wake up the update loop."""
+        self.status = next_status
 
 
     def play_susie_attack_animation(self):

@@ -3,13 +3,11 @@ from tkinter import PhotoImage, messagebox
 from PIL import Image, ImageTk
 from pygame import mixer
 from src.core.enums import Action
-from src.systems.battle_dialogue import BattleDialogue
 
 class FloweyIntroCutscene:
     def __init__(self, main_game, cutscene_mgr):
         self.game = main_game
         self.cutscene_mgr = cutscene_mgr
-        self.is_waiting = False
         self.cutscene_mgr.blocks_player = True
         self.flowey_interactable = self.game.current_room.interactables[0]
 
@@ -23,17 +21,17 @@ class FloweyIntroCutscene:
             )
             exit(1)
 
-        self.status = "greeting"
+        self.status = None
         self.music = None
         self.timeline = 0
 
-        self.battle_dialogue = BattleDialogue(self.game)
         self.battle_started = False
         self.soul_movement = False
         self.soul_x = 0
         self.soul_y = 0
 
         self._preload_sprites()
+        self.advance_phase(self.status)
 
 
     def _preload_sprites(self):
@@ -61,6 +59,7 @@ class FloweyIntroCutscene:
         self.kris_ghosts = self._generate_faded_ghosts("sprites/characters/kris/walk/spr_krisr_0.png")
         self.susie_ghosts = self._generate_faded_ghosts("sprites/characters/susie/walk/spr_susier_0.png")
         self.pulse_frames = self._generate_pulse_frames("sprites/SOUL.png", base_zoom=2, max_zoom=4.5, frames=12)
+        self.soul_fade_frames = self._generate_faded_ghosts("sprites/SOUL.png", zoom=1, frames=10)
 
         # Sound effects & musics
         self.snd_laz = mixer.Sound(file="sounds/sound_effects/snd_laz_c.wav")
@@ -74,110 +73,117 @@ class FloweyIntroCutscene:
 
 
     def update(self):
-        if self.is_waiting: return
+        if self.status in ["battle", "spawn_bullets", "refuse_bullets", "die"]:
+            if not self.soul_movement: 
+                self.handle_soul_movement()
 
-        if self.status == "greeting":
-            self.is_waiting = True
+
+    def advance_phase(self, from_status):
+        if from_status == None: # -> Greeting
+            self.update_status("greeting")
             self.flowey_music.play(-1)
             self.game.dialogue_system.start_dialogue(
                 self.dialogue_data['greeting'],
-                on_complete=lambda: self.resume_timeline(self.status),
-                actors={"FLOWEY": self.flowey_interactable}
-            )
-        
-        elif self.status == "heated_up":
-            self.is_waiting = True
-            self.game.dialogue_system.start_dialogue(
-                self.dialogue_data['heated_up'],
-                on_complete=lambda: self.resume_timeline(self.status),
+                on_complete=lambda: self.advance_phase(self.status),
                 actors={"FLOWEY": self.flowey_interactable}
             )
 
-        elif self.status == "pre_battle":
-            self.is_waiting = True
-            self.game.dialogue_system.start_dialogue(
-                self.dialogue_data['pre_battle'],
-                on_complete=lambda: self.resume_timeline(self.status),
-                actors={"FLOWEY": self.flowey_interactable}
-            )
-
-        elif self.status == "battle":
-            self.handle_soul_movement()
-
-            if not self.battle_dialogue.is_active:
-                self.battle_dialogue.start_dialogue(
-                    self.dialogue_data['battle'],
-                    on_complete=lambda: self.resume_timeline(self.status),
-                    actors={"FLOWEY": self.flowey_interactable}
-                )
-
-            if self.battle_dialogue.is_active:
-                self.battle_dialogue.handle_input(self.game.input_manager)
-                self.battle_dialogue.update()
-
-        elif self.status == "spawn_bullets":
-            self.handle_soul_movement()
-
-            if not self.battle_dialogue.is_active:
-                self.game.root.after(300, lambda: self.battle_dialogue.start_dialogue(
-                    self.dialogue_data['spawn_bullets'],
-                    on_complete=lambda: self.resume_timeline(self.status),
-                    actors={"FLOWEY": self.flowey_interactable}
-                ))
-
-            if self.battle_dialogue.is_active:
-                self.battle_dialogue.handle_input(self.game.input_manager)
-                self.battle_dialogue.update()
-
-
-    def advance_phase(self, next_status):
-        """Helper to transition states and wake up the update loop."""
-        self.status = next_status
-        self.is_waiting = False
-
-
-    def resume_timeline(self, from_status):
-        if from_status == "greeting":
+        elif from_status == "greeting": # -> Heated Up
+            self.update_status("heated_up")
             self.flowey_music.fadeout(1500)
-            self.game.root.after(2500, lambda: self.advance_phase("heated_up"))
+            self.game.root.after(2500, lambda: self.game.dialogue_system.start_dialogue(
+                self.dialogue_data['heated_up'],
+                on_complete=lambda: self.advance_phase(self.status),
+                actors={"FLOWEY": self.flowey_interactable}
+            ))
 
-        elif from_status == "heated_up":
+        elif from_status == "heated_up": # -> Pre Battle
+            self.update_status("pre_battle")
             self.play_susie_attack_animation()
-            self.game.root.after(500, lambda: self.advance_phase("pre_battle"))
+            self.game.root.after(500, lambda: self.game.dialogue_system.start_dialogue(
+                self.dialogue_data['pre_battle'],
+                on_complete=lambda: self.advance_phase(self.status),
+                actors={"FLOWEY": self.flowey_interactable}
+            ))
 
-        elif from_status == "pre_battle": 
+        elif from_status == "pre_battle": # -> Battle
+            self.update_status("battle_setup")
             self.game.root.after(100, lambda: self.init_battle())
 
-        elif from_status == "battle": # spawn bullets
-            self.advance_phase("spawn_bullets")
+        elif from_status == "battle": # -> Spawn Bullets
+            self.update_status("spawn_bullets")
             self.game.root.after(100, lambda: self.spawn_bullets())
+            self.game.root.after(300, lambda: self.game.dialogue_system.start_dialogue(
+                self.dialogue_data['spawn_bullets'],
+                on_complete=lambda: self.advance_phase(self.status),
+                actors={"FLOWEY": self.flowey_interactable},
+                is_battle=True
+            ))
 
-        elif from_status == "spawn_bullets": # refuse bullets
+        elif from_status == "spawn_bullets": # -> Refuse Bullets
             self.move_bullets()
-            self.game.root.after(100, lambda: self.advance_phase("refuse_bullets"))
+            self.game.root.after(300, lambda: self.update_status("refuse_bullets"))
+            self.game.root.after(300, lambda: self.game.dialogue_system.start_dialogue(
+                self.dialogue_data['refuse_bullets'],
+                on_complete=lambda: self.advance_phase(self.status),
+                actors={"FLOWEY": self.flowey_interactable},
+                is_battle=True
+            ))
 
-        elif from_status == "refuse_bullets": # music_stop
+        elif from_status == "refuse_bullets": # -> Music Stop
+            self.end_turn()
             self.battle_mus.fadeout(1000)
-            self.game.root.after(1500, lambda: self.advance_phase("music_stop"))
+            self.game.root.after(1500, lambda: self.update_status("music_stop"))
+            self.game.root.after(1500, lambda: self.game.dialogue_system.start_dialogue(
+                self.dialogue_data['music_stop'],
+                on_complete=lambda: self.advance_phase(self.status),
+                is_battle=True
+            ))
 
-        elif from_status == "music_stop": # susie_angry
+        elif from_status == "music_stop": # -> Susie Angry
             self.play_susie_attack_animation()
-            self.game.root.after(500, lambda: self.advance_phase("susie_angry"))
+            self.game.root.after(500, lambda: self.update_status("susie_angry"))
+            self.game.root.after(500, lambda: self.game.dialogue_system.start_dialogue(
+                self.dialogue_data['susie_angry'],
+                on_complete=lambda: self.advance_phase(self.status),
+                actors={"FLOWEY": self.flowey_interactable},
+                is_battle=True
+            ))
 
-        elif from_status == "susie_angry": # die
+        elif from_status == "susie_angry": # -> Die
             self.spawn_bullets_around_soul()
-            self.game.root.after(500, lambda: self.advance_phase("die"))
+            self.game.root.after(500, lambda: self.update_status("die"))
+            self.game.root.after(500, lambda: self.game.dialogue_system.start_dialogue(
+                self.dialogue_data['die'],
+                on_complete=lambda: self.advance_phase(self.status),
+                actors={"FLOWEY": self.flowey_interactable},
+                is_battle=True
+            ))
 
-        elif from_status == "die": # yeah_whatever
+        elif from_status == "die": # -> Yeah Whatever
+            self.game.root.after(500, lambda: self.update_status("yeah_whatever"))
+            self.game.root.after(500, lambda: self.game.dialogue_system.start_dialogue(
+                self.dialogue_data['yeah_whatever'],
+                on_complete=lambda: self.advance_phase(self.status),
+                is_battle=True
+            ))
+
+        elif from_status == "yeah_whatever": # -> Post Battle
             self.fire_rude_buster()
-            self.game.root.after(500, lambda: self.advance_phase("yeah_whatever"))
+            self.game.root.after(1500, lambda: self.end_battle())
+            self.game.root.after(1500, lambda: self.update_status("post_battle"))
+            self.game.root.after(3000, lambda: self.game.dialogue_system.start_dialogue(
+                self.dialogue_data['post_battle'],
+                on_complete=lambda: self.advance_phase(self.status)
+            ))
 
-        elif from_status == "yeah_whatever": # post_battle
-            self.end_battle()
-            self.game.root.after(1000, lambda: self.advance_phase("post_battle"))
-
-        elif from_status == "post_battle": # post_battle
+        elif from_status == "post_battle": # -> Cutscene End
             self.game.cutscene_manager.stop_cutscene()
+
+
+    def update_status(self, next_status):
+        """Helper to transition states and wake up the update loop."""
+        self.status = next_status
 
 
     # BATTLE CODE
@@ -201,11 +207,35 @@ class FloweyIntroCutscene:
         self.move_soul((chest_x, chest_y), (self.game.constants.WIDTH // 2, self.game.constants.HEIGHT // 2 - 50), 15)
         self.play_chest_pulse()
 
-        self.advance_phase("battle")
+        self.update_status("battle")
+
+        self.game.dialogue_system.start_dialogue(
+            self.dialogue_data['battle'],
+            on_complete=lambda: self.advance_phase(self.status),
+            actors={"FLOWEY": self.flowey_interactable},
+            is_battle=True
+        )
 
 
     def end_battle(self):
         pass
+
+
+    def end_turn(self):
+        """Closes the battle UI and returns the SOUL to Kris."""
+        self.update_status("ending_turn")
+        self.close_battle_rectangle()
+        
+        kris_id = self.game.player.active_characters[0]
+        kx, ky = self.game.canvas.coords(kris_id)[:2]
+        chest_x = kx - 30
+        chest_y = ky - 50
+        self.move_soul(
+            (self.soul_x, self.soul_y), 
+            (chest_x, chest_y), 
+            15,
+            on_complete=self.returned_soul_to_body
+        )
 
 
     def init_battle(self):
@@ -298,14 +328,15 @@ class FloweyIntroCutscene:
                     image=self.susie_attack_sprites[frame_index]
                 )
 
-            if frame_index > 6:
-                return
+            if frame_index > 4:
+                self.start_battle()
             self.game.root.after(100, lambda: _play_next_frame(frame_index + 1))
 
         _play_next_frame(0)
 
 
     def play_susie_attack_animation(self):
+        self.susie_attacking = True
         self.snd_laz.play()
 
         def _play_next_frame(frame_index):
@@ -315,6 +346,8 @@ class FloweyIntroCutscene:
                     image=self.susie_attack_sprites[frame_index]
                 )
                 self.game.root.after(100, lambda: _play_next_frame(frame_index + 1))
+            else:
+                self.susie_attacking = None
 
         _play_next_frame(0)
 
@@ -329,7 +362,10 @@ class FloweyIntroCutscene:
             active_sprites = self.susie_idle_sprites
 
         def _play_next_frame(frame_index):
-            if not self.status == "battle" and not self.status == "spawn_bullets": return
+            if self.status == "post_battle": return
+            if char_index == 1 and self.susie_attacking == True:
+                self.game.root.after(100, lambda: _play_next_frame(frame_index))
+                return
 
             if frame_index > len(active_sprites) - 1:
                 frame_index = 0
@@ -383,7 +419,6 @@ class FloweyIntroCutscene:
 
                 # Draw swords
                 self.play_battle_intro()
-                self.game.root.after(450, self.start_battle)
           
         _slide_frame(0)
 
@@ -460,7 +495,7 @@ class FloweyIntroCutscene:
         _fade_frame(0)
 
 
-    def move_soul(self, start_coords, end_coords, frames):
+    def move_soul(self, start_coords, end_coords, frames, on_complete=None):
         """Moves the player soul to the given coordinates over x frames."""
         start_x, start_y = start_coords
         end_x, end_y = end_coords
@@ -482,6 +517,9 @@ class FloweyIntroCutscene:
                 self.soul_movement = False
                 self.game.canvas.coords(self.player_soul, end_x, end_y)
                 self.soul_x, self.soul_y = end_x, end_y
+                
+                if on_complete:
+                    on_complete()
 
         _animate_soul(0)
 
@@ -521,7 +559,7 @@ class FloweyIntroCutscene:
             0, 0, 0, 0, 0, 0, 0, 0,
             outline="#00ff00",
             fill="black",
-            width=2
+            width=4
         )
         self.game.canvas.tag_lower(self.main_anim_poly, self.game.player.active_characters[0])
 
@@ -595,6 +633,101 @@ class FloweyIntroCutscene:
         _play_anim_frame(0)
 
 
+    def close_battle_rectangle(self):
+        """Closes the battle box using a reverse spinning animation and fades out the darkness."""
+        target_width = 160
+        target_height = 160
+        box_x, box_y = self.game.constants.WIDTH // 2, self.game.constants.HEIGHT // 2 - 50
+
+        total_frames = 20
+
+        if hasattr(self, 'battle_box_id'):
+            self.game.canvas.delete(self.battle_box_id)
+
+        self._light_overlay_frames = []
+        max_darkness = 200
+        
+        for i in range(total_frames + 1):
+            t = i / total_frames
+            ease_t = (1 - t)**3 
+            alpha = int(max_darkness * ease_t)
+            
+            img = Image.new("RGBA", (self.game.constants.WIDTH, self.game.constants.HEIGHT), (0, 0, 0, alpha))
+            self._light_overlay_frames.append(ImageTk.PhotoImage(img))
+
+        self.main_anim_poly = self.game.canvas.create_polygon(
+            0, 0, 0, 0, 0, 0, 0, 0,
+            outline="#00ff00",
+            fill="black",
+            width=4
+        )
+        self.game.canvas.tag_lower(self.main_anim_poly, self.game.player.active_characters[0])
+
+        def _get_rotated_corners(cx, cy, w, h, angle):
+            """Calculates the 4 corners of a rotated rectangle."""
+            hw, hh = w / 2, h / 2
+            corners = [(-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh)]
+            rotated_coords = []
+            
+            for x_off, y_off in corners:
+                rx = x_off * math.cos(angle) - y_off * math.sin(angle)
+                ry = x_off * math.sin(angle) + y_off * math.cos(angle)
+                rotated_coords.extend([cx + rx, cy + ry])
+                
+            return rotated_coords
+
+        def _spawn_fading_ghost(coords):
+            """Spawns a hollow polygon that fades itself out."""
+            poly_id = self.game.canvas.create_polygon(
+                *coords,
+                outline="#00ff00",
+                fill="",
+                width=4
+            )
+            self.game.canvas.tag_raise(poly_id, self.main_anim_poly)
+            
+            fade_colors = ["#00cc00", "#009900", "#006600", "#003300", "delete"]
+            def _fade_step(step_index):
+                if step_index < len(fade_colors):
+                    color = fade_colors[step_index]
+                    if color == "delete":
+                        self.game.canvas.delete(poly_id)
+                    else:
+                        self.game.canvas.itemconfig(poly_id, outline=color)
+                        self.game.root.after(30, lambda: _fade_step(step_index + 1))
+                        
+            self.game.root.after(30, lambda: _fade_step(0))
+
+        def _play_anim_frame(frame_index):
+            if frame_index <= total_frames:
+                t = frame_index / total_frames
+                ease_t = (1 - t)**3
+
+                if hasattr(self, 'dark_overlay_id'):
+                    self.game.canvas.itemconfig(self.dark_overlay_id, image=self._light_overlay_frames[frame_index])
+                
+                current_w = target_width * ease_t
+                current_h = target_height * ease_t
+                
+                current_angle = math.pi * (1 - ease_t)
+
+                coords = _get_rotated_corners(box_x, box_y, current_w, current_h, current_angle)
+                self.game.canvas.coords(self.main_anim_poly, *coords)
+                
+                if ease_t < 0.35:
+                    _spawn_fading_ghost(coords)
+
+                self.game.root.after(25, lambda: _play_anim_frame(frame_index + 1))
+            else:
+                self.game.canvas.delete(self.main_anim_poly)
+                if hasattr(self, 'dark_overlay_id'):
+                    self.game.canvas.delete(self.dark_overlay_id)
+                
+                self._light_overlay_frames = []
+
+        _play_anim_frame(0)
+
+
     def play_chest_pulse(self):
         """Spawns the pulse on Kris's chest."""
         kris_id = self.game.player.active_characters[0]
@@ -642,3 +775,20 @@ class FloweyIntroCutscene:
             pulse_frames.append(ImageTk.PhotoImage(faded_image))
             
         return pulse_frames
+
+
+    def fade_out_soul(self):
+        """Fades out the player SOUL and removes it from the canvas."""
+        def _play_fade(frame_index):
+            if frame_index < len(self.soul_fade_frames):
+                self.game.canvas.itemconfig(self.player_soul, image=self.soul_fade_frames[frame_index])
+                self.game.root.after(30, lambda: _play_fade(frame_index + 1))
+            else:
+                self.game.canvas.delete(self.player_soul)
+                
+        _play_fade(0)
+
+
+    def returned_soul_to_body(self):
+        self.fade_out_soul()
+        self.play_chest_pulse()

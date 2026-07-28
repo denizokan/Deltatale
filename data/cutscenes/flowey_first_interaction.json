@@ -280,7 +280,7 @@
     "music_stop": [
         {
             "speaker": "SUSIE",
-            "dialogue": "* I guess you didn't hear what I said.",
+            "dialogue": "* I guess you didn't hear\\n  what I said.",
             "face": "SUSIE_NEUTRAL",
             "sound": "SUSIE",
             "pos": "bottom"
@@ -289,7 +289,7 @@
     "susie_angry": [
         {
             "speaker": "SUSIE",
-            "dialogue": "* GET OUT OF THE GODDAMN WAY BEFORE\\n  I TURN YOU INTO LAWN\\n  CLIPPINGS.",
+            "dialogue": "* GET OUT OF THE GODDAMN WAY\\n  BEFORE I TURN YOU INTO LAWN\\n  CLIPPINGS.",
             "face": "SUSIE_MANIAC",
             "sound": "SUSIE",
             "pos": "bottom"
