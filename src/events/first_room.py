@@ -23,13 +23,14 @@ class FirstRoomCutscene:
         self.susie_spawn_x = 330
         self.susie_spawn_y = 220
 
-        self.kris_sprites = [PhotoImage(file="sprites/characters/kris/spr_krisd_0.png").zoom(2), PhotoImage(file="sprites/characters/kris/spr_krisr_0.png").zoom(2)]
+        self.kris_sprites = [PhotoImage(file="sprites/characters/kris/spr_dkris_ground_0.png").zoom(2), PhotoImage(file="sprites/characters/kris/spr_dkris_ground_1.png").zoom(2), PhotoImage(file="sprites/characters/kris/spr_dkris_ground_2.png").zoom(2), PhotoImage(file="sprites/characters/kris/walk/spr_krisd_0.png").zoom(2), PhotoImage(file="sprites/characters/kris/walk/spr_krisr_0.png").zoom(2)]
         self.susie_sprites = [PhotoImage(file="sprites/characters/susie/walk/spr_susied_0.png").zoom(2), PhotoImage(file="sprites/characters/susie/walk/spr_susiel_0.png").zoom(2)]
 
         self.game.player.x, self.game.player.y = self.kris_spawn_x,self.kris_spawn_y
         self.game.canvas.coords(self.game.player.active_characters[0], self.kris_spawn_x - self.game.camera.x, self.kris_spawn_y - self.game.camera.y)
         self.game.canvas.itemconfig(self.game.player.active_characters[0], image=self.kris_sprites[0])
         self.game.canvas.coords(self.game.player.active_characters[1], self.susie_spawn_x - self.game.camera.x, self.susie_spawn_y - self.game.camera.y)
+        self.game.canvas.itemconfig(self.game.player.active_characters[1], image=self.susie_sprites[1])
     
         self.status = "pilot"
         self.timeline = 0
@@ -76,10 +77,10 @@ class FirstRoomCutscene:
     def resume_timeline(self, from_status):
         if from_status == "pilot":
             self.game.transition.fade_from_black(speed=12)
-            self.game.root.after(2500, lambda: self.advance_phase("waking_up"))
+            self.game.root.after(2000, lambda: self.play_kris_get_up())
+            self.game.root.after(4000, lambda: self.advance_phase("waking_up"))
     
         elif from_status == "waking_up":
-            self.game.canvas.itemconfig(self.game.player.active_characters[0], image=self.kris_sprites[1])
             self.play_susie_attack_animation()
             self.game.root.after(500, lambda: self.advance_phase("axe_realization"))
 
@@ -92,12 +93,12 @@ class FirstRoomCutscene:
             self.game.root.after(100, lambda: self.advance_phase("after_realization"))
     
         elif from_status == "after_realization":
-            self.game.canvas.coords(self.game.player.active_characters[1], self.kris_spawn_x, self.kris_spawn_y + 20)
             self.game.canvas.itemconfig(
-                self.game.player.active_characters[1], 
-                image=self.susie_sprites[0]
+                self.game.player.active_characters[0], 
+                image=self.kris_sprites[3]
             )
-            self.game.root.after(100, lambda: self.game.cutscene_manager.stop_cutscene())
+            self.game.player._move_susie_behind_kris(susie_start_coords=(self.susie_spawn_x, self.susie_spawn_y), kris_facing="down")
+            self.game.root.after(1000, lambda: self.game.cutscene_manager.stop_cutscene())
 
 
     def play_susie_attack_animation(self):
@@ -113,4 +114,24 @@ class FirstRoomCutscene:
                 )
                 self.game.root.after(100, lambda: _play_next_frame(frame_index + 1))
 
+        _play_next_frame(0)
+
+
+    def play_kris_get_up(self):
+        def _play_next_frame(frame_index):
+            if frame_index < len(self.kris_sprites) - 2:
+                self.game.canvas.itemconfig(
+                    self.game.player.active_characters[0], 
+                    image=self.kris_sprites[frame_index]
+                )
+                self.game.root.after(400, lambda: _play_next_frame(frame_index + 1))
+
+            else:
+                if frame_index > 4: return
+                self.game.canvas.itemconfig(
+                    self.game.player.active_characters[0], 
+                    image=self.kris_sprites[frame_index]
+                )
+                self.game.root.after(500, lambda: _play_next_frame(frame_index + 1))
+            
         _play_next_frame(0)

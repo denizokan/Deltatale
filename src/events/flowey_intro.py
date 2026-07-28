@@ -176,7 +176,7 @@ class FloweyIntroCutscene:
         sx, sy = self.game.canvas.coords(susie_id)[:2]
         fx, fy = self.game.canvas.coords(flowey_id)[:2]
 
-        self.kris_ghosts = self._generate_faded_ghosts("sprites/characters/kris/spr_krisr_0.png")
+        self.kris_ghosts = self._generate_faded_ghosts("sprites/characters/kris/walk/spr_krisr_0.png")
         self.susie_ghosts = self._generate_faded_ghosts("sprites/characters/susie/walk/spr_susier_0.png")
 
         total_steps = 15
