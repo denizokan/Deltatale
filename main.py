@@ -1,4 +1,5 @@
 import tkinter
+import time
 from tkinter import messagebox
 from PIL import Image, ImageTk
 from src.core.constants import Constants
@@ -11,8 +12,9 @@ from src.core.camera import Camera
 from src.screens.menu_screen import MenuScreen
 from src.screens.save_screen import SaveScreen
 from src.screens.file_select import FileSelectScreen
-from src.systems.savesystem import SaveSystem
-from src.systems.dialoguesystem import DialogueSystem
+from src.systems.save_system import SaveSystem
+from src.systems.dialogue_system import DialogueSystem
+from src.systems.cutscene_manager import CutsceneManager
 from pygame import mixer
 
 class Main:
@@ -45,6 +47,7 @@ class Main:
         self.save_screen = SaveScreen(self)
         self.menu_screen = MenuScreen(self)
         self.transition = TransitionManager(self)
+        self.cutscene_manager = CutsceneManager(self)
         self.dialogue_system = DialogueSystem(self)
 
         root.bind("<KeyPress>", self.input_manager.press_key)
@@ -61,8 +64,13 @@ class Main:
         self.player_sprite = tkinter.PhotoImage(file="sprites/SOUL.png")
         self.active_ui_elements = []
 
+        # FPS logic
+        self.frame_count = 0
+        self.last_fps_time = time.time()
+
         self.current_room = None
         self.selected_file_index = None
+        self.flags = {}
 
         self.state = GameState.INTRO # Possible states: INTRO, FILE_SELECT, PLAYING, BATTLE, GAMEOVER
         self.setup_intro() # Enter the main menu
@@ -141,6 +149,7 @@ class Main:
         self.selected_file_index = index
         
         data = self.save_system.load_file(index)
+        self.flags = data["flags"]
         self.camera = Camera(self)
         self.current_room = Room(self, data["room"])
 
@@ -151,7 +160,7 @@ class Main:
                 break
 
         if spawn_info is None:
-            # It's a room without a save point, or a brand new game!
+            # It's a brand new game
             spawn_x = 320
             spawn_y = 240
             spawn_facing = "down"
@@ -172,6 +181,8 @@ class Main:
             self.canvas.tag_raise(self.player.active_characters[0]) # Put Kris at top
         if spawn_facing == "up":
             self.canvas.tag_raise(self.player.active_characters[0]) # Put Susie at top
+
+        self.canvas.tag_raise(self.transition.fade_canvas_image)
         
         self.file_select_screen = None
         self.state = GameState.PLAYING
@@ -179,10 +190,16 @@ class Main:
         if hasattr(self.current_room, "music"):
             self.root.after(1000, lambda: self.current_room.music.play(loops=-1))
 
+        if spawn_info == None:
+            self.root.after(1000, self.cutscene_manager.play_cutscene("first_room"))
+            return
+        
         self.transition.fade_from_black(speed=24)
         
 
     def game_loop(self):
+        loop_start = time.time()
+
         self.handle_quit() # Listen for quit inputs
 
         # State: INTRO -> Waiting for confirm to go to File Select
@@ -197,26 +214,41 @@ class Main:
         # State: PLAYING -> Handle player movement
         elif self.state == GameState.PLAYING:
             self.update_playtime()
+
+            if self.cutscene_manager.active_cutscene != None:
+                self.cutscene_manager.update()
             
             if self.dialogue_system.is_active: # If dialogue is active
                 self.dialogue_system.handle_input(self.input_manager)
                 self.dialogue_system.update()
+
             elif self.save_screen.is_active: # If save screen is active
                 self.save_screen.handle_input(self.input_manager)
+
             elif self.menu_screen.is_active:
                 self.menu_screen.handle_input(self.input_manager)
-            else:
-                self.player.update(input_mgr=self.input_manager)
-                self.camera.update()
-                self.canvas.coords(self.current_room.background, -self.camera.x, -self.camera.y)
 
-                # Debug mode:
-                if self.input_manager.is_just_pressed(Action.DEBUG):
-                    self.current_room.toggle_debug()
+            else:
+                is_cinematic = self.cutscene_manager.active_cutscene != None and self.cutscene_manager.blocks_player
+                if not is_cinematic:
+                    self.player.update(input_mgr=self.input_manager)
+
+            self.camera.update()
+            self.canvas.coords(self.current_room.background, -self.camera.x, -self.camera.y)
+            self.current_room.update_positions()
+
+        # Debug mode:
+        if self.input_manager.is_just_pressed(Action.DEBUG):
+            self.current_room.toggle_debug()
             self.current_room.update_positions()
 
         self.input_manager.update()
-        delay_ms = int(1000 / self.constants.FPS)
+        self.canvas.update_idletasks()
+
+        execution_time_ms = int((time.time() - loop_start) * 1000)
+        target_ms = int(1000 / self.constants.FPS)
+        delay_ms = max(1, target_ms - execution_time_ms)
+
         self.root.after(delay_ms, self.game_loop)
 
 

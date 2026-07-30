@@ -58,14 +58,14 @@
                 [
                     {
                         "speaker": null,
-                        "dialogue": "* The faint smell of ozone and\n  blasted weed lingers in the air.",
+                        "dialogue": "* The faint smell of ozone and\\n  blasted weed lingers in the air.",
                         "face": null,
                         "sound": "GENERIC",
                         "pos": "bottom"
                     },
                     {
                         "speaker": null,
-                        "dialogue": "* Knowing that your terrifying\n  friend just completely skipped\n  the tutorial...",
+                        "dialogue": "* Knowing that your terrifying\\n  friend just completely skipped\\n  the tutorial...",
                         "face": null,
                         "sound": "GENERIC",
                         "pos": "bottom"
@@ -81,14 +81,14 @@
                 [
                     {
                         "speaker": null,
-                        "dialogue": "* The faint smell of ozone and\n  blasted weed lingers in the air.",
+                        "dialogue": "* The faint smell of ozone and\\n  blasted weed lingers in the air.",
                         "face": null,
                         "sound": "GENERIC",
                         "pos": "bottom"
                     },
                     {
                         "speaker": null,
-                        "dialogue": "* Knowing that your terrifying\n  friend just completely skipped\n  the tutorial...",
+                        "dialogue": "* Knowing that your terrifying\\n  friend just completely skipped\\n  the tutorial...",
                         "face": null,
                         "sound": "GENERIC",
                         "pos": "bottom"
@@ -102,28 +102,28 @@
                     },
                     {
                         "speaker": "SUSIE",
-                        "dialogue": "* Uh... Kris?\n* Everything good?",
+                        "dialogue": "* Uh... Kris?\\n* Everything good?",
                         "face": "SUSIE_NEUTRAL",
                         "sound": "SUSIE",
                         "pos": "bottom"
                     },
                     {
                         "speaker": "SUSIE",
-                        "dialogue": "* You're just kind of...\n  reaching out to thin air.",
+                        "dialogue": "* You're just kind of...\\n  reaching out to thin air.",
                         "face": "SUSIE_AWKWARD",
                         "sound": "SUSIE",
                         "pos": "bottom"
                     },
                     {
                         "speaker": "SUSIE",
-                        "dialogue": "* ... Did that weird flower\n  give you a concussion or\n  something?",
+                        "dialogue": "* ... Did that weird flower\\n  give you a concussion or\\n  something?",
                         "face": "SUSIE_ANNOYED",
                         "sound": "SUSIE",
                         "pos": "bottom"
                     },
                     {
                         "speaker": "SUSIE",
-                        "dialogue": "* Come on, let's keep\n  moving.",
+                        "dialogue": "* Come on, let's keep\\n  moving.",
                         "face": "SUSIE_SMILE",
                         "sound": "SUSIE",
                         "pos": "bottom"

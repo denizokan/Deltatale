@@ -166,7 +166,7 @@ class FileSelectScreen:
             font=("Determination Sans", 16, "normal"),
             anchor="e"
         )
-        self.kris_sprite_image = PhotoImage(file="sprites/characters/kris/spr_krisd_0.png").zoom(2)
+        self.kris_sprite_image = PhotoImage(file="sprites/characters/kris/walk/spr_krisd_0.png").zoom(2)
         kris_sprite = self.game.canvas.create_image(self.game.constants.WIDTH // 2 - 30, self.game.constants.HEIGHT - 8, image=self.kris_sprite_image)
 
         self.susie_sprite_image = PhotoImage(file="sprites/characters/susie/walk/spr_susied_0.png").zoom(2)

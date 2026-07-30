@@ -5,6 +5,7 @@ __pycache__/
 tempCodeRunnerFile.py
 *.pyc
 
+DIALOGUE_FORMATTING.md
 sprites/DELTARUNE Sprites/
 sprites/UNDERTALE Sprites/
 sounds/undertale_sounds/

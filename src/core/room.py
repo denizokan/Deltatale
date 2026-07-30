@@ -1,8 +1,8 @@
 import json
-import os
+import time
 from tkinter import PhotoImage
 from pygame import mixer
-from src.core.enums import TextSound, Interactable
+from src.core.enums import Interactable
 
 class Room:
     """Initializes a room."""
@@ -40,6 +40,8 @@ class Room:
 
         # Draw interactables
         for interactable in self.interactables:
+            if not self._isActive(interactable): continue
+
             interactable["interaction_count"] = 0
             if interactable["sprite"] != None:
                 if len(interactable["sprite"]) > 1: # Its animated
@@ -66,6 +68,8 @@ class Room:
             if (x1 <= target_x <= x2 and y1 <= target_y <= y2): return False
 
         for interactable in self.interactables:
+            if not self._isActive(interactable): continue
+
             obj_x = interactable["x"]
             obj_y = interactable["y"]
 
@@ -82,6 +86,23 @@ class Room:
             if (x1 <= target_x <= x2 and y1 <= target_y <= y2): return False
 
         return True
+
+
+    def check_trigger(self, target_x, target_y):
+        """Checks if the player has stepped on an active cutscene trigger."""
+        for index, trigger in enumerate(self.triggers):
+            trigger_id = self.room_data["triggers"][index]["id"]
+
+            if self.game.flags.get(f"cutscene_{trigger_id}_completed", False):
+                continue
+
+            x1, y1, x2, y2 = trigger["x1"], trigger["y1"], trigger["x2"], trigger["y2"]
+            
+            if (x1 <= target_x <= x2 and y1 <= target_y <= y2):
+                self.game.canvas.itemconfig(self.game.player.active_characters[0], image=self.game.player.kris_sprites[self.game.player.facing][0])
+                self.game.canvas.itemconfig(self.game.player.active_characters[1], image=self.game.player.susie_sprites[self.game.player.facing][0])
+                self.game.cutscene_manager.play_cutscene(trigger_id)
+                break
     
 
     def check_exit(self, target_x, target_y):
@@ -124,6 +145,8 @@ class Room:
             reach = (self.game.player.x + reach_distance, self.game.player.y)
 
         for interactable in self.interactables:
+            if not self._isActive(interactable): continue
+
             if "image_obj" in interactable:
                 obj_x, obj_y = interactable["x"], interactable["y"]
                 if len(interactable["image_obj"]) > 1: # Animated
@@ -147,17 +170,31 @@ class Room:
 
     def play_interactable(self, interactable):
         """Plays the current interactable."""
-        count = interactable["interaction_count"]
-        interactable["interaction_count"] += 1
-        text_groups = interactable["text"]
+        count = interactable.get("interaction_count", 0)
+        interactable["interaction_count"] = count + 1
 
-        selected_index = min(count, len(text_groups) - 1)
-        chosen_dialogue = text_groups[selected_index]
-        if interactable["type"] == Interactable.SAVE_POINT.value:
+        raw_text_data = interactable.get("text", [])
+        if len(raw_text_data) == 0:
+            return
+
+        if interactable.get("type") == Interactable.SAVE_POINT.value:
             mixer.Sound(file="sounds/sound_effects/snd_power.wav").play()
+            
             self.game.dialogue_system.start_dialogue(
-                text=chosen_dialogue,
+                text=raw_text_data,
+                interaction_index=count,
                 on_complete=lambda: self.game.save_screen.show_save_screen(interactable)
+            )
+        elif interactable.get("type") == Interactable.NPC.value:
+            self.game.dialogue_system.start_dialogue(
+                text=raw_text_data,
+                interaction_index=count,
+                actors={interactable["name"]: interactable}
+            )
+        else:
+            self.game.dialogue_system.start_dialogue(
+                text=raw_text_data,
+                interaction_index=count
             )
 
     
@@ -223,6 +260,16 @@ class Room:
             self.game.canvas.tag_raise(debug_text)
             self.debug_elements.append({"id": debug_text, "type": "text", "coords": (text_x, text_y)})
 
+            fps_text = self.game.canvas.create_text(
+                10, 40,
+                text="FPS: 0", 
+                fill="yellow", 
+                font=("Determination Sans", 16, "normal"), 
+                anchor="nw"
+            )
+            self.game.canvas.tag_raise(debug_text)
+            self.debug_elements.append({"id": fps_text, "type": "fps_text", "coords": (text_x, text_y)})
+
             coords_text_x = self.game.constants.WIDTH - 5
             coords_text_y = 15
             coords_text = self.game.canvas.create_text(
@@ -252,6 +299,7 @@ class Room:
     def _create_rectangle(self, list, color, width):
         coords_list = []
         for element in list:
+            if not self._isActive(element): continue
             try:
                 coords = (element["x1"], element["y1"], element["x2"], element["y2"])
             except KeyError: # Dealing with an interactable
@@ -294,15 +342,32 @@ class Room:
     def update_positions(self):
         """Updates interactable indexes & positions in respect to camera x and y."""
         for interactable in self.interactables:
+            if interactable.get("is_battling", False): continue
+            if not self._isActive(interactable): continue
             canvas_id = interactable["canvas_id"]
             if len(interactable["image_obj"]) > 0:
-                interactable["timer"] -= 1
-                if interactable["timer"] <= 0:
-                    interactable["frame_index"] += 1
-                    if interactable["frame_index"] > len(interactable["image_obj"]) - 1:
-                        interactable["frame_index"] = 0
-                    interactable["timer"] = 5
-                    self.game.canvas.itemconfig(canvas_id, image=interactable["image_obj"][interactable["frame_index"]])
+                if interactable["type"] == "SAVE_POINT":
+                    interactable["timer"] -= 1
+                    if interactable["timer"] <= 0:
+                        interactable["frame_index"] += 1
+                        if interactable["frame_index"] > len(interactable["image_obj"]) - 1:
+                            interactable["frame_index"] = 0
+                        interactable["timer"] = 5
+                        self.game.canvas.itemconfig(canvas_id, image=interactable["image_obj"][interactable["frame_index"]])
+                elif interactable["type"] == "NPC":
+                    if interactable.get("is_speaking", False):
+                        interactable["timer"] -= 1
+                        if interactable["timer"] <= 0:
+                            interactable["frame_index"] += 1
+                            if interactable["frame_index"] > len(interactable["image_obj"]) - 1:
+                                interactable["frame_index"] = 0
+                            interactable["timer"] = 5
+                            
+                            self.game.canvas.itemconfig(canvas_id, image=interactable["image_obj"][interactable["frame_index"]])
+                    else:
+                        if interactable.get("frame_index", 0) != 0:
+                            interactable["frame_index"] = 0
+                            self.game.canvas.itemconfig(canvas_id, image=interactable["image_obj"][0])
             self.game.canvas.coords(canvas_id, interactable["x"] - self.game.camera.x, interactable["y"] - self.game.camera.y)
 
         if self.debug_mode: self._update_debug_positions() # DEBUG MODE
@@ -313,6 +378,17 @@ class Room:
         for element in self.debug_elements:
             if element["type"] == "text":
                 self.game.canvas.tag_raise(element["id"])
+
+            if element["type"] == "fps_text":
+                self.game.canvas.tag_raise(element["id"])
+                self.game.frame_count += 1
+                current_time = time.time()
+                
+                if current_time - self.game.last_fps_time >= 1.0:
+                    self.game.canvas.itemconfig(element["id"], text=f"FPS: {self.game.frame_count}")
+                    self.game.canvas.tag_raise(element["id"]) 
+                    self.game.frame_count = 0
+                    self.game.last_fps_time = current_time
 
             if element["type"] == "coords_text":
                 self.game.canvas.tag_raise(element["id"])
@@ -326,3 +402,13 @@ class Room:
                 x, y, radius = element["coords"]
                 x1, y1, x2, y2 = x - radius, y - radius, x + radius, y + radius
                 self.game.canvas.coords(element["id"], x1 - self.game.camera.x, y1 - self.game.camera.y, x2 - self.game.camera.x, y2 - self.game.camera.y)
+
+
+    def _isActive(self, interactable):
+        """Checks if an interactable is currently active on the canvas."""
+        if interactable.get("is_active", False): return False
+        if interactable.get("cutscene", None) != None:
+            if self.game.flags.get(f"cutscene_{interactable["cutscene"]}_completed", False):
+                return False
+
+        return True

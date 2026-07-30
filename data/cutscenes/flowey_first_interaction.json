@@ -1,0 +1,369 @@
+{
+    "greeting": [
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* Howdy!\\n* I'm \\c[yellow]FLOWEY\\c[white].\\n* \\c[yellow]FLOWEY\\c[white] the \\c[yellow]FLOWER\\c[white]!",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "top"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* Hmm...\\n* You're new to the\\n  underground-\\d[3]\\sk",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "top"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* Great. A talking\\n  dandelion. Move, weed,\\n  we're walking here.",
+            "face": "SUSIE_ANNOYED",
+            "sound": "SUSIE",
+            "pos": "top"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* Hey! No need to be rude.\\n* I was just greeting the\\n  human to the underground.",
+            "face": "FLOWEY_SMILE_ANNOYED",
+            "sound": "FLOWEY",
+            "pos": "top"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* ...",
+            "face": "SUSIE_UNIMPRESSED",
+            "sound": "SUSIE",
+            "pos": "top"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* As I was saying, you\\n  must be so confused.",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "top"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* Somebody's ought to teach\\n  you how things work\\n  around here!",
+            "face": "FLOWEY_WINK",
+            "sound": "FLOWEY",
+            "pos": "top"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* We're not interested.",
+            "face": "SUSIE_ANNOYED",
+            "sound": "SUSIE",
+            "pos": "top"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* ... Now, will you move\\n  aside or will I have to\\n  do it by force?",
+            "face": "SUSIE_PISSED",
+            "sound": "SUSIE",
+            "pos": "top"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* But don't you want to\\n  learn about your \\c[yellow]SOUL\\c[white]?\\n* About your \\c[yellow]LOVE\\c[white]?",
+            "face": "FLOWEY_NEUTRAL",
+            "sound": "FLOWEY",
+            "pos": "top"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* Why the hell would we\\n  care?",
+            "face": "SUSIE_ANNOYED",
+            "sound": "SUSIE",
+            "pos": "top"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* The underground is full\\n  of dangerous monsters.",
+            "face": "FLOWEY_NEUTRAL",
+            "sound": "FLOWEY",
+            "pos": "top"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* The human needs to learn\\n  how to defend themselves.",
+            "face": "FLOWEY_NEUTRAL",
+            "sound": "FLOWEY",
+            "pos": "top"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* A dumb little flower\\n  teaching self-defense?\\n* I'm good, thanks.",
+            "face": "SUSIE_UNIMPRESSED_SMIRK",
+            "sound": "SUSIE",
+            "pos": "top"
+        }
+    ],
+    "heated_up": [
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* \\sp[2]\\s[1]You think you can talk to\\n  me like that, you IDIOT?!",
+            "face": "FLOWEY_SCARY",
+            "sound": "FLOWEY_EVIL",
+            "pos": "top"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* Wow. Gross face. Change\\n  it back before I step on\\n  you.",
+            "face": "SUSIE_UNIMPRESSED",
+            "sound": "SUSIE",
+            "pos": "top"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* \\s[1]What? WHO do you think\\n  you ARE?",
+            "face": "FLOWEY_ANGRY",
+            "sound": "FLOWEY_EVIL",
+            "pos": "top"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* You're nowhere near as\\n  intimidating as you think.",
+            "face": "SUSIE_SMIRK",
+            "sound": "SUSIE",
+            "pos": "top"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* Look, I might look like a\\n  flower, but-\\d[3]\\sk",
+            "face": "FLOWEY_SMILE_ANNOYED",
+            "sound": "FLOWEY",
+            "pos": "top"
+        }
+    ],
+    "pre_battle": [
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* FINE!! If it will get you\\n  to SHUT UP, hurry up and\\n  show us.",
+            "face": "SUSIE_ROAR",
+            "sound": "SUSIE",
+            "pos": "top"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* Okay, here we go!",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "top"
+        }
+    ],
+    "battle": [
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* See that heart?",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* That is your \\c[red]SOUL\\c[white].\\n* The very culmination of your\\n  being!",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* Hey Kris, why are we fighting\\n  this idiot?",
+            "face": "SUSIE_ANNOYED",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* No no! We're not fighting.\\n* I don't have the intention\\n  to hurt you.",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* I DO HAVE the intention to\\n  hurt you if you don't make\\n  this quick.",
+            "face": "SUSIE_PISSED",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* ...",
+            "face": "FLOWEY_NEUTRAL",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* Anyway, your SOUL starts off\\n  weak, but can grow strong if\\n  you gain a lot of \\c[yellow]LV\\c[white].",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* What does \\c[yellow]LV \\c[white]stand for?\\n* Why, \\c[yellow]LOVE \\c[white]of course!",
+            "face": "FLOWEY_WINK",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* (yawn)",
+            "face": "SUSIE_UNIMPRESSED",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* You want some \\c[yellow]LOVE\\c[white], don't you?",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        }
+    ],
+    "spawn_bullets": [
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* Don't worry, I'll share some!",
+            "face": "FLOWEY_WINK",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* Down here, \\c[yellow]LOVE \\c[white]is shared by-\\d[3]\\sk",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* Why do these look like teeth?",
+            "face": "SUSIE_AWKWARD",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* No, silly!\\n* These are called '\\c[yellow]friendliness\\n  pellets\\c[white]'.",
+            "face": "FLOWEY_SMILE_ANNOYED",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* Here, try to catch as many\\n  as you can!",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        }
+    ],
+    "refuse_bullets": [
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* Look, weirdo. We don't want\\n  your trash. Can we leave\\n  already?",
+            "face": "SUSIE_ANNOYED",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* But we were just getting\\n  started!",
+            "face": "FLOWEY_SAD",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* The human just needs to-\\d[3]\\sk",
+            "face": "FLOWEY_NEUTRAL",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        }
+    ],
+    "music_stop": [
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* I guess you didn't hear\\n  what I said.",
+            "face": "SUSIE_PISSED",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        }
+    ],
+    "susie_angry": [
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* GET OUT OF THE GODDAMN WAY\\n  BEFORE I TURN YOU INTO LAWN\\n  CLIPPINGS.",
+            "face": "SUSIE_MANIAC",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        }
+    ],
+    "evil_flowey": [
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* Hahaha... You really are an\\n  idiot, aren't you?",
+            "face": "FLOWEY_SCARY",
+            "sound": "FLOWEY_EVIL",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* You think you're the one\\n  in control here?",
+            "face": "FLOWEY_MANIAC",
+            "sound": "FLOWEY_EVIL",
+            "pos": "bottom"
+        },
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* In this world, it's \\s[1]KILL\\s[0] or\\n  be \\s[1]KILLED\\s[0].",
+            "face": "FLOWEY_MANIAC_2",
+            "sound": "FLOWEY_EVIL",
+            "pos": "bottom"
+        }
+    ],
+    "die": [
+        {
+            "speaker": "FLOWEY",
+            "dialogue": "* DIE.",
+            "face": "FLOWEY_MANIAC_2",
+            "sound": "FLOWEY_EVIL",
+            "pos": "bottom"
+        }
+    ],
+    "yeah_whatever": [
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* Yeah, whatever.",
+            "face": "SUSIE_UNIMPRESSED",
+            "sound": "SUSIE",
+            "pos": "bottom"
+        }
+    ],
+    "post_battle": [
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* I knew something was up\\n  with that flower.",
+            "face": "SUSIE_ANNOYED",
+            "sound": "SUSIE",
+            "pos": "top"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* ...",
+            "face": "SUSIE_LOOK_AWAY",
+            "sound": "SUSIE",
+            "pos": "top"
+        },
+        {
+            "speaker": "SUSIE",
+            "dialogue": "* What the hell have we\\n  gotten ourselves into?",
+            "face": "SUSIE_AWKWARD",
+            "sound": "SUSIE",
+            "pos": "top"
+        }
+    ]
+}
