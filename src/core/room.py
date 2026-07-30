@@ -1,8 +1,8 @@
 import json
-import os
+import time
 from tkinter import PhotoImage
 from pygame import mixer
-from src.core.enums import TextSound, Interactable
+from src.core.enums import Interactable
 
 class Room:
     """Initializes a room."""
@@ -254,6 +254,16 @@ class Room:
             self.game.canvas.tag_raise(debug_text)
             self.debug_elements.append({"id": debug_text, "type": "text", "coords": (text_x, text_y)})
 
+            fps_text = self.game.canvas.create_text(
+                10, 40,
+                text="FPS: 0", 
+                fill="yellow", 
+                font=("Determination Sans", 16, "normal"), 
+                anchor="nw"
+            )
+            self.game.canvas.tag_raise(debug_text)
+            self.debug_elements.append({"id": fps_text, "type": "fps_text", "coords": (text_x, text_y)})
+
             coords_text_x = self.game.constants.WIDTH - 5
             coords_text_y = 15
             coords_text = self.game.canvas.create_text(
@@ -360,6 +370,17 @@ class Room:
         for element in self.debug_elements:
             if element["type"] == "text":
                 self.game.canvas.tag_raise(element["id"])
+
+            if element["type"] == "fps_text":
+                self.game.canvas.tag_raise(element["id"])
+                self.game.frame_count += 1
+                current_time = time.time()
+                
+                if current_time - self.game.last_fps_time >= 1.0:
+                    self.game.canvas.itemconfig(element["id"], text=f"FPS: {self.game.frame_count}")
+                    self.game.canvas.tag_raise(element["id"]) 
+                    self.game.frame_count = 0
+                    self.game.last_fps_time = current_time
 
             if element["type"] == "coords_text":
                 self.game.canvas.tag_raise(element["id"])

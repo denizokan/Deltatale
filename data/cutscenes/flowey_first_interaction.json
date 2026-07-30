@@ -293,7 +293,9 @@
             "face": "SUSIE_MANIAC",
             "sound": "SUSIE",
             "pos": "bottom"
-        },
+        }
+    ],
+    "evil_flowey": [
         {
             "speaker": "FLOWEY",
             "dialogue": "* Hahaha... You really are an\\n  idiot, aren't you?",

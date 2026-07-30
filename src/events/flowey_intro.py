@@ -26,6 +26,7 @@ class FloweyIntroCutscene:
         self.timeline = 0
 
         self.battle_started = False
+        self.battle_rectangle_coords = None
         self.soul_movement = False
         self.soul_x = 0
         self.soul_y = 0
@@ -70,6 +71,27 @@ class FloweyIntroCutscene:
         # Battle UI
         self.battle_lower_ui = PhotoImage(file="sprites/battle/ui/flowey_fight_lower_ui.png")
         self.battle_tp_ui = PhotoImage(file="sprites/battle/ui/flowey_fight_tp_bar.png")
+
+        # Battle box
+        self._dark_overlay_frames = []
+        self._light_overlay_frames = []
+        total_frames = 20
+        max_darkness = 200
+
+        for i in range(total_frames + 1):
+            t = i / total_frames
+            
+            # Opening frames (ease out)
+            ease_t_dark = 1 - (1 - t)**3
+            alpha_dark = int(max_darkness * ease_t_dark)
+            img_dark = Image.new("RGBA", (self.game.constants.WIDTH, self.game.constants.HEIGHT), (0, 0, 0, alpha_dark))
+            self._dark_overlay_frames.append(ImageTk.PhotoImage(img_dark))
+            
+            # Closing frames (ease in)
+            ease_t_light = (1 - t)**3
+            alpha_light = int(max_darkness * ease_t_light)
+            img_light = Image.new("RGBA", (self.game.constants.WIDTH, self.game.constants.HEIGHT), (0, 0, 0, alpha_light))
+            self._light_overlay_frames.append(ImageTk.PhotoImage(img_light))
 
 
     def update(self):
@@ -141,8 +163,8 @@ class FloweyIntroCutscene:
             ))
 
         elif from_status == "music_stop": # -> Susie Angry
+            self.update_status("susie_angry")
             self.play_susie_attack_animation()
-            self.game.root.after(500, lambda: self.update_status("susie_angry"))
             self.game.root.after(500, lambda: self.game.dialogue_system.start_dialogue(
                 self.dialogue_data['susie_angry'],
                 on_complete=lambda: self.advance_phase(self.status),
@@ -150,8 +172,17 @@ class FloweyIntroCutscene:
                 is_battle=True
             ))
 
-        elif from_status == "susie_angry": # -> Die
-            self.spawn_bullets_around_soul()
+        elif from_status == "susie_angry": # -> Evil Flowey
+            self.update_status("evil_flowey")
+            self.game.root.after(100, lambda: self.game.dialogue_system.start_dialogue(
+                self.dialogue_data['evil_flowey'],
+                on_complete=lambda: self.advance_phase(self.status),
+                actors={"FLOWEY": self.flowey_interactable},
+                is_battle=True
+            ))
+
+        elif from_status == "evil_flowey":
+            self.flowey_attack()
             self.game.root.after(500, lambda: self.update_status("die"))
             self.game.root.after(500, lambda: self.game.dialogue_system.start_dialogue(
                 self.dialogue_data['die'],
@@ -263,11 +294,10 @@ class FloweyIntroCutscene:
         if self.game.input_manager.is_pressed(Action.RIGHT):
             target_x = self.soul_x + self.game.constants.SOUL_SPEED
 
-        box_width = 160
-        box_height = 160
-        box_x, box_y = self.game.constants.WIDTH // 2, self.game.constants.HEIGHT // 2 - 50
-        x1, y1 = box_x - box_width/2, box_y - box_height/2,
-        x2, y2 = box_x + box_width/2, box_y + box_height/2,
+        if self.battle_rectangle_coords:
+            x1, y1, x2, y2 = self.battle_rectangle_coords
+        else:
+            return
 
         soul_radius = 8
         offset = 4 
@@ -304,6 +334,19 @@ class FloweyIntroCutscene:
         pass
 
 
+    def flowey_attack(self):
+        self.spawn_battle_rectangle(width=24, height=24)
+
+        kris_id = self.game.player.active_characters[0]
+        kx, ky = self.game.canvas.coords(kris_id)[:2]
+        chest_x = kx - 30
+        chest_y = ky - 50
+        
+        self.player_soul = self.game.canvas.create_image(chest_x, chest_y, image=self.player_sprite)
+        self.move_soul((chest_x, chest_y), (self.game.constants.WIDTH // 2, self.game.constants.HEIGHT // 2 - 50), 15, on_complete=self.spawn_bullets_around_soul)
+        self.play_chest_pulse()
+
+
     def spawn_bullets_around_soul(self):
         pass
 
@@ -336,7 +379,6 @@ class FloweyIntroCutscene:
 
 
     def play_susie_attack_animation(self):
-        self.susie_attacking = True
         self.snd_laz.play()
 
         def _play_next_frame(frame_index):
@@ -346,8 +388,6 @@ class FloweyIntroCutscene:
                     image=self.susie_attack_sprites[frame_index]
                 )
                 self.game.root.after(100, lambda: _play_next_frame(frame_index + 1))
-            else:
-                self.susie_attacking = None
 
         _play_next_frame(0)
 
@@ -363,7 +403,7 @@ class FloweyIntroCutscene:
 
         def _play_next_frame(frame_index):
             if self.status == "post_battle": return
-            if char_index == 1 and self.susie_attacking == True:
+            if char_index == 1 and self.status == "susie_angry":
                 self.game.root.after(100, lambda: _play_next_frame(frame_index))
                 return
 
@@ -524,24 +564,16 @@ class FloweyIntroCutscene:
         _animate_soul(0)
 
 
-    def spawn_battle_rectangle(self):
+    def spawn_battle_rectangle(self, width=160, height=160):
         """Spawns the battle box using a solid expanding void and hollow fading trails."""
-        target_width = 160
-        target_height = 160
+        if self.battle_rectangle_coords != None: raise RuntimeError("Can't spawn a new battle rectangle because another one is already present.")
+        target_width = width
+        target_height = height
         box_x, box_y = self.game.constants.WIDTH // 2, self.game.constants.HEIGHT // 2 - 50
 
-        total_frames = 20
+        self.battle_rectangle_coords = (box_x - target_width/2, box_y - target_height/2, box_x + target_width/2, box_y + target_height/2)
 
-        self._dark_overlay_frames = []
-        max_darkness = 200
-        
-        for i in range(total_frames + 1):
-            t = i / total_frames
-            ease_t = 1 - (1 - t)**3 
-            alpha = int(max_darkness * ease_t)
-            
-            img = Image.new("RGBA", (self.game.constants.WIDTH, self.game.constants.HEIGHT), (0, 0, 0, alpha))
-            self._dark_overlay_frames.append(ImageTk.PhotoImage(img))
+        total_frames = 20
 
         self.dark_overlay_id = self.game.canvas.create_image(
             0, 0, 
@@ -635,25 +667,17 @@ class FloweyIntroCutscene:
 
     def close_battle_rectangle(self):
         """Closes the battle box using a reverse spinning animation and fades out the darkness."""
-        target_width = 160
-        target_height = 160
+        if self.battle_rectangle_coords == None: raise RuntimeError("There is no battle rectangle to close.")
+        x1, y1, x2, y2 = self.battle_rectangle_coords
+        self.battle_rectangle_coords = None
+        target_width = x2 - x1
+        target_height = y2 - y1
         box_x, box_y = self.game.constants.WIDTH // 2, self.game.constants.HEIGHT // 2 - 50
 
         total_frames = 20
 
         if hasattr(self, 'battle_box_id'):
             self.game.canvas.delete(self.battle_box_id)
-
-        self._light_overlay_frames = []
-        max_darkness = 200
-        
-        for i in range(total_frames + 1):
-            t = i / total_frames
-            ease_t = (1 - t)**3 
-            alpha = int(max_darkness * ease_t)
-            
-            img = Image.new("RGBA", (self.game.constants.WIDTH, self.game.constants.HEIGHT), (0, 0, 0, alpha))
-            self._light_overlay_frames.append(ImageTk.PhotoImage(img))
 
         self.main_anim_poly = self.game.canvas.create_polygon(
             0, 0, 0, 0, 0, 0, 0, 0,

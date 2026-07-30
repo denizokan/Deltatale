@@ -148,13 +148,14 @@ class DialogueSystem:
         if not self.is_active: return
 
         # Update shaking text:
-        for text in self.shaking_text_ids:
-            item_id = text["id"]
-            x, y = text["pos"]
-            intensity = text["intensity"]
-            new_x = uniform(x - intensity, x + intensity)
-            new_y = uniform(y - intensity, y + intensity)
-            self.game.canvas.coords(item_id, new_x, new_y)
+        if self.shaking_text_ids:
+            for text in self.shaking_text_ids:
+                item_id = text["id"]
+                x, y = text["pos"]
+                intensity = text["intensity"]
+                new_x = uniform(x - intensity, x + intensity)
+                new_y = uniform(y - intensity, y + intensity)
+                self.game.canvas.coords(item_id, new_x, new_y)
         # --------------------
 
         if self.is_line_complete: return

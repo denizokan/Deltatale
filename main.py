@@ -1,4 +1,5 @@
 import tkinter
+import time
 from tkinter import messagebox
 from PIL import Image, ImageTk
 from src.core.constants import Constants
@@ -62,6 +63,10 @@ class Main:
         self.logo_sprite = tkinter.PhotoImage(file="assets/LOGO.png")
         self.player_sprite = tkinter.PhotoImage(file="sprites/SOUL.png")
         self.active_ui_elements = []
+
+        # FPS logic
+        self.frame_count = 0
+        self.last_fps_time = time.time()
 
         self.current_room = None
         self.selected_file_index = None
@@ -191,6 +196,8 @@ class Main:
         
 
     def game_loop(self):
+        loop_start = time.time()
+
         self.handle_quit() # Listen for quit inputs
 
         # State: INTRO -> Waiting for confirm to go to File Select
@@ -224,16 +231,22 @@ class Main:
                 if not is_cinematic:
                     self.player.update(input_mgr=self.input_manager)
 
-                self.camera.update()
-                self.canvas.coords(self.current_room.background, -self.camera.x, -self.camera.y)
+            self.camera.update()
+            self.canvas.coords(self.current_room.background, -self.camera.x, -self.camera.y)
+            self.current_room.update_positions()
 
-                # Debug mode:
-                if self.input_manager.is_just_pressed(Action.DEBUG):
-                    self.current_room.toggle_debug()
+        # Debug mode:
+        if self.input_manager.is_just_pressed(Action.DEBUG):
+            self.current_room.toggle_debug()
             self.current_room.update_positions()
 
         self.input_manager.update()
-        delay_ms = int(1000 / self.constants.FPS)
+        self.canvas.update_idletasks()
+
+        execution_time_ms = int((time.time() - loop_start) * 1000)
+        target_ms = int(1000 / self.constants.FPS)
+        delay_ms = max(1, target_ms - execution_time_ms)
+
         self.root.after(delay_ms, self.game_loop)
 
 
