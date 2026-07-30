@@ -40,6 +40,8 @@ class Room:
 
         # Draw interactables
         for interactable in self.interactables:
+            if not self._isActive(interactable): continue
+
             interactable["interaction_count"] = 0
             if interactable["sprite"] != None:
                 if len(interactable["sprite"]) > 1: # Its animated
@@ -66,6 +68,8 @@ class Room:
             if (x1 <= target_x <= x2 and y1 <= target_y <= y2): return False
 
         for interactable in self.interactables:
+            if not self._isActive(interactable): continue
+
             obj_x = interactable["x"]
             obj_y = interactable["y"]
 
@@ -142,6 +146,8 @@ class Room:
             reach = (self.game.player.x + reach_distance, self.game.player.y)
 
         for interactable in self.interactables:
+            if not self._isActive(interactable): continue
+            
             if "image_obj" in interactable:
                 obj_x, obj_y = interactable["x"], interactable["y"]
                 if len(interactable["image_obj"]) > 1: # Animated
@@ -337,6 +343,9 @@ class Room:
         """Updates interactable indexes & positions in respect to camera x and y."""
         for interactable in self.interactables:
             if interactable.get("is_battling", False): continue
+            if interactable.get("cutscene", None) != None:
+                if self.game.flags.get(f"cutscene_{interactable["cutscene"]}_completed", False):
+                    continue
             canvas_id = interactable["canvas_id"]
             if len(interactable["image_obj"]) > 0:
                 if interactable["type"] == "SAVE_POINT":
@@ -395,3 +404,13 @@ class Room:
                 x, y, radius = element["coords"]
                 x1, y1, x2, y2 = x - radius, y - radius, x + radius, y + radius
                 self.game.canvas.coords(element["id"], x1 - self.game.camera.x, y1 - self.game.camera.y, x2 - self.game.camera.x, y2 - self.game.camera.y)
+
+
+    def _isActive(self, interactable):
+        """Checks if an interactable is currently active on the canvas."""
+        if interactable.get("is_active", False): return False
+        if interactable.get("cutscene", None) != None:
+            if self.game.flags.get(f"cutscene_{interactable["cutscene"]}_completed", False):
+                return False
+
+        return True

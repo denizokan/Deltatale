@@ -131,6 +131,7 @@ class SaveScreen:
         """Overwrites old save data with the new data."""
         old_data["location"] = interactable["location"]
         old_data["playtime"] += self.game.playtime
+        old_data["room"] = self.game.current_room.room_id
         old_data["flags"] = self.game.flags
         self.game.playtime = 0
         # TODO: Update more values later

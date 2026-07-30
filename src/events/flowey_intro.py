@@ -258,8 +258,8 @@ class FloweyIntroCutscene:
     def end_battle(self):
         """Fully transitions the game out of the battle state."""
         self.end_turn()
-        self.game.root.after(1500, self.hide_battle_ui())
-        self.game.root.after(1500, self.move_characters_to_original_positions())
+        self.game.root.after(1500, self.hide_battle_ui)
+        self.game.root.after(1500, self.move_characters_to_original_positions)
         
         self.flowey_interactable["is_battling"] = False
 
@@ -761,7 +761,7 @@ class FloweyIntroCutscene:
         kx, ky = self.game.canvas.coords(kris_id)[:2]
         sx, sy = self.game.canvas.coords(susie_id)[:2]
 
-        total_steps = 15
+        total_steps = 30
 
         def _slide_frame(step):
             if step <= total_steps:
