@@ -24,14 +24,14 @@
         {
             "speaker": "FLOWEY",
             "dialogue": "* Hey! No need to be rude.\\n* I was just greeting the\\n  human to the underground.",
-            "face": "FLOWEY_NEUTRAL",
+            "face": "FLOWEY_SMILE_ANNOYED",
             "sound": "FLOWEY",
             "pos": "top"
         },
         {
             "speaker": "SUSIE",
             "dialogue": "* ...",
-            "face": "SUSIE_ANNOYED",
+            "face": "SUSIE_UNIMPRESSED",
             "sound": "SUSIE",
             "pos": "top"
         },
@@ -59,7 +59,7 @@
         {
             "speaker": "SUSIE",
             "dialogue": "* ... Now, will you move\\n  aside or will I have to\\n  do it by force?",
-            "face": "SUSIE_ANNOYED",
+            "face": "SUSIE_PISSED",
             "sound": "SUSIE",
             "pos": "top"
         },
@@ -94,7 +94,7 @@
         {
             "speaker": "SUSIE",
             "dialogue": "* A dumb little flower\\n  teaching self-defense?\\n* I'm good, thanks.",
-            "face": "SUSIE_GRIN",
+            "face": "SUSIE_UNIMPRESSED_SMIRK",
             "sound": "SUSIE",
             "pos": "top"
         }
@@ -117,21 +117,21 @@
         {
             "speaker": "FLOWEY",
             "dialogue": "* \\s[1]What? WHO do you think\\n  you ARE?",
-            "face": "FLOWEY_MANIAC",
+            "face": "FLOWEY_ANGRY",
             "sound": "FLOWEY_EVIL",
             "pos": "top"
         },
         {
             "speaker": "SUSIE",
             "dialogue": "* You're nowhere near as\\n  intimidating as you think.",
-            "face": "SUSIE_MANIAC",
+            "face": "SUSIE_SMIRK",
             "sound": "SUSIE",
             "pos": "top"
         },
         {
             "speaker": "FLOWEY",
             "dialogue": "* Look, I might look like a\\n  flower, but-\\d[3]\\sk",
-            "face": "FLOWEY_NEUTRAL",
+            "face": "FLOWEY_SMILE_ANNOYED",
             "sound": "FLOWEY",
             "pos": "top"
         }
@@ -184,7 +184,7 @@
         {
             "speaker": "SUSIE",
             "dialogue": "* I DO HAVE the intention to\\n  hurt you if you don't make\\n  this quick.",
-            "face": "SUSIE_MANIAC",
+            "face": "SUSIE_PISSED",
             "sound": "SUSIE",
             "pos": "bottom"
         },
@@ -212,7 +212,7 @@
         {
             "speaker": "SUSIE",
             "dialogue": "* (yawn)",
-            "face": "SUSIE_NEUTRAL",
+            "face": "SUSIE_UNIMPRESSED",
             "sound": "SUSIE",
             "pos": "bottom"
         },
@@ -235,7 +235,7 @@
         {
             "speaker": "SUSIE",
             "dialogue": "* Why do these look like teeth?",
-            "face": "SUSIE_NEUTRAL",
+            "face": "SUSIE_AWKWARD",
             "sound": "SUSIE",
             "pos": "bottom"
         },
@@ -258,21 +258,21 @@
         {
             "speaker": "SUSIE",
             "dialogue": "* Look, weirdo. We don't want\\n  your trash. Can we leave\\n  already?",
-            "face": "SUSIE_UNIMPRESSED",
+            "face": "SUSIE_ANNOYED",
             "sound": "SUSIE",
             "pos": "bottom"
         },
         {
             "speaker": "FLOWEY",
             "dialogue": "* But we were just getting\\n  started!",
-            "face": "FLOWEY_SMILE",
+            "face": "FLOWEY_SAD",
             "sound": "FLOWEY",
             "pos": "bottom"
         },
         {
             "speaker": "FLOWEY",
             "dialogue": "* The human just needs to-\\d[3]\\sk",
-            "face": "FLOWEY_SMILE",
+            "face": "FLOWEY_NEUTRAL",
             "sound": "FLOWEY",
             "pos": "bottom"
         }
@@ -281,7 +281,7 @@
         {
             "speaker": "SUSIE",
             "dialogue": "* I guess you didn't hear\\n  what I said.",
-            "face": "SUSIE_NEUTRAL",
+            "face": "SUSIE_PISSED",
             "sound": "SUSIE",
             "pos": "bottom"
         }
@@ -313,7 +313,7 @@
         {
             "speaker": "FLOWEY",
             "dialogue": "* In this world, it's \\s[1]KILL\\s[0] or\\n  be \\s[1]KILLED\\s[0].",
-            "face": "FLOWEY_MANIAC",
+            "face": "FLOWEY_MANIAC_2",
             "sound": "FLOWEY_EVIL",
             "pos": "bottom"
         }
@@ -322,7 +322,7 @@
         {
             "speaker": "FLOWEY",
             "dialogue": "* DIE.",
-            "face": "FLOWEY_MANIAC",
+            "face": "FLOWEY_MANIAC_2",
             "sound": "FLOWEY_EVIL",
             "pos": "bottom"
         }
@@ -331,7 +331,7 @@
         {
             "speaker": "SUSIE",
             "dialogue": "* Yeah, whatever.",
-            "face": "SUSIE_NEUTRAL",
+            "face": "SUSIE_UNIMPRESSED",
             "sound": "SUSIE",
             "pos": "bottom"
         }
@@ -340,7 +340,7 @@
         {
             "speaker": "SUSIE",
             "dialogue": "* I knew something was up\\n  with that flower.",
-            "face": "SUSIE_MANIAC",
+            "face": "SUSIE_ANNOYED",
             "sound": "SUSIE",
             "pos": "top"
         },
@@ -354,7 +354,7 @@
         {
             "speaker": "SUSIE",
             "dialogue": "* What the hell have we\\n  gotten ourselves into?",
-            "face": "SUSIE_NEUTRAL",
+            "face": "SUSIE_AWKWARD",
             "sound": "SUSIE",
             "pos": "top"
         }

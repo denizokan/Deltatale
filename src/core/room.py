@@ -99,7 +99,6 @@ class Room:
             x1, y1, x2, y2 = trigger["x1"], trigger["y1"], trigger["x2"], trigger["y2"]
             
             if (x1 <= target_x <= x2 and y1 <= target_y <= y2):
-                self.game.flags[f"cutscene_{trigger_id}_completed"] = True
                 self.game.canvas.itemconfig(self.game.player.active_characters[0], image=self.game.player.kris_sprites[self.game.player.facing][0])
                 self.game.canvas.itemconfig(self.game.player.active_characters[1], image=self.game.player.susie_sprites[self.game.player.facing][0])
                 self.game.cutscene_manager.play_cutscene(trigger_id)
@@ -147,7 +146,7 @@ class Room:
 
         for interactable in self.interactables:
             if not self._isActive(interactable): continue
-            
+
             if "image_obj" in interactable:
                 obj_x, obj_y = interactable["x"], interactable["y"]
                 if len(interactable["image_obj"]) > 1: # Animated
@@ -300,6 +299,7 @@ class Room:
     def _create_rectangle(self, list, color, width):
         coords_list = []
         for element in list:
+            if not self._isActive(element): continue
             try:
                 coords = (element["x1"], element["y1"], element["x2"], element["y2"])
             except KeyError: # Dealing with an interactable
@@ -343,9 +343,7 @@ class Room:
         """Updates interactable indexes & positions in respect to camera x and y."""
         for interactable in self.interactables:
             if interactable.get("is_battling", False): continue
-            if interactable.get("cutscene", None) != None:
-                if self.game.flags.get(f"cutscene_{interactable["cutscene"]}_completed", False):
-                    continue
+            if not self._isActive(interactable): continue
             canvas_id = interactable["canvas_id"]
             if len(interactable["image_obj"]) > 0:
                 if interactable["type"] == "SAVE_POINT":

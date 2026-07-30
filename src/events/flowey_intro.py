@@ -35,83 +35,6 @@ class FloweyIntroCutscene:
         self.advance_phase(self.status)
 
 
-    def _preload_sprites(self):
-        """Loads and caches all dynamic sprites into memory once during initialization."""
-        self.kris_attack_sprites = [
-            PhotoImage(file=f"sprites/battle/attack/kris/spr_krisb_attack_{i}.png").zoom(2)
-            for i in range(7)
-        ]
-        self.susie_attack_sprites = [
-            PhotoImage(file=f"sprites/battle/attack/susie/spr_susieb_attack_{i}.png").zoom(2)
-            for i in range(6)
-        ]
-        self.kris_idle_sprites = [
-            PhotoImage(file=f"sprites/battle/idle/kris/spr_krisb_idle_{i}.png").zoom(2)
-            for i in range(6)
-        ]
-        self.susie_idle_sprites = [
-            PhotoImage(file=f"sprites/battle/idle/susie/spr_susieb_idle_{i}.png").zoom(2)
-            for i in range(4)
-        ]
-
-        self.flowey_bullet_sprites = [
-            PhotoImage(file=f"sprites/characters/flowey/bullets/spr_pellet_{i}.png")
-            for i in range(2)
-        ]
-
-        self.rude_buster_sprites = [
-            PhotoImage(file=f"sprites/battle/attack/susie/spr_rudebuster_beam_{i}.png").zoom(2)
-            for i in range(7)
-        ]
-
-        self.player_sprite = PhotoImage(file="sprites/SOUL.png")
-
-        # Ghost references
-        self.kris_ghosts = self._generate_faded_ghosts("sprites/characters/kris/walk/spr_krisr_0.png")
-        self.susie_ghosts = self._generate_faded_ghosts("sprites/characters/susie/walk/spr_susier_0.png")
-        self.pulse_frames = self._generate_pulse_frames("sprites/SOUL.png", base_zoom=2, max_zoom=4.5, frames=12)
-        self.soul_fade_frames = self._generate_faded_ghosts("sprites/SOUL.png", zoom=1, frames=10)
-        self.rude_buster_ghosts = [
-            self._generate_faded_ghosts(f"sprites/battle/attack/susie/spr_rudebuster_beam_{i}.png", zoom=2, frames=5)
-            for i in range(7)
-        ]
-        self.flowey_spin_frames = self._generate_rotated_frames("sprites/characters/flowey/pngs/spr_flowey_0.png", zoom=2, frames=8)
-
-        # Sound effects & musics
-        self.snd_laz = mixer.Sound(file="sounds/sound_effects/snd_laz_c.wav")
-        self.snd_weapon = mixer.Sound(file="sounds/sound_effects/snd_weaponpull.wav")
-        self.snd_pelletcreate = mixer.Sound(file="sounds/sound_effects/snd_floweypelletscreate.mp3")
-        self.snd_floweylaugh = mixer.Sound(file="sounds/sound_effects/snd_floweylaugh.wav")
-        self.snd_floweyhit = mixer.Sound(file="sounds/sound_effects/snd_floweyhurt.wav")
-        self.flowey_music = mixer.Sound("sounds/mus_flowey.ogg")
-        self.battle_mus = mixer.Sound(file="sounds/battle.ogg")
-
-        # Battle UI
-        self.battle_lower_ui = PhotoImage(file="sprites/battle/ui/flowey_fight_lower_ui.png")
-        self.battle_tp_ui = PhotoImage(file="sprites/battle/ui/flowey_fight_tp_bar.png")
-
-        # Battle box
-        self._dark_overlay_frames = []
-        self._light_overlay_frames = []
-        total_frames = 20
-        max_darkness = 200
-
-        for i in range(total_frames + 1):
-            t = i / total_frames
-            
-            # Opening frames (ease out)
-            ease_t_dark = 1 - (1 - t)**3
-            alpha_dark = int(max_darkness * ease_t_dark)
-            img_dark = Image.new("RGBA", (self.game.constants.WIDTH, self.game.constants.HEIGHT), (0, 0, 0, alpha_dark))
-            self._dark_overlay_frames.append(ImageTk.PhotoImage(img_dark))
-            
-            # Closing frames (ease in)
-            ease_t_light = (1 - t)**3
-            alpha_light = int(max_darkness * ease_t_light)
-            img_light = Image.new("RGBA", (self.game.constants.WIDTH, self.game.constants.HEIGHT), (0, 0, 0, alpha_light))
-            self._light_overlay_frames.append(ImageTk.PhotoImage(img_light))
-
-
     def update(self):
         if self.status in ["battle", "spawn_bullets", "refuse_bullets", "die"]:
             if not self.soul_movement: 
@@ -162,13 +85,6 @@ class FloweyIntroCutscene:
 
         elif from_status == "spawn_bullets": # -> Refuse Bullets
             self.move_bullets()
-            self.game.root.after(500, lambda: self.update_status("refuse_bullets"))
-            self.game.root.after(500, lambda: self.game.dialogue_system.start_dialogue(
-                self.dialogue_data['refuse_bullets'],
-                on_complete=lambda: self.advance_phase(self.status),
-                actors={"FLOWEY": self.flowey_interactable},
-                is_battle=True
-            ))
 
         elif from_status == "refuse_bullets": # -> Music Stop
             self.end_turn()
@@ -210,7 +126,7 @@ class FloweyIntroCutscene:
             self.fire_rude_buster()
             self.game.root.after(1500, lambda: self.end_battle())
             self.game.root.after(1500, lambda: self.update_status("post_battle"))
-            self.game.root.after(3000, lambda: self.game.dialogue_system.start_dialogue(
+            self.game.root.after(4000, lambda: self.game.dialogue_system.start_dialogue(
                 self.dialogue_data['post_battle'],
                 on_complete=lambda: self.advance_phase(self.status)
             ))
@@ -257,11 +173,11 @@ class FloweyIntroCutscene:
 
     def end_battle(self):
         """Fully transitions the game out of the battle state."""
-        self.end_turn()
-        self.game.root.after(1500, self.hide_battle_ui)
-        self.game.root.after(1500, self.move_characters_to_original_positions)
-        
         self.flowey_interactable["is_battling"] = False
+        self.end_turn()
+        # TODO: Hide TP bar and play battle over sprites
+        self.game.root.after(1500, self.hide_battle_ui)
+        self.game.root.after(1550, self.move_characters_to_original_positions)
 
 
     def end_turn(self):
@@ -417,8 +333,8 @@ class FloweyIntroCutscene:
             dy = self.soul_y - bullet["y"]
             bullet["target_angle"] = math.atan2(dy, dx)
 
-        frames = 15
-        speed = 4.0
+        frames = 20
+        speed = 3.0
         
         def _move_frame(current_frame):
             if current_frame <= frames:
@@ -430,7 +346,13 @@ class FloweyIntroCutscene:
                 
                 self.game.root.after(20, lambda: _move_frame(current_frame + 1))
             else:
-                pass
+                self.update_status("refuse_bullets")
+                self.game.dialogue_system.start_dialogue(
+                    self.dialogue_data['refuse_bullets'],
+                    on_complete=lambda: self.advance_phase(self.status),
+                    actors={"FLOWEY": self.flowey_interactable},
+                    is_battle=True
+                )
 
         _move_frame(0)
 
@@ -521,7 +443,7 @@ class FloweyIntroCutscene:
                     "target_angle": closing_angle
                 })
                 
-                self.game.root.after(20, lambda: _spawn_single_bullet(index + 1))
+                self.game.root.after(40, lambda: _spawn_single_bullet(index + 1))
             else:
                 self.snd_pelletcreate.stop()
                 self.update_status("die")
@@ -929,20 +851,7 @@ class FloweyIntroCutscene:
         box_x, box_y = self.game.constants.WIDTH // 2, self.game.constants.HEIGHT // 2 - 50
 
         self.battle_rectangle_coords = (box_x - target_width/2, box_y - target_height/2, box_x + target_width/2, box_y + target_height/2)
-
         total_frames = 20
-
-        self.dark_overlay_id = self.game.canvas.create_image(
-            0, 0, 
-            image=self._dark_overlay_frames[0], 
-            anchor="nw"
-        )
-        
-        try:
-            self.game.canvas.tag_raise(self.dark_overlay_id, self.game.current_room.background)
-        except AttributeError:
-            self.game.canvas.tag_lower(self.dark_overlay_id)
-            self.game.canvas.tag_raise(self.dark_overlay_id)
 
         self.main_anim_poly = self.game.canvas.create_polygon(
             0, 0, 0, 0, 0, 0, 0, 0,
@@ -992,7 +901,10 @@ class FloweyIntroCutscene:
                 t = frame_index / total_frames
                 ease_t = 1 - (1 - t)**3
 
-                self.game.canvas.itemconfig(self.dark_overlay_id, image=self._dark_overlay_frames[frame_index])
+                self.game.canvas.itemconfig(
+                    self.game.current_room.background, 
+                    image=self._dark_bg_frames[frame_index]
+                )
                 
                 current_w = target_width * ease_t
                 current_h = target_height * ease_t
@@ -1030,7 +942,6 @@ class FloweyIntroCutscene:
         target_width = x2 - x1
         target_height = y2 - y1
         box_x, box_y = self.game.constants.WIDTH // 2, self.game.constants.HEIGHT // 2 - 50
-
         total_frames = 20
 
         if hasattr(self, 'battle_box_id'):
@@ -1084,8 +995,10 @@ class FloweyIntroCutscene:
                 t = frame_index / total_frames
                 ease_t = (1 - t)**3
 
-                if hasattr(self, 'dark_overlay_id'):
-                    self.game.canvas.itemconfig(self.dark_overlay_id, image=self._light_overlay_frames[frame_index])
+                self.game.canvas.itemconfig(
+                    self.game.current_room.background, 
+                    image=self._light_bg_frames[frame_index]
+                )
                 
                 current_w = target_width * ease_t
                 current_h = target_height * ease_t
@@ -1101,8 +1014,10 @@ class FloweyIntroCutscene:
                 self.game.root.after(25, lambda: _play_anim_frame(frame_index + 1))
             else:
                 self.game.canvas.delete(self.main_anim_poly)
-                if hasattr(self, 'dark_overlay_id'):
-                    self.game.canvas.delete(self.dark_overlay_id)
+                self.game.canvas.itemconfig(
+                    self.game.current_room.background, 
+                    image=self.game.current_room.bg_image 
+                )
 
         _play_anim_frame(0)
 
@@ -1186,3 +1101,85 @@ class FloweyIntroCutscene:
     def returned_soul_to_body(self):
         self.fade_out_soul()
         self.play_chest_pulse()
+
+
+    def _preload_sprites(self):
+        """Loads and caches all dynamic sprites into memory once during initialization."""
+        self.kris_attack_sprites = [
+            PhotoImage(file=f"sprites/battle/attack/kris/spr_krisb_attack_{i}.png").zoom(2)
+            for i in range(7)
+        ]
+        self.susie_attack_sprites = [
+            PhotoImage(file=f"sprites/battle/attack/susie/spr_susieb_attack_{i}.png").zoom(2)
+            for i in range(6)
+        ]
+        self.kris_idle_sprites = [
+            PhotoImage(file=f"sprites/battle/idle/kris/spr_krisb_idle_{i}.png").zoom(2)
+            for i in range(6)
+        ]
+        self.susie_idle_sprites = [
+            PhotoImage(file=f"sprites/battle/idle/susie/spr_susieb_idle_{i}.png").zoom(2)
+            for i in range(4)
+        ]
+
+        self.flowey_bullet_sprites = [
+            PhotoImage(file=f"sprites/characters/flowey/bullets/spr_pellet_{i}.png")
+            for i in range(2)
+        ]
+
+        self.rude_buster_sprites = [
+            PhotoImage(file=f"sprites/battle/attack/susie/spr_rudebuster_beam_{i}.png").zoom(2)
+            for i in range(7)
+        ]
+
+        self.player_sprite = PhotoImage(file="sprites/SOUL.png")
+
+        # Ghost references
+        self.kris_ghosts = self._generate_faded_ghosts("sprites/characters/kris/walk/spr_krisr_0.png")
+        self.susie_ghosts = self._generate_faded_ghosts("sprites/characters/susie/walk/spr_susier_0.png")
+        self.pulse_frames = self._generate_pulse_frames("sprites/SOUL.png", base_zoom=2, max_zoom=4.5, frames=12)
+        self.soul_fade_frames = self._generate_faded_ghosts("sprites/SOUL.png", zoom=1, frames=10)
+        self.rude_buster_ghosts = [
+            self._generate_faded_ghosts(f"sprites/battle/attack/susie/spr_rudebuster_beam_{i}.png", zoom=2, frames=5)
+            for i in range(7)
+        ]
+        self.flowey_spin_frames = self._generate_rotated_frames("sprites/characters/flowey/pngs/spr_flowey_0.png", zoom=2, frames=8)
+
+        # Sound effects & musics
+        self.snd_laz = mixer.Sound(file="sounds/sound_effects/snd_laz_c.wav")
+        self.snd_weapon = mixer.Sound(file="sounds/sound_effects/snd_weaponpull.wav")
+        self.snd_pelletcreate = mixer.Sound(file="sounds/sound_effects/snd_floweypelletscreate.mp3")
+        self.snd_floweylaugh = mixer.Sound(file="sounds/sound_effects/snd_floweylaugh.wav")
+        self.snd_floweyhit = mixer.Sound(file="sounds/sound_effects/snd_floweyhurt.wav")
+        self.flowey_music = mixer.Sound("sounds/mus_flowey.ogg")
+        self.battle_mus = mixer.Sound(file="sounds/battle.ogg")
+
+        # Battle UI
+        self.battle_lower_ui = PhotoImage(file="sprites/battle/ui/flowey_fight_lower_ui.png")
+        self.battle_tp_ui = PhotoImage(file="sprites/battle/ui/flowey_fight_tp_bar.png")
+
+        # Battle box
+        self._dark_bg_frames = []
+        self._light_bg_frames = []
+        total_frames = 20
+        max_darkness = 200
+
+        bg_path = self.game.current_room.room_data["bg_image"]
+        pil_img = Image.open(bg_path).convert("RGBA")
+        w, h = pil_img.size
+        original_bg = pil_img.resize((w * 2, h * 2), Image.NEAREST)
+
+        for i in range(total_frames + 1):
+            t = i / total_frames
+
+            ease_t_dark = 1 - (1 - t)**3
+            alpha_dark = int(max_darkness * ease_t_dark)
+            dark_layer = Image.new("RGBA", original_bg.size, (0, 0, 0, alpha_dark))
+            baked_dark = Image.alpha_composite(original_bg, dark_layer)
+            self._dark_bg_frames.append(ImageTk.PhotoImage(baked_dark))
+
+            ease_t_light = (1 - t)**3
+            alpha_light = int(max_darkness * ease_t_light)
+            light_layer = Image.new("RGBA", original_bg.size, (0, 0, 0, alpha_light))
+            baked_light = Image.alpha_composite(original_bg, light_layer)
+            self._light_bg_frames.append(ImageTk.PhotoImage(baked_light))

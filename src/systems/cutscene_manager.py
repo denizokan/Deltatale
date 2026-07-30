@@ -10,6 +10,7 @@ class CutsceneManager:
     def __init__(self, main_game):
         self.game = main_game
         self.active_cutscene = None
+        self.cutscene_id = None
         self.cutscene_cls = None
         self.blocks_player = True
 
@@ -26,6 +27,7 @@ class CutsceneManager:
         self.cutscene_cls = self.cutscene_registry.get(cutscene_id, None)
         if self.cutscene_cls == None: raise RuntimeError(f"No cutscene found with ID {cutscene_id}.")
 
+        self.cutscene_id = cutscene_id
         self.active_cutscene = self.cutscene_cls(self.game, self)
 
 
@@ -39,8 +41,9 @@ class CutsceneManager:
     def stop_cutscene(self):
         """Ends the current cutscene and hands control to the player manager classes."""
         if self.active_cutscene == None and self.cutscene_cls == None: return
-
+        self.game.flags[f"cutscene_{self.cutscene_id}_completed"] = True
         self.active_cutscene = None
+        self.cutscene_id = None
         self.cutscene_cls = None
 
 
