@@ -333,8 +333,8 @@ class FloweyIntroCutscene:
             dy = self.soul_y - bullet["y"]
             bullet["target_angle"] = math.atan2(dy, dx)
 
-        frames = 20
-        speed = 3.0
+        frames = 30
+        speed = 3
         
         def _move_frame(current_frame):
             if current_frame <= frames:
@@ -371,7 +371,7 @@ class FloweyIntroCutscene:
 
         for bullet in self.active_bullets:
             if mode == "backwards":
-                speed = -10.0
+                speed = -15.0
                 bullet["vx"] = math.cos(bullet["target_angle"]) * speed
                 bullet["vy"] = math.sin(bullet["target_angle"]) * speed
             elif mode == "right":
@@ -465,7 +465,7 @@ class FloweyIntroCutscene:
 
         self.snd_floweylaugh.play()
 
-        frames = 60
+        frames = 70
         speed = 1
         
         def _close_in_frame(current_frame):

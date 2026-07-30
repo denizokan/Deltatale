@@ -233,6 +233,13 @@
             "pos": "bottom"
         },
         {
+            "speaker": "FLOWEY",
+            "dialogue": "* Down here, \\c[yellow]LOVE \\c[white]is shared by-\\d[3]\\sk",
+            "face": "FLOWEY_SMILE",
+            "sound": "FLOWEY",
+            "pos": "bottom"
+        },
+        {
             "speaker": "SUSIE",
             "dialogue": "* Why do these look like teeth?",
             "face": "SUSIE_AWKWARD",
@@ -242,7 +249,7 @@
         {
             "speaker": "FLOWEY",
             "dialogue": "* No, silly!\\n* These are called '\\c[yellow]friendliness\\n  pellets\\c[white]'.",
-            "face": "FLOWEY_SMILE",
+            "face": "FLOWEY_SMILE_ANNOYED",
             "sound": "FLOWEY",
             "pos": "bottom"
         },
