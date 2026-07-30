@@ -85,16 +85,17 @@ class Room:
 
 
     def check_trigger(self, target_x, target_y):
-        """Checks if the player has stepped on a cutscene trigger."""
-        coords_list = []
-        for trigger in self.triggers:
-            coords = (trigger["x1"], trigger["y1"], trigger["x2"], trigger["y2"])
-            coords_list.append(coords)
+        """Checks if the player has stepped on an active cutscene trigger."""
+        for index, trigger in enumerate(self.triggers):
+            trigger_id = self.room_data["triggers"][index]["id"]
 
-        for index, box in enumerate(coords_list):
-            x1, y1, x2, y2 = box
+            if self.game.flags.get(f"cutscene_{trigger_id}_completed", False):
+                continue
+
+            x1, y1, x2, y2 = trigger["x1"], trigger["y1"], trigger["x2"], trigger["y2"]
+            
             if (x1 <= target_x <= x2 and y1 <= target_y <= y2):
-                trigger_id = self.room_data["triggers"][index]["id"]
+                self.game.flags[f"cutscene_{trigger_id}_completed"] = True
                 self.game.canvas.itemconfig(self.game.player.active_characters[0], image=self.game.player.kris_sprites[self.game.player.facing][0])
                 self.game.canvas.itemconfig(self.game.player.active_characters[1], image=self.game.player.susie_sprites[self.game.player.facing][0])
                 self.game.cutscene_manager.play_cutscene(trigger_id)

@@ -70,6 +70,7 @@ class Main:
 
         self.current_room = None
         self.selected_file_index = None
+        self.flags = {}
 
         self.state = GameState.INTRO # Possible states: INTRO, FILE_SELECT, PLAYING, BATTLE, GAMEOVER
         self.setup_intro() # Enter the main menu
@@ -148,6 +149,7 @@ class Main:
         self.selected_file_index = index
         
         data = self.save_system.load_file(index)
+        self.flags = data["flags"]
         self.camera = Camera(self)
         self.current_room = Room(self, data["room"])
 

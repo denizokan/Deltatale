@@ -54,6 +54,16 @@ class FloweyIntroCutscene:
             for i in range(4)
         ]
 
+        self.flowey_bullet_sprites = [
+            PhotoImage(file=f"sprites/characters/flowey/bullets/spr_pellet_{i}.png")
+            for i in range(2)
+        ]
+
+        self.rude_buster_sprites = [
+            PhotoImage(file=f"sprites/battle/attack/susie/spr_rudebuster_beam_{i}.png").zoom(2)
+            for i in range(7)
+        ]
+
         self.player_sprite = PhotoImage(file="sprites/SOUL.png")
 
         # Ghost references
@@ -61,10 +71,18 @@ class FloweyIntroCutscene:
         self.susie_ghosts = self._generate_faded_ghosts("sprites/characters/susie/walk/spr_susier_0.png")
         self.pulse_frames = self._generate_pulse_frames("sprites/SOUL.png", base_zoom=2, max_zoom=4.5, frames=12)
         self.soul_fade_frames = self._generate_faded_ghosts("sprites/SOUL.png", zoom=1, frames=10)
+        self.rude_buster_ghosts = [
+            self._generate_faded_ghosts(f"sprites/battle/attack/susie/spr_rudebuster_beam_{i}.png", zoom=2, frames=5)
+            for i in range(7)
+        ]
+        self.flowey_spin_frames = self._generate_rotated_frames("sprites/characters/flowey/pngs/spr_flowey_0.png", zoom=2, frames=8)
 
         # Sound effects & musics
         self.snd_laz = mixer.Sound(file="sounds/sound_effects/snd_laz_c.wav")
         self.snd_weapon = mixer.Sound(file="sounds/sound_effects/snd_weaponpull.wav")
+        self.snd_pelletcreate = mixer.Sound(file="sounds/sound_effects/snd_floweypelletscreate.mp3")
+        self.snd_floweylaugh = mixer.Sound(file="sounds/sound_effects/snd_floweylaugh.wav")
+        self.snd_floweyhit = mixer.Sound(file="sounds/sound_effects/snd_floweyhurt.wav")
         self.flowey_music = mixer.Sound("sounds/mus_flowey.ogg")
         self.battle_mus = mixer.Sound(file="sounds/battle.ogg")
 
@@ -144,8 +162,8 @@ class FloweyIntroCutscene:
 
         elif from_status == "spawn_bullets": # -> Refuse Bullets
             self.move_bullets()
-            self.game.root.after(300, lambda: self.update_status("refuse_bullets"))
-            self.game.root.after(300, lambda: self.game.dialogue_system.start_dialogue(
+            self.game.root.after(500, lambda: self.update_status("refuse_bullets"))
+            self.game.root.after(500, lambda: self.game.dialogue_system.start_dialogue(
                 self.dialogue_data['refuse_bullets'],
                 on_complete=lambda: self.advance_phase(self.status),
                 actors={"FLOWEY": self.flowey_interactable},
@@ -154,6 +172,7 @@ class FloweyIntroCutscene:
 
         elif from_status == "refuse_bullets": # -> Music Stop
             self.end_turn()
+            self.clear_bullets()
             self.battle_mus.fadeout(1000)
             self.game.root.after(1500, lambda: self.update_status("music_stop"))
             self.game.root.after(1500, lambda: self.game.dialogue_system.start_dialogue(
@@ -183,21 +202,9 @@ class FloweyIntroCutscene:
 
         elif from_status == "evil_flowey":
             self.flowey_attack()
-            self.game.root.after(500, lambda: self.update_status("die"))
-            self.game.root.after(500, lambda: self.game.dialogue_system.start_dialogue(
-                self.dialogue_data['die'],
-                on_complete=lambda: self.advance_phase(self.status),
-                actors={"FLOWEY": self.flowey_interactable},
-                is_battle=True
-            ))
 
         elif from_status == "die": # -> Yeah Whatever
-            self.game.root.after(500, lambda: self.update_status("yeah_whatever"))
-            self.game.root.after(500, lambda: self.game.dialogue_system.start_dialogue(
-                self.dialogue_data['yeah_whatever'],
-                on_complete=lambda: self.advance_phase(self.status),
-                is_battle=True
-            ))
+            self.close_in_bullets()
 
         elif from_status == "yeah_whatever": # -> Post Battle
             self.fire_rude_buster()
@@ -249,7 +256,12 @@ class FloweyIntroCutscene:
 
 
     def end_battle(self):
-        pass
+        """Fully transitions the game out of the battle state."""
+        self.end_turn()
+        self.game.root.after(1500, self.hide_battle_ui())
+        self.game.root.after(1500, self.move_characters_to_original_positions())
+        
+        self.flowey_interactable["is_battling"] = False
 
 
     def end_turn(self):
@@ -327,11 +339,144 @@ class FloweyIntroCutscene:
 
 
     def spawn_bullets(self):
-        pass
+        """Spawns bullets behind Flowey and fans them out to the right (Up-Right to Down-Right)."""
+        self.active_bullets = []
+        flowey_id = self.flowey_interactable["canvas_id"]
+        
+        fx, fy = self.game.canvas.coords(flowey_id)[:2]
+        spawn_x = fx
+        spawn_y = fy
+        
+        num_bullets = 4
+        
+        for i in range(num_bullets):
+            fraction = i / (num_bullets - 1) 
+            
+            start_angle = -(math.pi / 4) 
+            total_spread = (math.pi / 2)
+            angle = start_angle + (total_spread * fraction)
+            
+            bullet_id = self.game.canvas.create_image(spawn_x, spawn_y, image=self.flowey_bullet_sprites[0])
+            self.game.canvas.tag_lower(bullet_id, flowey_id)
+            
+            self.active_bullets.append({
+                "id": bullet_id,
+                "x": spawn_x,
+                "y": spawn_y,
+                "angle": angle
+            })
+
+        self._animate_bullets_popping_out()
+        self._animate_bullet_sprites(0)
+
+
+    def _animate_bullet_sprites(self, frame_index):
+        """Continuously swaps the bullet sprites to make them spin/flash."""
+        if not hasattr(self, 'active_bullets') or len(self.active_bullets) == 0:
+            return
+
+        sprite_index = frame_index % 2
+        
+        for bullet in self.active_bullets:
+            try:
+                self.game.canvas.itemconfig(bullet["id"], image=self.flowey_bullet_sprites[sprite_index])
+            except:
+                pass
+
+        self.game.root.after(100, lambda: self._animate_bullet_sprites(frame_index + 1))
+
+
+    def _animate_bullets_popping_out(self):
+        """Pushes the bullets outward from Flowey along their specific angles."""
+        frames = 15
+        distance_to_push = 60
+        speed = distance_to_push / frames
+        
+        def _pop_frame(current_frame):
+            if current_frame <= frames:
+                for bullet in self.active_bullets:
+                    bullet["x"] += math.cos(bullet["angle"]) * speed
+                    bullet["y"] += math.sin(bullet["angle"]) * speed
+                    
+                    self.game.canvas.coords(bullet["id"], bullet["x"], bullet["y"])
+                    
+                self.game.root.after(30, lambda: _pop_frame(current_frame + 1))
+            else:
+                pass
+
+        _pop_frame(0)
 
 
     def move_bullets(self):
-        pass
+        """Calculates the angle to the SOUL and moves the bullets a short distance before stopping."""
+        if not hasattr(self, 'active_bullets') or len(self.active_bullets) == 0:
+            return
+
+        for bullet in self.active_bullets:
+            dx = self.soul_x - bullet["x"]
+            dy = self.soul_y - bullet["y"]
+            bullet["target_angle"] = math.atan2(dy, dx)
+
+        frames = 15
+        speed = 4.0
+        
+        def _move_frame(current_frame):
+            if current_frame <= frames:
+                for bullet in self.active_bullets:
+                    bullet["x"] += math.cos(bullet["target_angle"]) * speed
+                    bullet["y"] += math.sin(bullet["target_angle"]) * speed
+                    
+                    self.game.canvas.coords(bullet["id"], bullet["x"], bullet["y"])
+                
+                self.game.root.after(20, lambda: _move_frame(current_frame + 1))
+            else:
+                pass
+
+        _move_frame(0)
+
+
+    def clear_bullets(self, mode="backwards"):
+        """
+        Scatters bullets and deletes them. 
+        Modes: 'backwards' (fleeing the SOUL) or 'right' (smashed by Rude Buster).
+        """
+        if not hasattr(self, 'active_bullets') or len(self.active_bullets) == 0:
+            return
+
+        import random
+
+        frames = 10 if mode == "backwards" else 15
+
+        for bullet in self.active_bullets:
+            if mode == "backwards":
+                speed = -10.0
+                bullet["vx"] = math.cos(bullet["target_angle"]) * speed
+                bullet["vy"] = math.sin(bullet["target_angle"]) * speed
+            elif mode == "right":
+                bullet["vx"] = random.uniform(15, 30)
+                bullet["vy"] = random.uniform(-15, 15)
+        
+        def _scatter_frame(current_frame):
+            if current_frame <= frames:
+                for bullet in self.active_bullets:
+                    try:
+                        bullet["x"] += bullet["vx"]
+                        bullet["y"] += bullet["vy"]
+                        self.game.canvas.coords(bullet["id"], bullet["x"], bullet["y"])
+                    except:
+                        pass
+                        
+                self.game.root.after(20, lambda: _scatter_frame(current_frame + 1))
+            else:
+                for bullet in self.active_bullets:
+                    try: 
+                        self.game.canvas.delete(bullet["id"])
+                    except: 
+                        pass
+                
+                self.active_bullets = []
+
+        _scatter_frame(0)
 
 
     def flowey_attack(self):
@@ -348,11 +493,145 @@ class FloweyIntroCutscene:
 
 
     def spawn_bullets_around_soul(self):
-        pass
+        """Spawns a massive ring of Friendliness Pellets around the battle box one by one."""
+        self.active_bullets = []
+        self.snd_pelletcreate.play()
+        
+        center_x = self.soul_x
+        center_y = self.soul_y
+        
+        num_bullets = 36
+        radius = 100
+        
+        def _spawn_single_bullet(index):
+            if index < num_bullets:
+                angle = (index / num_bullets) * (2 * math.pi)
+                
+                bx = center_x + (math.cos(angle) * radius)
+                by = center_y + (math.sin(angle) * radius)
+                
+                bullet_id = self.game.canvas.create_image(bx, by, image=self.flowey_bullet_sprites[0])
+                closing_angle = angle + math.pi 
+                
+                self.active_bullets.append({
+                    "id": bullet_id,
+                    "x": bx,
+                    "y": by,
+                    "angle": angle,
+                    "target_angle": closing_angle
+                })
+                
+                self.game.root.after(20, lambda: _spawn_single_bullet(index + 1))
+            else:
+                self.snd_pelletcreate.stop()
+                self.update_status("die")
+                self.game.dialogue_system.start_dialogue(
+                    self.dialogue_data['die'],
+                    on_complete=lambda: self.advance_phase(self.status),
+                    actors={"FLOWEY": self.flowey_interactable},
+                    is_battle=True
+                )
+
+        _spawn_single_bullet(0)
+        self._animate_bullet_sprites(0)
+
+
+    def close_in_bullets(self):
+        """Animates the giant ring of bullets rapidly closing in on the SOUL and stopping before impact."""
+        if not hasattr(self, 'active_bullets') or len(self.active_bullets) == 0:
+            return
+
+        self.snd_floweylaugh.play()
+
+        frames = 60
+        speed = 1
+        
+        def _close_in_frame(current_frame):
+            if current_frame <= frames:
+                for bullet in self.active_bullets:
+                    try:
+                        bullet["x"] += math.cos(bullet["target_angle"]) * speed
+                        bullet["y"] += math.sin(bullet["target_angle"]) * speed
+                        
+                        self.game.canvas.coords(bullet["id"], bullet["x"], bullet["y"])
+                    except:
+                        pass
+                
+                self.game.root.after(15, lambda: _close_in_frame(current_frame + 1))
+            else:
+                self.snd_floweylaugh.stop()
+                self.update_status("yeah_whatever")
+                self.game.dialogue_system.start_dialogue(
+                    self.dialogue_data['yeah_whatever'],
+                    on_complete=lambda: self.advance_phase(self.status),
+                    is_battle=True
+                )
+
+        _close_in_frame(0)
 
 
     def fire_rude_buster(self):
-        pass
+        """Fires the Rude Buster at Flowey, cycling sprites and leaving a trail of colored shadows."""
+        susie_id = self.game.player.active_characters[1]
+        flowey_id = self.flowey_interactable["canvas_id"]
+
+        sx, sy = self.game.canvas.coords(susie_id)[:2]
+        fx, fy = self.game.canvas.coords(flowey_id)[:2]
+
+        spawn_x = sx + 50
+        spawn_y = sy - 10
+
+        self.play_susie_attack_animation()
+        
+        buster_id = self.game.canvas.create_image(spawn_x, spawn_y, image=self.rude_buster_sprites[0], anchor="center")
+
+        total_steps = 15
+        dx = (fx - spawn_x) / total_steps
+        dy = (fy - spawn_y) / total_steps
+
+        def _fly_frame(step):
+            if step <= total_steps:
+                self.game.canvas.move(buster_id, dx, dy)
+                
+                sprite_index = step % 7
+                self.game.canvas.itemconfig(buster_id, image=self.rude_buster_sprites[sprite_index])
+                
+                if step % 2 == 0:
+                    cur_x, cur_y = self.game.canvas.coords(buster_id)[:2]
+                    self._spawn_fading_ghost(cur_x, cur_y, self.rude_buster_ghosts[sprite_index], anchor="center")
+                    self.game.canvas.tag_raise(buster_id)
+                
+                if step == total_steps // 2:
+                    self.clear_bullets(mode="right")
+                    
+                self.game.root.after(20, lambda: _fly_frame(step + 1))
+            else:
+                self.game.canvas.delete(buster_id)
+                self.snd_floweyhit.play()
+                self._knock_flowey_out()
+                
+        _fly_frame(0)
+
+    def _knock_flowey_out(self):
+        """Spins Flowey and launches him violently off the right side of the screen."""
+        flowey_id = self.flowey_interactable["canvas_id"]
+        
+        frames = 30
+        dx = 30
+        dy = -15
+        
+        def _spin_frame(current_frame):
+            if current_frame <= frames:
+                self.game.canvas.move(flowey_id, dx, dy)
+                
+                spin_index = current_frame % len(self.flowey_spin_frames)
+                self.game.canvas.itemconfig(flowey_id, image=self.flowey_spin_frames[spin_index])
+                
+                self.game.root.after(20, lambda: _spin_frame(current_frame + 1))
+            else:
+                self.game.canvas.itemconfig(flowey_id, state="hidden")
+                
+        _spin_frame(0)
 
 
     def play_battle_intro(self):
@@ -403,7 +682,7 @@ class FloweyIntroCutscene:
 
         def _play_next_frame(frame_index):
             if self.status == "post_battle": return
-            if char_index == 1 and self.status == "susie_angry":
+            if char_index == 1 and (self.status == "susie_angry" or self.status == "yeah_whatever"):
                 self.game.root.after(100, lambda: _play_next_frame(frame_index))
                 return
 
@@ -422,7 +701,9 @@ class FloweyIntroCutscene:
     def move_characters_to_battle_positions(self):
         kris_id = self.game.player.active_characters[0]
         susie_id = self.game.player.active_characters[1]
-        flowey_id = self.game.current_room.interactables[0]["canvas_id"]
+        flowey_id = self.flowey_interactable["canvas_id"]
+
+        self.original_character_positions = [(self.game.canvas.coords(kris_id)[:2], self.game.player.facing), (self.game.canvas.coords(susie_id)[:2], self.game.player.history[0][2])]
 
         kris_target_x, kris_target_y = 100 + 50, self.game.constants.HEIGHT // 2 - 50 
         susie_target_x, susie_target_y = 100 + 30, self.game.constants.HEIGHT // 2 + 50
@@ -459,6 +740,45 @@ class FloweyIntroCutscene:
 
                 # Draw swords
                 self.play_battle_intro()
+          
+        _slide_frame(0)
+
+
+    def move_characters_to_original_positions(self):
+        """Slides Kris and Susie back to their saved overworld positions and resets their sprites."""
+        kris_id = self.game.player.active_characters[0]
+        susie_id = self.game.player.active_characters[1]
+
+        kris_saved_coords, kris_facing = self.original_character_positions[0]
+        susie_saved_coords, susie_facing = self.original_character_positions[1]
+
+        self.game.canvas.itemconfig(kris_id, image=self.game.player.kris_sprites[kris_facing][0])
+        self.game.canvas.itemconfig(susie_id, image=self.game.player.susie_sprites[susie_facing][0])
+
+        kris_target_x, kris_target_y = kris_saved_coords
+        susie_target_x, susie_target_y = susie_saved_coords
+
+        kx, ky = self.game.canvas.coords(kris_id)[:2]
+        sx, sy = self.game.canvas.coords(susie_id)[:2]
+
+        total_steps = 15
+
+        def _slide_frame(step):
+            if step <= total_steps:
+                t = step / total_steps
+                ease_t = 1 - (1 - t)**3
+
+                new_kx = kx + (kris_target_x - kx) * ease_t
+                new_ky = ky + (kris_target_y - ky) * ease_t
+                new_sx = sx + (susie_target_x - sx) * ease_t
+                new_sy = sy + (susie_target_y - sy) * ease_t
+
+                self.game.canvas.coords(kris_id, new_kx, new_ky)
+                self.game.canvas.coords(susie_id, new_sx, new_sy)
+
+                self.game.root.after(16, lambda: _slide_frame(step + 1))
+            else:
+                pass
           
         _slide_frame(0)
 
@@ -503,6 +823,43 @@ class FloweyIntroCutscene:
         _animate_ui(0)
 
 
+    def hide_battle_ui(self):
+        """Slides the Battle UI off-screen and deletes it."""
+        lower_ui_start_y = self.game.constants.HEIGHT
+        lower_ui_target_y = self.game.constants.HEIGHT + 150
+        lower_ui_x = self.game.constants.WIDTH // 2
+
+        tp_ui_start_x = 10
+        tp_ui_target_x = -100
+        tp_ui_y = 50
+
+        total_frames = 20
+
+        def _animate_ui_out(frame):
+            if frame <= total_frames:
+                t = frame / total_frames
+                ease_t = t**3
+
+                current_lower_y = lower_ui_start_y + (lower_ui_target_y - lower_ui_start_y) * ease_t
+                current_tp_x = tp_ui_start_x + (tp_ui_target_x - tp_ui_start_x) * ease_t
+
+                try:
+                    self.game.canvas.coords(self.lower_ui_id, lower_ui_x, current_lower_y)
+                    self.game.canvas.coords(self.tp_ui_id, current_tp_x, tp_ui_y)
+                except: 
+                    pass
+
+                self.game.root.after(16, lambda: _animate_ui_out(frame + 1))
+            else:
+                try:
+                    self.game.canvas.delete(self.lower_ui_id)
+                    self.game.canvas.delete(self.tp_ui_id)
+                except: 
+                    pass
+
+        _animate_ui_out(0)
+
+
     def _generate_faded_ghosts(self, image_path, zoom=2, frames=6):
         """Pre-renders an array of fading sprites to prevent game lag."""
         original = Image.open(image_path).convert("RGBA")
@@ -521,9 +878,9 @@ class FloweyIntroCutscene:
         return ghosts
     
 
-    def _spawn_fading_ghost(self, x, y, ghost_array):
+    def _spawn_fading_ghost(self, x, y, ghost_array, anchor="s"):
         """Spawns a ghost that manages its own fade-out animation."""
-        ghost_id = self.game.canvas.create_image(x, y, image=ghost_array[0], anchor="s")
+        ghost_id = self.game.canvas.create_image(x, y, image=ghost_array[0], anchor=anchor)
 
         def _fade_frame(frame_index):
             if frame_index < len(ghost_array):
@@ -746,8 +1103,6 @@ class FloweyIntroCutscene:
                 self.game.canvas.delete(self.main_anim_poly)
                 if hasattr(self, 'dark_overlay_id'):
                     self.game.canvas.delete(self.dark_overlay_id)
-                
-                self._light_overlay_frames = []
 
         _play_anim_frame(0)
 
@@ -799,6 +1154,21 @@ class FloweyIntroCutscene:
             pulse_frames.append(ImageTk.PhotoImage(faded_image))
             
         return pulse_frames
+
+
+    def _generate_rotated_frames(self, image_path, zoom=2, frames=8):
+        """Pre-renders an array of rotated sprites to prevent lag during the hit animation."""
+        original = Image.open(image_path).convert("RGBA")
+        width, height = original.size
+        original = original.resize((width * zoom, height * zoom), Image.NEAREST)
+
+        rotated_frames = []
+        for i in range(frames):
+            angle = i * (360 / frames)
+            rotated_image = original.rotate(angle, expand=True) 
+            rotated_frames.append(ImageTk.PhotoImage(rotated_image))
+
+        return rotated_frames
 
 
     def fade_out_soul(self):
