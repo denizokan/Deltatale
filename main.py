@@ -10,6 +10,7 @@ from src.core.player import Player
 from src.core.room import Room
 from src.core.camera import Camera
 from src.screens.menu_screen import MenuScreen
+from src.screens.menu_screen import MenuScreen
 from src.screens.save_screen import SaveScreen
 from src.screens.file_select import FileSelectScreen
 from src.systems.save_system import SaveSystem
@@ -45,6 +46,7 @@ class Main:
         mixer.init()
         self.save_system = SaveSystem()
         self.save_screen = SaveScreen(self)
+        self.menu_screen = MenuScreen(self)
         self.menu_screen = MenuScreen(self)
         self.transition = TransitionManager(self)
         self.cutscene_manager = CutsceneManager(self)
