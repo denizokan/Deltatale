@@ -6,6 +6,8 @@ tempCodeRunnerFile.py
 *.pyc
 
 DIALOGUE_FORMATTING.md
+saves/
+tools/
 sprites/DELTARUNE Sprites/
 sprites/UNDERTALE Sprites/
 sounds/undertale_sounds/
