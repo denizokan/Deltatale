@@ -5,22 +5,49 @@ from src.core.player import Player
 from src.core.room import Room
 from src.core.events import EventBus
 from src.core.constants import Constants, Color
-from src.core.enums import Event
+from src.core.enums import Event, Interactable
 
 class WorldManager:
     """Owns the player, the room, and the camera. Handles map logic."""
-    def __init__(self, asset_manager, selected_slot, flags):
+    def __init__(self, asset_manager, transition_manager, save_data):
         self.asset_manager = asset_manager
-        self.selected_slot = selected_slot
-        self.flags = flags
+        self.transition_manager = transition_manager
+        self.save_data = save_data
+
+        self.flags = save_data["flags"]
         
-        self.transition_manager = TransitionManager()
         self.camera = Camera()
-        self.player = Player(100, 100, "down", self.asset_manager)
-        self.current_room = Room("room_ruins1", self.asset_manager, self.flags)
+        self.current_room = Room(save_data["room"], self.asset_manager, self.flags)
+
+        spawn_info = None
+        for interactable in self.current_room.interactables:
+            if interactable["type"] == Interactable.SAVE_POINT.value:
+                spawn_info = interactable["spawn_info"]
+                break
+        
+        if spawn_info is None:
+            # It's a brand new game
+            spawn_x = 320
+            spawn_y = 240
+            spawn_facing = "down"
+        else:
+            # Spawn in front of the save point!
+            spawn_x = spawn_info["spawn_x"]
+            spawn_y = spawn_info["spawn_y"]
+            spawn_facing = spawn_info["spawn_facing"]
+
+        self.player = Player(spawn_x, spawn_y, spawn_facing, self.asset_manager)
+
         if hasattr(self.current_room, "music"):
             self.current_room.music.play(loops=-1)
 
+        #if spawn_info == None:
+            #self.root.after(1000, self.cutscene_manager.play_cutscene("first_room"))
+            #return
+    
+        self.transition_manager.fade_from_black(speed=8)
+
+        # Event Busses
         EventBus.subscribe(Event.CHANGE_ROOM, self.handle_room_switch)
 
 
@@ -57,11 +84,11 @@ class WorldManager:
             self.transition_manager.fade_from_black(speed=24)
 
         try:
-            with open(self.path + target_room_id + ".json", "r") as file:
+            with open("data/rooms/" + target_room_id + ".json", "r") as file:
                 next_room_peek = json.load(file)
             
-            if self.room_data["music"] != next_room_peek["music"]:
-                if hasattr(self, "music"):
+            if self.current_room.room_data["music"] != next_room_peek["music"]:
+                if hasattr(self.current_room, "music"):
                     self.music.fadeout(500)
         except Exception as e:
             print(f"Warning: Could not read next room music: {e}")
@@ -73,13 +100,11 @@ class WorldManager:
             self.player.update(input_manager, self.current_room)
             self.current_room.update()
             self.camera.update(self.player, self.current_room)
-        self.transition_manager.update()
 
 
     def draw(self, surface, clock):
         self.current_room.draw(surface, self.camera)
         self.player.draw(surface, self.camera)
-        self.transition_manager.draw(surface)
         if self.current_room.debug_mode: self._draw_debug_text(surface, clock)
 
 
