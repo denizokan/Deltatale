@@ -1,3 +1,4 @@
+import pygame
 from src.core.enums import Action
 
 class InputManager:
@@ -7,13 +8,13 @@ class InputManager:
 
     def __init__(self):
         self.keys = {
-            "Left": False, "Right": False, "Up": False, "Down": False,
-            "z": False, "Z": False,
-            "x": False, "X": False,
-            "c": False, "C": False,
-            "Return": False,
-            "Escape": False,
-            "udiaeresis": False, "Udiaeresis": False # Debug keys (ü, Ü)
+            pygame.K_LEFT: False, pygame.K_RIGHT: False, pygame.K_UP: False, pygame.K_DOWN: False,
+            pygame.K_z: False,
+            pygame.K_x: False,
+            pygame.K_c: False,
+            pygame.K_RETURN: False,
+            pygame.K_ESCAPE: False,
+            pygame.K_COMMA: False # Debug key (,)
         }
         self.pressed_this_frame = {k: False for k in self.keys}
         self.action_stack = []
@@ -21,24 +22,24 @@ class InputManager:
 
     def press_key(self, event):
         """Callback for keyboard press."""
-        if event.keysym in self.keys:
-            if not self.keys[event.keysym]:
-                self.pressed_this_frame[event.keysym] = True
-            self.keys[event.keysym] = True
+        if event.key in self.keys:
+            if not self.keys[event.key]:
+                self.pressed_this_frame[event.key] = True
+            self.keys[event.key] = True
 
-        if event.keysym in ["Up", "Down", "Left", "Right"]:
-            if not event.keysym in self.action_stack:
-                self.action_stack.append(event.keysym)
+        if event.key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]:
+            if not event.key in self.action_stack:
+                self.action_stack.append(event.key)
 
 
     def release_key(self, event):
         """Callback for keyboard release."""
-        if event.keysym in self.keys:
-            self.keys[event.keysym] = False
-            self.pressed_this_frame[event.keysym] = False
+        if event.key in self.keys:
+            self.keys[event.key] = False
+            self.pressed_this_frame[event.key] = False
 
-        if event.keysym in self.action_stack:
-            self.action_stack.remove(event.keysym)
+        if event.key in self.action_stack:
+            self.action_stack.remove(event.key)
 
     
     def get_active_direction(self):
@@ -49,37 +50,37 @@ class InputManager:
 
     def is_pressed(self, action):
         """Checks if a key is being held down continuously (Good for Movement)."""
-        if action == Action.QUIT:      return self.keys["Escape"]
-        if action == Action.CANCEL:    return self.keys["x"] or self.keys["X"]
-        if action == Action.UP:        return self.keys["Up"]
-        if action == Action.DOWN:      return self.keys["Down"]
-        if action == Action.LEFT:      return self.keys["Left"]
-        if action == Action.RIGHT:     return self.keys["Right"]
+        if action == Action.QUIT:      return self.keys[pygame.K_ESCAPE]
+        if action == Action.CANCEL:    return self.keys[pygame.K_x]
+        if action == Action.UP:        return self.keys[pygame.K_UP]
+        if action == Action.DOWN:      return self.keys[pygame.K_DOWN]
+        if action == Action.LEFT:      return self.keys[pygame.K_LEFT]
+        if action == Action.RIGHT:     return self.keys[pygame.K_RIGHT]
         return False
 
 
     def is_just_pressed(self, action):
         """Checks if a button was freshly tapped on this frame (Good for Menus)."""
         if action == Action.CONFIRM:
-            return self.pressed_this_frame["z"] or self.pressed_this_frame["Z"] or self.pressed_this_frame["Return"]
+            return self.pressed_this_frame[pygame.K_z] or self.pressed_this_frame[pygame.K_RETURN]
         if action == Action.CANCEL:
-            return self.pressed_this_frame["x"] or self.pressed_this_frame["X"]
+            return self.pressed_this_frame[pygame.K_x]
         if action == Action.MENU:
-            return self.pressed_this_frame["c"] or self.pressed_this_frame["C"]
+            return self.pressed_this_frame[pygame.K_c]
         
         if action == Action.UP:
-            return self.pressed_this_frame["Up"]
+            return self.pressed_this_frame[pygame.K_UP]
         if action == Action.DOWN:
-            return self.pressed_this_frame["Down"]
+            return self.pressed_this_frame[pygame.K_DOWN]
         if action == Action.LEFT:
-            return self.pressed_this_frame["Left"]
+            return self.pressed_this_frame[pygame.K_LEFT]
         if action == Action.RIGHT:
-            return self.pressed_this_frame["Right"]
+            return self.pressed_this_frame[pygame.K_RIGHT]
 
         if action == Action.QUIT:
-            return self.pressed_this_frame["Escape"]
+            return self.pressed_this_frame[pygame.K_ESCAPE]
         if action == Action.DEBUG: # Debug key check
-            return self.pressed_this_frame["udiaeresis"] or self.pressed_this_frame["Udiaeresis"]
+            return self.pressed_this_frame[pygame.K_COMMA]
 
         return False
 

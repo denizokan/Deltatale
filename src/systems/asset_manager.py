@@ -87,8 +87,6 @@ class AssetManager:
                     base_name = file_name[:-4]
                     self.images[base_name] = scaled_img
 
-        print(self.images)
-
 
     def load_image(self, name, path, scaling=2):
         """Loads an image from the hard disk and stores the image in self.images class variable."""
