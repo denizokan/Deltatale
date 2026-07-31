@@ -57,14 +57,14 @@ class Portraits(Enum):
     SUSIE_SWEAT_MANIAC_NO_EYE = f"{_portraits_folder}/susie/portraits/susie_sweat_maniac_no_eye.png"
     SUSIE_PISSED = f"{_portraits_folder}/susie/portraits/susie_pissed.png"
     SUSIE_ROAR = f"{_portraits_folder}/susie/portraits/susie_roar.png"
-    SUSIE_ROAR_2 = f"{_portraits_folder}/susie/portraits/susie_roar_2.png"
+    SUSIE_ROAR_2 = f"{_portraits_folder}/susie/portraits/susie_roar2.png"
     SUSIE_LOOK_AWAY = f"{_portraits_folder}/susie/portraits/susie_look_away.png"
     SUSIE_SMILE_SIDE = f"{_portraits_folder}/susie/portraits/susie_smile_side.png"
     SUSIE_UNIMPRESSED = f"{_portraits_folder}/susie/portraits/susie_unimpressed.png"
-    SUSIE_UNIMPRESSED_2 = f"{_portraits_folder}/susie/portraits/susie_unimpressed_2.png"
+    SUSIE_UNIMPRESSED_2 = f"{_portraits_folder}/susie/portraits/susie_unimpressed2.png"
     SUSIE_HAPPY_TEETH = f"{_portraits_folder}/susie/portraits/susie_happy_teeth.png"
     SUSIE_UNIMPRESSED_SMIRK = f"{_portraits_folder}/susie/portraits/susie_unimpressed_smirk.png"
-    SUSIE_UNIMPRESSED_SMIRK_2 = f"{_portraits_folder}/susie/portraits/susie_unimpressed_smirk_2.png"
+    SUSIE_UNIMPRESSED_SMIRK_2 = f"{_portraits_folder}/susie/portraits/susie_unimpressed_smirk2.png"
     SUSIE_UNHAPPY_SMIRK = f"{_portraits_folder}/susie/portraits/susie_unhappy_smirk.png"
     SUSIE_DERANGED = f"{_portraits_folder}/susie/portraits/susie_deranged.png"
     SUSIE_AWKWARD = f"{_portraits_folder}/susie/portraits/susie_awkward.png"
@@ -83,7 +83,7 @@ class Portraits(Enum):
     FLOWEY_SCARED = f"{_portraits_folder}/flowey/portraits/flowey_scared.png"
     FLOWEY_SCARY = f"{_portraits_folder}/flowey/portraits/flowey_scary.png"
     FLOWEY_MANIAC = f"{_portraits_folder}/flowey/portraits/flowey_maniac.png"
-    FLOWEY_MANIAC_2 = f"{_portraits_folder}/flowey/portraits/flowey_maniac_2.png"
+    FLOWEY_MANIAC_2 = f"{_portraits_folder}/flowey/portraits/flowey_maniac2.png"
 
 
 class TextSound(Enum):
