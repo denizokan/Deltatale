@@ -8,10 +8,10 @@ tempCodeRunnerFile.py
 DIALOGUE_FORMATTING.md
 saves/
 tools/
-sprites/DELTARUNE Sprites/
-sprites/UNDERTALE Sprites/
-sounds/undertale_sounds/
-sounds/deltarune_sounds/
+assets/images/DELTARUNE Sprites/
+assets/images/UNDERTALE Sprites/
+assets/sfx/undertale_sounds/
+assets/sfx/deltarune_sounds/
 save_*.json
 room_template.json
 html_file.txt
