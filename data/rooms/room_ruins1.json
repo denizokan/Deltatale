@@ -1,7 +1,7 @@
 {
     "room_id": "room_ruins1",
-    "bg_image": "sprites/raw_rooms/room_ruins1.png",
-    "music": "sounds/mus_ruins.ogg",
+    "bg_image": "room_ruins1",
+    "music": "assets/sfx/musics/mus_ruins.ogg",
 
     "walls": [
         {"x1": 0, "y1": 156, "x2": 280, "y2": 196},
@@ -52,7 +52,8 @@
                 "spawn_facing": "down"
             },
             "type": "SAVE_POINT",
-            "sprite": ["sprites/objects/spr_savepoint_0.png", "sprites/objects/spr_savepoint_1.png"],
+            "sprite": "spr_savepoint",
+            "is_animated": true,
             "location": "Ruins - Entrance",
             "text": [
                 [

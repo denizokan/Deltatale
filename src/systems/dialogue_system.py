@@ -1,13 +1,14 @@
+import pygame
 from random import uniform
 from pygame import mixer
-from tkinter import PhotoImage
+from src.core.constants import Constants, Color
 from src.core.enums import Action, TextSound, Portraits
 
 class DialogueSystem:
     """This class is used for rendering text."""
 
-    def __init__(self, main_game):
-        self.game = main_game
+    def __init__(self, asset_manager):
+        self.asset_manager = asset_manager
 
         self.is_active = False
         self.is_battle = False
@@ -15,9 +16,10 @@ class DialogueSystem:
 
         self.cursor_y = 0
         self.token_index = 0
-        self.current_color = "white"
-        self.current_font = "Determination Mono"
-        self.typewriter_delay = self.game.constants.DEFAULT_TYPEWRITER_TIMER
+        self.current_color = Color.WHITE
+        self.current_font = "dtm_mono_26"
+        self.portrait_image = None
+        self.typewriter_delay = Constants.DEFAULT_TYPEWRITER_TIMER
         self.is_shaking = False
         self.shake_intensity = 0
 
@@ -28,41 +30,47 @@ class DialogueSystem:
 
         self.current_page = 0
         self.visible_char_count = 0
-        self.typewriter_timer = self.game.constants.DEFAULT_TYPEWRITER_TIMER
+        self.typewriter_timer = Constants.DEFAULT_TYPEWRITER_TIMER
         self.is_line_complete = False
 
         self.actors = None
-        self.active_text_elements = []
-        self.shaking_text_ids = []
+        self.visible_characters = []
 
 
-    def draw_text_box(self, page_data):
-        """Draws the text box and calculates starting coordinates based on mode."""
+    def get_box_rect(self, page_data):
+        """Calculates starting coordinates based on mode."""
         pos = page_data.get("pos", "bottom")
+
+        image_coords = None
+        fill = None
+        outline = None
+        width = 0
 
         if self.is_battle:
             self.line_spacing = 30
-            x1, x2 = 10, self.game.constants.WIDTH - 10
-            y1, y2 = self.game.constants.HEIGHT - 125, self.game.constants.HEIGHT
+            x1, x2 = 10, Constants.WIDTH - 10
+            y1, y2 = Constants.HEIGHT - 125, Constants.HEIGHT
         else:
             self.line_spacing = 35
             if pos == "bottom":
-                x1, x2 = 32, self.game.constants.WIDTH - 32
-                y1, y2 = self.game.constants.HEIGHT - 155, self.game.constants.HEIGHT - 15
+                x1, x2 = 32, Constants.WIDTH - 32
+                y1, y2 = Constants.HEIGHT - 155, Constants.HEIGHT - 15
             elif pos == "top":
-                x1, x2 = 32, self.game.constants.WIDTH - 32
+                x1, x2 = 32, Constants.WIDTH - 32
                 y1, y2 = 15, 155
-            
-            self.text_box = self.game.canvas.create_rectangle(x1, y1, x2, y2, fill="black", outline="white", width=6)
-            self.active_text_elements.append(self.text_box)
+
+            fill = Color.BLACK
+            outline = Color.WHITE
+            width = 6
 
         if page_data.get("face") != None:
-            self.portrait_sprite = PhotoImage(file=Portraits[page_data["face"]].value).zoom(2)
-            self.portrait_id = self.game.canvas.create_image(x1 + 25, y1 + 17, image=self.portrait_sprite, anchor="nw")
-            self.active_text_elements.append(self.portrait_id)
-            self.text_coords = (x1 + 140, y1 + 13)
+            self.portrait_image = self.asset_manager.get_image(Portraits[page_data["face"]].value)
+            image_coords = (x1 + 25, y1 + 17)
+            text_coords = (x1 + 140, y1 + 13)
         else:
-            self.text_coords = (x1 + 25, y1 + 13)
+            text_coords = (x1 + 25, y1 + 13)
+
+        return {"box_bounds": (x1, y1, x2 - x1, y2 - y1), "image_coords": image_coords, "text_coords": text_coords, "fill": fill, "outline": outline, "width": width}
 
 
     def start_dialogue(self, text, interaction_index=0, actors=None, on_complete=None, is_battle=False):
@@ -87,8 +95,6 @@ class DialogueSystem:
 
         self.load_page(0)
 
-        if not self.is_battle:
-            self.game.current_room.is_paused = True
         self.is_active = True
 
 
@@ -105,16 +111,16 @@ class DialogueSystem:
                 else:
                     interactable["is_speaking"] = False
 
-        self.talk_sound = mixer.Sound(file=self._get_sound_path(TextSound[page_data["sound"]]))
-        self.draw_text_box(page_data)
+        self.talk_sound = self.asset_manager.get_sfx(self._get_sound_path(TextSound[page_data["sound"]]))
+        self.box_info = self.get_box_rect(page_data)
 
         self.visible_char_count = 0
         self.cursor_y = 0
         self.og_text_coords = self.text_coords
         self.token_index = 0
-        self.current_color = "white"
-        self.current_font = "Determination Mono"
-        self.typewriter_delay = self.game.constants.DEFAULT_TYPEWRITER_TIMER
+        self.current_color = Color.WHITE
+        self.current_font = "dtm_mono_26"
+        self.typewriter_delay = Constants.DEFAULT_TYPEWRITER_TIMER
         self.is_shaking = False
         self.shake_intensity = 0
         self.shaking_text_ids = []
@@ -146,17 +152,6 @@ class DialogueSystem:
     def update(self):
         """Updates every game tick to write text on the screen."""
         if not self.is_active: return
-
-        # Update shaking text:
-        if self.shaking_text_ids:
-            for text in self.shaking_text_ids:
-                item_id = text["id"]
-                x, y = text["pos"]
-                intensity = text["intensity"]
-                new_x = uniform(x - intensity, x + intensity)
-                new_y = uniform(y - intensity, y + intensity)
-                self.game.canvas.coords(item_id, new_x, new_y)
-        # --------------------
 
         if self.is_line_complete: return
 
@@ -206,27 +201,20 @@ class DialogueSystem:
 
                 char = self.tokenized_text[self.token_index]["value"]
                 x, y = self.text_coords
-                text_id = self.game.canvas.create_text(
-                    x, y,
-                    text=char,
-                    fill=self.current_color,
-                    font=(self.current_font, 26, "normal"),
-                    anchor="nw"
-                )
-                self.active_text_elements.append(text_id)
-
-                if self.is_shaking:
-                    self.shaking_text_ids.append({
-                        "id": text_id,
-                        "pos": (x, y),
-                        "intensity": float(self.shake_intensity)
-                    })
+                self.visible_characters.append({
+                    "char": char,
+                    "color": self.current_color,
+                    "font": self.current_font,
+                    "x": x,
+                    "y": y,
+                    "shake_intensity": float(self.shake_intensity)
+                })
 
                 fixed_char_width = 15 
                 self.text_coords = (x + fixed_char_width, self.og_text_coords[1] + (self.cursor_y * self.line_spacing))
 
                 # Apply pauses
-                if self.typewriter_delay == self.game.constants.DEFAULT_TYPEWRITER_TIMER:
+                if self.typewriter_delay == Constants.DEFAULT_TYPEWRITER_TIMER:
                     just_typed_char = char
 
                     next_char = ""
@@ -254,6 +242,34 @@ class DialogueSystem:
                     return
 
                 self.token_index += 1
+
+
+    def draw(self, surface):
+        """Draws current text on the screen."""
+        if not self.is_active: return
+
+        pygame.draw.rect(surface, self.box_info["fill"], self.box_info["box_bounds"])
+        
+        if self.box_info["outline"] is not None:
+            border_rect = pygame.Rect(self.box_info["box_bounds"]).inflate(6, 6)
+            pygame.draw.rect(surface, self.box_info["outline"], border_rect, self.box_info["width"])
+
+        if hasattr(self, 'portrait_image') and self.portrait_image:
+            surface.blit(self.portrait_image, self.box_info["image_coords"])
+        
+        for char_data in self.visible_characters:
+            font_obj = self.asset_manager.get_font(char_data["font"])
+            char_surface = font_obj.render(char_data["char"], False, char_data["color"])
+
+            draw_x = self.box_info["text_coords"][0] + char_data["x"]
+            draw_y = self.box_info["text_coords"][1] + char_data["y"]
+
+            if char_data["shake_intensity"] > 0:
+                draw_x += uniform(-char_data["shake_intensity"], char_data["shake_intensity"])
+                draw_y += uniform(-char_data["shake_intensity"], char_data["shake_intensity"])
+
+            char_rect = char_surface.get_rect(center=(draw_x, draw_y))
+            surface.blit(char_surface, char_rect)
 
 
     def _print_remaining_text(self):
@@ -288,21 +304,14 @@ class DialogueSystem:
             
                 char = value["value"]
                 x, y = self.text_coords
-                text_id = self.game.canvas.create_text(
-                    x, y,
-                    text=char,
-                    fill=self.current_color,
-                    font=(self.current_font, 26, "normal"),
-                    anchor="nw"
-                )
-                self.active_text_elements.append(text_id)
-            
-                if self.is_shaking:
-                    self.shaking_text_ids.append({
-                        "id": text_id,
-                        "pos": (x, y),
-                        "intensity": float(self.shake_intensity)
-                    })
+                self.visible_characters.append({
+                    "char": char,
+                    "color": self.current_color,
+                    "font": self.current_font,
+                    "x": x,
+                    "y": y,
+                    "shake_intensity": float(self.shake_intensity)
+                })
             
                 fixed_char_width = 15
                 self.text_coords = (x + fixed_char_width, self.og_text_coords[1] + (self.cursor_y * self.line_spacing))
@@ -319,40 +328,33 @@ class DialogueSystem:
 
     def close_dialogue(self, isDone=False):
         """Cleans up and closes the dialogue box. If passed True, unfreezes keyboard inputs."""
-        self.text_box = None
-        self.text_id = None
+        self.visible_characters.clear()
 
         self.cursor_y = 0
         self.token_index = 0
-        self.current_color = "white"
-        self.current_font = "Determination Mono"
-        self.typewriter_delay = self.game.constants.DEFAULT_TYPEWRITER_TIMER
+        self.current_color = Color.WHITE
+        self.current_font = "dtm_mono_26"
+        self.portrait_image = None
+        self.typewriter_delay = Constants.DEFAULT_TYPEWRITER_TIMER
         self.is_shaking = False
         self.shake_intensity = 0
-        self.shaking_text_ids = []
 
         self.tokenized_text = None
         self.text_coords = (0, 0)
         self.og_text_coords = (0, 0)
 
         self.visible_char_count = 0
-        self.typewriter_timer = self.game.constants.DEFAULT_TYPEWRITER_TIMER
+        self.typewriter_timer = Constants.DEFAULT_TYPEWRITER_TIMER
         self.is_line_complete = False
 
         if self.actors:
             for interactable in self.actors.values():
                 interactable["is_speaking"] = False
-        
-        for element in self.active_text_elements:
-            self.game.canvas.delete(element)
-        self.active_text_elements = []
 
         if isDone:
             self.actors = None
             self.current_page = 0
             self.is_active = False
-            if not self.is_battle:
-                self.game.current_room.is_paused = False
             if self.on_complete_callback != None:
                 self.on_complete_callback()
 

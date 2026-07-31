@@ -18,16 +18,19 @@ class AssetManager:
         self.load_image("logo", "assets/images/logo/LOGO.png", scaling=1)
         self.load_characters()
         self.load_all_sprites("assets/images/sprites", scaling=2)
-        self.load_image("logo", "assets/images/sprites/spr_soul.png", scaling=1)
-        self.load_image("logo", "assets/images/sprites/spr_monster_soul.png", scaling=1)
+        self.load_all_rooms("assets/images/tilesets", scaling=2)
+        self.load_image("spr_soul", "assets/images/sprites/spr_soul.png", scaling=1)
+        self.load_image("spr_monster_soul", "assets/images/sprites/spr_monster_soul.png", scaling=1)
 
         # Load Fonts
         self.load_font("dtm_sans_16", "assets/fonts/DTM-Sans.otf", 16)
         self.load_font("dtm_sans_20", "assets/fonts/DTM-Sans.otf", 20)
         self.load_font("dtm_sans_24", "assets/fonts/DTM-Sans.otf", 24)
+        self.load_font("dtm_mono_26", "assets/fonts/DTM-Mono.otf", 26)
 
         # Load SFX
-        self.load_sfx("intro_noise", "assets/sfx/sound_effects/mus_intronoise.ogg")
+        self.load_all_sfx("assets/sfx/sound_effects")
+        self.load_all_sfx("assets/sfx/text_sounds")
 
 
     def load_characters(self):
@@ -86,6 +89,32 @@ class AssetManager:
                 else:
                     base_name = file_name[:-4]
                     self.images[base_name] = scaled_img
+
+
+    def load_all_rooms(self, root_folder="assets/images/tilesets", scaling=2):
+        for directory_path, directory_names, file_names in os.walk(root_folder):
+            scale = scaling
+            for file_name in file_names:
+                if not file_name.endswith(".png"):
+                    continue
+
+                full_path = os.path.join(directory_path, file_name)
+                loaded_img = image.load(full_path).convert_alpha()
+                scaled_img = transform.scale_by(loaded_img, scale)
+                base_name = file_name[:-4]
+                self.images[base_name] = scaled_img
+
+
+    def load_all_sfx(self, root_folder="assets/sfx/sound_effects"):
+        for directory_path, directory_names, file_names in os.walk(root_folder):
+            for file_name in file_names:
+                if not file_name.endswith((".ogg", ".wav", ".mp3")):
+                    continue
+
+                full_path = os.path.join(directory_path, file_name)
+                loaded_sound = mixer.Sound(full_path)
+                base_name = file_name[:-4]
+                self.sfx[base_name] = loaded_sound
 
 
     def load_image(self, name, path, scaling=2):

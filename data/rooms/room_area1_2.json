@@ -1,6 +1,6 @@
 {
     "room_id": "room_area1_2",
-    "bg_image": "sprites/raw_rooms/room_area1_2.png",
+    "bg_image": "room_area1_2",
     "music": null,
 
     "walls": [
