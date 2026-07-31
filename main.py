@@ -1,6 +1,7 @@
 import pygame
 import sys
 from src.core.constants import Constants, Color
+from src.systems.asset_manager import AssetManager
 
 class Main:
     def __init__(self):
@@ -15,6 +16,8 @@ class Main:
         self.screen = pygame.display.set_mode((Constants.WIDTH, Constants.HEIGHT))
         pygame.display.set_caption("Deltatale")
         self.clock = pygame.time.Clock()
+        self.asset_manager = AssetManager()
+        self.asset_manager.load_all()
 
         self.running = True
 

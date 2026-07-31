@@ -1,6 +1,6 @@
 import os
 import re
-from pygame import image, font, mixer
+from pygame import image, transform, font, mixer
 
 class AssetManager:
     """This class loads all the game assets on startup and holds them on system RAM."""
@@ -15,14 +15,16 @@ class AssetManager:
         """The manifest. Calls the setters to load files into RAM."""
 
         # Load Images
-        self.load_image("logo", "assets/images/logo/LOGO.png")
+        self.load_image("logo", "assets/images/logo/LOGO.png", scaling=1)
         self.load_characters()
-        self.load_all_sprites("assets/images/sprites")
+        self.load_all_sprites("assets/images/sprites", scaling=2)
+        self.load_image("logo", "assets/images/sprites/spr_soul.png", scaling=1)
+        self.load_image("logo", "assets/images/sprites/spr_monster_soul.png", scaling=1)
 
         # Load Fonts
-        self.load_font("dtm_sans_16", "assets/fonts/Determination Sans.ttf", 16)
-        self.load_font("dtm_sans_20", "assets/fonts/Determination Sans.ttf", 20)
-        self.load_font("dtm_sans_24", "assets/fonts/Determination Sans.ttf", 24)
+        self.load_font("dtm_sans_16", "assets/fonts/DTM-Sans.otf", 16)
+        self.load_font("dtm_sans_20", "assets/fonts/DTM-Sans.otf", 20)
+        self.load_font("dtm_sans_24", "assets/fonts/DTM-Sans.otf", 24)
 
         # Load SFX
         self.load_sfx("intro_noise", "assets/sfx/sound_effects/mus_intronoise.ogg")
@@ -43,24 +45,30 @@ class AssetManager:
                 for frame in range(4):
                     path = f"assets/images/sprites/characters/{char}/walk/spr_{char}{first_letter}_{frame}.png"
                     loaded_img = image.load(path).convert_alpha()
-                    char_dict[direction].append(loaded_img)
+                    scaled_image = transform.scale_by(loaded_img, 2)
+                    char_dict[direction].append(scaled_image)
 
             self.images[char] = char_dict
 
 
-    def load_all_sprites(self, root_folder="assets/images/sprites"):
+    def load_all_sprites(self, root_folder="assets/images/sprites", scaling=2):
         pattern = re.compile(r"(.+)_(\d+)\.png$")
 
         for directory_path, directory_names, file_names in os.walk(root_folder):
+            scale = scaling
             for file_name in file_names:
                 if not file_name.endswith(".png"):
                     continue
 
                 if "walk" in directory_path: # Skip Kris/Susie walking sprites
                     continue
+
+                if "bullets" in directory_path:
+                    scale = 1
                 
                 full_path = os.path.join(directory_path, file_name)
                 loaded_img = image.load(full_path).convert_alpha()
+                scaled_img = transform.scale_by(loaded_img, scale)
                 
                 match = pattern.match(file_name)
                 
@@ -73,17 +81,20 @@ class AssetManager:
 
                     while len(self.images[base_name]) <= frame_index:
                         self.images[base_name].append(None)
-                    self.images[base_name][frame_index] = loaded_img
+                    self.images[base_name][frame_index] = scaled_img
                     
                 else:
                     base_name = file_name[:-4]
-                    self.images[base_name] = loaded_img
+                    self.images[base_name] = scaled_img
+
+        print(self.images)
 
 
-    def load_image(self, name, path):
+    def load_image(self, name, path, scaling=2):
         """Loads an image from the hard disk and stores the image in self.images class variable."""
-        loaded_image = image.load(path).convert_alpha()
-        self.images[name] = loaded_image
+        loaded_img = image.load(path).convert_alpha()
+        scaled_img = transform.scale_by(loaded_img, scaling)
+        self.images[name] = scaled_img
 
 
     def load_font(self, name, path, size):
