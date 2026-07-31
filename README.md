@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/BANNER.png" alt="Deltatale Banner" width="100%">
+  <img src="assets/images/logo//BANNER.png" alt="Deltatale Banner" width="100%">
 </p>
 
 # Deltatale
