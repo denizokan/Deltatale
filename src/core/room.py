@@ -8,9 +8,10 @@ from src.core.events import EventBus
 
 class Room:
     """Initializes a room."""
-    def __init__(self, room_id, asset_manager):
+    def __init__(self, room_id, asset_manager, flags):
         self.room_id = room_id
         self.asset_manager = asset_manager
+        self.flags = flags
 
         path = "data/rooms/"
 
@@ -39,7 +40,7 @@ class Room:
 
             interactable["interaction_count"] = 0
             if interactable["sprite"] != None:
-                if interactable.get("is_animated", False): # Its animated
+                if isinstance(self.asset_manager.get_image(interactable["sprite"]), list): # Its animated
                     interactable["image_obj"] = []
                     interactable["frame_index"] = 0
                     interactable["timer"] = 5
@@ -83,7 +84,7 @@ class Room:
         for index, trigger in enumerate(self.triggers):
             trigger_id = self.room_data["triggers"][index]["id"]
 
-            if self.game.flags.get(f"cutscene_{trigger_id}_completed", False):
+            if self.flags.get(f"cutscene_{trigger_id}_completed", False):
                 continue
 
             x1, y1, x2, y2 = trigger["x1"], trigger["y1"], trigger["x2"], trigger["y2"]
@@ -205,7 +206,7 @@ class Room:
         for interactable in self.interactables:
             if not self._isActive(interactable): continue
 
-            if interactable.get("is_animated", False):
+            if isinstance(interactable["image_obj"], list):
                 current_image = interactable["image_obj"][interactable["frame_index"]]
             else:
                 current_image = interactable["image_obj"]

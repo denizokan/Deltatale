@@ -8,13 +8,12 @@ class Player:
     Handles player overworld movement and tracks stats.
     """
 
-    def __init__(self, start_x, start_y, start_facing, asset_manager, input_manager):
+    def __init__(self, start_x, start_y, start_facing, asset_manager):
         self.x = start_x
         self.y = start_y
         self.facing = start_facing
 
         self.asset_manager = asset_manager
-        self.input_manager = input_manager
 
         self.speed = Constants.PLAYER_SPEED
 

@@ -1,54 +1,64 @@
-from PIL import Image, ImageTk
+import pygame
+from src.core.constants import Constants, Color
 
 class TransitionManager:
     """Handles smooth screen fade transitions."""
-    def __init__(self, main_game):
-        self.game = main_game
+    def __init__(self):
         self.fade_alpha = 0
-        self.fade_canvas_image = None
-        self.fade_image_ref = None
+        self.speed = 0
+        self.target_alpha = 0
         self.is_transitioning = False
+        self.on_complete_callback = None
+
+        self.fade_surface = pygame.Surface((Constants.WIDTH, Constants.HEIGHT))
+        self.fade_surface.fill(Color.BLACK)
+
 
     def fade_to_black(self, speed=8, on_complete=None):
-        """Fades the screen out, then runs the on_complete function."""
+        """Starts a transition to a fully black screen."""
         if self.is_transitioning: return
         self.is_transitioning = True
         self.fade_alpha = 0
-        self._animate(speed, 255, on_complete)
+        self.target_alpha = 255
+        self.speed = speed
+        self.on_complete_callback = on_complete
+
 
     def fade_from_black(self, speed=8, on_complete=None):
-        """Reveals the screen, then runs the on_complete function."""
+        """Starts a transition from a black screen to fully transparent."""
         if self.is_transitioning: return
         self.is_transitioning = True
         self.fade_alpha = 255
-        self._animate(-speed, 0, on_complete)
+        self.target_alpha = 0
+        self.speed = -speed
+        self.on_complete_callback = on_complete
 
-    def _animate(self, speed, target_alpha, on_complete):
-        """The internal loop that updates the image opacity."""
-        self.fade_alpha += speed
 
-        if self.fade_alpha >= 255: self.fade_alpha = 255
-        if self.fade_alpha <= 0: self.fade_alpha = 0
+    def update(self):
+        """Updates the alpha transparency. Must be called in the main loop."""
+        if not self.is_transitioning: return
 
-        img = Image.new('RGBA', (self.game.constants.WIDTH, self.game.constants.HEIGHT), (0, 0, 0, self.fade_alpha))
-        self.fade_image_ref = ImageTk.PhotoImage(img)
+        self.fade_alpha += self.speed
 
-        if self.fade_canvas_image is None:
-            self.fade_canvas_image = self.game.canvas.create_image(0, 0, image=self.fade_image_ref, anchor="nw")
-        else:
-            self.game.canvas.itemconfig(self.fade_canvas_image, image=self.fade_image_ref)
+        reached_target = False
+        if self.speed > 0 and self.fade_alpha >= self.target_alpha:
+            self.fade_alpha = self.target_alpha
+            reached_target = True
+        elif self.speed < 0 and self.fade_alpha <= self.target_alpha:
+            self.fade_alpha = self.target_alpha
+            reached_target = True
 
-        self.game.canvas.tag_raise(self.fade_canvas_image)
-
-        if self.fade_alpha == target_alpha:
+        if reached_target:
             self.is_transitioning = False
-            if self.fade_alpha == 0 and self.fade_canvas_image:
-                self.game.canvas.delete(self.fade_canvas_image)
-                self.fade_canvas_image = None
-                self.fade_image_ref = None
-                
-            if on_complete:
-                on_complete()
-        else:
-            delay = int(1000 / self.game.constants.FPS)
-            self.game.root.after(delay, lambda: self._animate(speed, target_alpha, on_complete))
+            
+            if self.on_complete_callback:
+                cb = self.on_complete_callback
+                self.on_complete_callback = None
+                cb()
+
+
+    def draw(self, surface):
+        """Draws the fade overlay. Must be called LAST in the render phase."""
+        if self.fade_alpha > 0:
+            self.fade_surface.set_alpha(int(self.fade_alpha))
+            surface.blit(self.fade_surface, (0, 0))

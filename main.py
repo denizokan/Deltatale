@@ -3,10 +3,8 @@ import sys
 from src.core.input import InputManager
 from src.core.enums import Event
 from src.core.constants import Constants, Color
-from src.core.player import Player
-from src.core.room import Room
-from src.core.camera import Camera
 from src.core.events import EventBus
+from src.systems.world_manager import WorldManager
 from src.systems.dialogue_system import DialogueSystem
 from src.systems.asset_manager import AssetManager
 
@@ -24,16 +22,15 @@ class Main:
         pygame.display.set_caption("Deltatale")
         self.clock = pygame.time.Clock()
 
+        self.selected_file_index = 0
+        self.flags = {}
+
         # Load Managers
         self.input_manager = InputManager()
-
         self.asset_manager = AssetManager()
         self.asset_manager.load_all()
-
-        self.player = Player(100, 100, "down", self.asset_manager, self.input_manager)
         self.dialogue_system = DialogueSystem(self.asset_manager)
-        self.current_room = Room("room_ruins1", self.asset_manager)
-        self.camera = Camera()
+        self.world_manager = WorldManager(self.asset_manager, self.flags)
 
         # Busses
         EventBus.subscribe(Event.START_DIALOGUE, self.handle_dialogue)
@@ -58,16 +55,13 @@ class Main:
             # ==========================================
             # PHASE 2: MATH & LOGIC (UPDATE)
             # ==========================================
-            
-            if self.dialogue_system.is_active: 
+
+            if self.dialogue_system.is_active:
                 self.dialogue_system.handle_input(self.input_manager)
                 self.dialogue_system.update()
-            
             else:
-                self.player.update(input_mgr=self.input_manager, current_room=self.current_room)                
-                self.current_room.update()
+                self.world_manager.update(self.input_manager)
 
-            self.camera.update(self.player, self.current_room)
             self.input_manager.update()
 
             # ==========================================
@@ -76,34 +70,14 @@ class Main:
             
             self.screen.fill(Color.BLACK)
 
-            self.current_room.draw(self.screen, self.camera)
-            self.player.draw(self.screen, self.camera)
+            self.world_manager.draw(self.screen, self.clock)
             self.dialogue_system.draw(self.screen)
-
-            if self.current_room.debug_mode:
-                self._draw_debug_text(self.screen)
 
             pygame.display.update()
             self.clock.tick(Constants.FPS)
 
         pygame.quit()
         sys.exit()
-
-
-    def _draw_debug_text(self, screen):
-        """Draws debug information on the screen."""
-        debug_font = self.asset_manager.get_font("dtm_sans_36")
-        debug_surf = debug_font.render(f"DEBUG MODE", False, Color.WHITE)
-        screen.blit(debug_surf, (5, 15))
-
-        fps_font = self.asset_manager.get_font("dtm_sans_16")
-        current_fps = int(self.clock.get_fps())
-        fps_surf = fps_font.render(f"FPS: {current_fps}", False, Color.YELLOW)
-        screen.blit(fps_surf, (5, 40))
-
-        coord_font = self.asset_manager.get_font("dtm_sans_24")
-        coord_surf = coord_font.render(f"{self.player.x:.2f}, {self.player.y:.2f}", False, Color.WHITE)
-        screen.blit(coord_surf, (Constants.WIDTH - coord_surf.get_width() - 5, 15))
 
 
     def handle_dialogue(self, data):
