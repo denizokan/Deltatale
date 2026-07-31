@@ -1,6 +1,8 @@
 import os
 import re
 from pygame import image, transform, font, mixer
+from src.core.enums import Event
+from src.core.events import EventBus
 
 class AssetManager:
     """This class loads all the game assets on startup and holds them on system RAM."""
@@ -9,6 +11,10 @@ class AssetManager:
         self.images = {}
         self.fonts = {}
         self.sfx = {}
+
+        EventBus.subscribe(Event.PLAY_SOUND, self.play_sfx)
+        EventBus.subscribe(Event.PLAY_MUSIC, self.play_music)
+        EventBus.subscribe(Event.STOP_SOUND, self.stop_sfx)
 
     # Setter Methods
     def load_all(self):
@@ -26,6 +32,7 @@ class AssetManager:
         self.load_font("dtm_sans_16", "assets/fonts/DTM-Sans.otf", 16)
         self.load_font("dtm_sans_20", "assets/fonts/DTM-Sans.otf", 20)
         self.load_font("dtm_sans_24", "assets/fonts/DTM-Sans.otf", 24)
+        self.load_font("dtm_sans_36", "assets/fonts/DTM-Sans.otf", 36)
         self.load_font("dtm_mono_26", "assets/fonts/DTM-Mono.otf", 26)
 
         # Load SFX
@@ -162,3 +169,39 @@ class AssetManager:
             return None
 
         return self.sfx[name]
+
+
+    # Event Bus Methods
+    def play_sfx(self, sound_name):
+        """Event bus method: Plays the given sound once."""
+        sound = self.get_sfx(sound_name)
+        if sound:
+            sound.play()
+
+
+    def play_music(self, sound_name):
+        """Event bus method: Loops the given music track indefinitely."""
+        sound = self.get_sfx(sound_name)
+        if sound:
+            sound.play(-1)
+
+
+    def stop_sfx(self, data):
+        """
+        Event bus method: Stops the given sound. 
+        Accepts string ('snd_power') or list/tuple (['snd_power', 100]).
+        """
+        fadeout = 0
+        if isinstance(data, (list, tuple)):
+            sound_name = data[0]
+            if len(data) > 1:
+                fadeout = data[1]
+        else:
+            sound_name = data
+        
+        sound = self.get_sfx(sound_name)
+        if sound:
+            if fadeout > 0:
+                sound.fadeout(fadeout)
+            else:
+                sound.stop()

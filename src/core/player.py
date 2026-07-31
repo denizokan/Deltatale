@@ -1,5 +1,6 @@
 import pygame
-from src.core.enums import Action
+from src.core.enums import Event, Action
+from src.core.events import EventBus
 from src.core.constants import Constants
 
 class Player:
@@ -62,7 +63,10 @@ class Player:
             current_room.check_interactable(self.x, self.y, self.facing)
 
         if input_mgr.is_just_pressed(Action.MENU):
-            return "MENU"
+            EventBus.emit(Event.OPEN_MENU, 0)
+
+        if input_mgr.is_just_pressed(Action.DEBUG):
+            current_room.toggle_debug()
         
         dx, dy = 0, 0
         new_facing = self.facing

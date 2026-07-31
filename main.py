@@ -1,10 +1,12 @@
 import pygame
 import sys
 from src.core.input import InputManager
+from src.core.enums import Event
 from src.core.constants import Constants, Color
 from src.core.player import Player
 from src.core.room import Room
 from src.core.camera import Camera
+from src.core.events import EventBus
 from src.systems.dialogue_system import DialogueSystem
 from src.systems.asset_manager import AssetManager
 
@@ -30,8 +32,11 @@ class Main:
 
         self.player = Player(100, 100, "down", self.asset_manager, self.input_manager)
         self.dialogue_system = DialogueSystem(self.asset_manager)
-        self.current_room = Room("room_ruins1", self.asset_manager, self.dialogue_system)
+        self.current_room = Room("room_ruins1", self.asset_manager)
         self.camera = Camera()
+
+        # Busses
+        EventBus.subscribe(Event.START_DIALOGUE, self.handle_dialogue)
 
         self.running = True
 
@@ -59,10 +64,7 @@ class Main:
                 self.dialogue_system.update()
             
             else:
-                player_signal = self.player.update(input_mgr=self.input_manager, current_room=self.current_room)
-                if player_signal == "MENU":
-                    self.menu_screen.open_menu(index=0)
-                
+                self.player.update(input_mgr=self.input_manager, current_room=self.current_room)                
                 self.current_room.update()
 
             self.camera.update(self.player, self.current_room)
@@ -78,11 +80,50 @@ class Main:
             self.player.draw(self.screen, self.camera)
             self.dialogue_system.draw(self.screen)
 
+            if self.current_room.debug_mode:
+                self._draw_debug_text(self.screen)
+
             pygame.display.update()
             self.clock.tick(Constants.FPS)
 
         pygame.quit()
         sys.exit()
+
+
+    def _draw_debug_text(self, screen):
+        """Draws debug information on the screen."""
+        debug_font = self.asset_manager.get_font("dtm_sans_36")
+        debug_surf = debug_font.render(f"DEBUG MODE", False, Color.WHITE)
+        screen.blit(debug_surf, (5, 15))
+
+        fps_font = self.asset_manager.get_font("dtm_sans_16")
+        current_fps = int(self.clock.get_fps())
+        fps_surf = fps_font.render(f"FPS: {current_fps}", False, Color.YELLOW)
+        screen.blit(fps_surf, (5, 40))
+
+        coord_font = self.asset_manager.get_font("dtm_sans_24")
+        coord_surf = coord_font.render(f"{self.player.x:.2f}, {self.player.y:.2f}", False, Color.WHITE)
+        screen.blit(coord_surf, (Constants.WIDTH - coord_surf.get_width() - 5, 15))
+
+
+    def handle_dialogue(self, data):
+        """Event Bus method: Stars a new dialogue with the data given."""
+        text = data.get("text")
+        interaction_index = data.get("interaction_index", 0)
+        interaction_type = data.get("type")
+        interactable = data.get("interactable")
+        actors = data.get("actors")
+
+        on_complete_cb = None
+        if interaction_type == "SAVE_POINT":
+            on_complete_cb = lambda: self.save_screen.show_save_screen(interactable)
+
+        self.dialogue_system.start_dialogue(
+            text=text,
+            interaction_index=interaction_index,
+            actors=actors,
+            on_complete=on_complete_cb
+        )
 
             
 if __name__ == "__main__":

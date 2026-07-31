@@ -3,14 +3,14 @@ import time
 import pygame
 from pygame import mixer
 from src.core.constants import Constants
-from src.core.enums import Interactable
+from src.core.enums import Event, Interactable
+from src.core.events import EventBus
 
 class Room:
     """Initializes a room."""
-    def __init__(self, room_id, asset_manager, dialogue_system):
+    def __init__(self, room_id, asset_manager):
         self.room_id = room_id
         self.asset_manager = asset_manager
-        self.dialogue_system = dialogue_system
 
         path = "data/rooms/"
 
@@ -89,9 +89,7 @@ class Room:
             x1, y1, x2, y2 = trigger["x1"], trigger["y1"], trigger["x2"], trigger["y2"]
             
             if (x1 <= target_x <= x2 and y1 <= target_y <= y2):
-                self.game.canvas.itemconfig(self.game.player.active_characters[0], image=self.game.player.kris_sprites[self.game.player.facing][0])
-                self.game.canvas.itemconfig(self.game.player.active_characters[1], image=self.game.player.susie_sprites[self.game.player.facing][0])
-                self.game.cutscene_manager.play_cutscene(trigger_id)
+                EventBus.emit(Event.START_CUTSCENE, trigger_id)
                 break
     
 
@@ -105,18 +103,7 @@ class Room:
             x1, y1, x2, y2 = box
             if (x1 <= target_x <= x2 and y1 <= target_y <= y2):
                 next_room_id = self.room_data["exits"][index]["target_room"]
-                
-                try:
-                    with open(self.path + next_room_id + ".json", "r") as file:
-                        next_room_peek = json.load(file)
-                    
-                    if self.room_data["music"] != next_room_peek["music"]:
-                        if hasattr(self, "music"):
-                            self.music.fadeout(500)
-                except Exception as e:
-                    print(f"Warning: Could not read next room music: {e}")
-
-                self.game.transition.fade_to_black(speed=24, on_complete=lambda: self.next_room(next_room_id))
+                EventBus.emit(Event.CHANGE_ROOM, next_room_id)
                 break
 
 
@@ -168,165 +155,21 @@ class Room:
             return
 
         if interactable.get("type") == Interactable.SAVE_POINT.value:
-            self.asset_manager.get_sfx("snd_power").play()
-            
-            self.dialogue_system.start_dialogue(
-                text=raw_text_data,
-                interaction_index=count,
-                on_complete=lambda: self.game.save_screen.show_save_screen(interactable)
-            )
-        elif interactable.get("type") == Interactable.NPC.value:
-            self.dialogue_system.start_dialogue(
-                text=raw_text_data,
-                interaction_index=count,
-                actors={interactable["name"]: interactable}
-            )
-        else:
-            self.dialogue_system.start_dialogue(
-                text=raw_text_data,
-                interaction_index=count
-            )
+            EventBus.emit(Event.PLAY_SOUND, "snd_power")
 
-    
-    def next_room(self, next_room_id):
-        """Cleans up and moves the player to the next room."""
-        for element in self.active_ui_elements:
-            self.game.canvas.delete(element)
-
-        self.active_ui_elements.clear()
-        self.game.current_room = Room(self.game, next_room_id)
-
-        spawn_x, spawn_y, spawn_facing = 0, 0, "right"
-        for spawn in self.game.current_room.room_data["spawns"]:
-            if spawn["from_room"] == self.room_id:
-                spawn_x = spawn["x"]
-                spawn_y = spawn["y"]
-                spawn_facing = spawn["facing"]
-                break
-
-        for character in self.game.player.active_characters:
-            self.game.canvas.coords(character, spawn_x, spawn_y)
-            self.game.canvas.tag_raise(character)
-
-        self.game.player.x = spawn_x
-        self.game.player.y = spawn_y
-        self.game.player.facing = spawn_facing
-        self.game.player.anim_frame = 0
-        self.game.player.anim_timer = 0
-        self.game.player.history = [(spawn_x, spawn_y, spawn_facing, 0)] * self.game.player.follow_delay
-
-        self.game.camera.update()
-        self.game.player.draw(spawn_x, spawn_y, spawn_facing, 0)
-        self.game.canvas.coords(self.game.current_room.background, -self.game.camera.x, -self.game.camera.y)
-
-        if self.room_data["music"] != self.game.current_room.room_data["music"]:
-            if hasattr(self.game.current_room, "music"):
-                self.game.current_room.music.play(loops=-1)
-
-        if self.debug_mode == True: # DEBUG MODE
-            self.toggle_debug()
-            self.game.current_room.toggle_debug()
-        
-        self.game.transition.fade_from_black(speed=24)
+        dialogue_data = {
+            "text": raw_text_data,
+            "interaction_index": count,
+            "type": interactable.get("type"),
+            "interactable": interactable,
+            "actors": {interactable["name"]: interactable} if interactable.get("type") == Interactable.NPC.value else None
+        }
+        EventBus.emit(Event.START_DIALOGUE, dialogue_data)
 
 
     def toggle_debug(self):
-        """Toggles the debug mode on/off. Shows the colission points. 
-        Blue: Walls, Green: Spawn Points, Red: Exit Points, Yellow: Interactables, Pink: Triggers"""
-        if self.debug_mode == False:
-            self.debug_mode = True
-            self.debug_elements = []
-
-            text_x = 10
-            text_y = 20
-            debug_text = self.game.canvas.create_text(
-                text_x,
-                text_y,
-                text="DEBUG MODE",
-                fill="white",
-                font=("Determination Sans", 36, "normal"),
-                anchor="w"
-            )
-            self.game.canvas.tag_raise(debug_text)
-            self.debug_elements.append({"id": debug_text, "type": "text", "coords": (text_x, text_y)})
-
-            fps_text = self.game.canvas.create_text(
-                10, 40,
-                text="FPS: 0", 
-                fill="yellow", 
-                font=("Determination Sans", 16, "normal"), 
-                anchor="nw"
-            )
-            self.game.canvas.tag_raise(debug_text)
-            self.debug_elements.append({"id": fps_text, "type": "fps_text", "coords": (text_x, text_y)})
-
-            coords_text_x = self.game.constants.WIDTH - 5
-            coords_text_y = 15
-            coords_text = self.game.canvas.create_text(
-                coords_text_x,
-                coords_text_y,
-                text=f"{self.game.player.x}, {self.game.player.y}",
-                fill="white",
-                font=("Determination Sans", 24, "normal"),
-                anchor="e"
-            )
-            self.game.canvas.tag_raise(coords_text)
-            self.debug_elements.append({"id": coords_text, "type": "coords_text", "coords": (coords_text_x, coords_text_y)})
-
-            self._create_rectangle(list=self.walls, color="blue", width=2)
-            self._create_circle(list=self.spawns, radius=20, color="green")
-            self._create_rectangle(list=self.exits, color="red", width=2)
-            self._create_rectangle(list=self.interactables, color="yellow", width=2)
-            self._create_rectangle(list=self.triggers, color="pink", width=2)
-
-        else:
-            self.debug_mode = False
-            for element in self.debug_elements:
-                self.game.canvas.delete(element["id"])
-            self.debug_elements.clear()
-
-
-    def _create_rectangle(self, list, color, width):
-        coords_list = []
-        for element in list:
-            if not self._isActive(element): continue
-            try:
-                coords = (element["x1"], element["y1"], element["x2"], element["y2"])
-            except KeyError: # Dealing with an interactable
-                if "image_obj" in element:
-                    obj_x, obj_y = element["x"], element["y"]
-                    if len(element["image_obj"]) > 1:
-                        half_w = element["image_obj"][element["frame_index"]].width() / 2
-                        half_h = element["image_obj"][element["frame_index"]].height() / 2
-                    else:
-                        half_w = element["image_obj"].width() / 2
-                        half_h = element["image_obj"].height() / 2
-                    
-                    x1, y1 = obj_x - half_w, obj_y - half_h
-                    x2, y2 = obj_x + half_w, obj_y + half_h
-    
-                else:
-                    x1, y1 = element["x1"], element["y1"]
-                    x2, y2 = element["x2"], element["y2"]
-                coords = (x1, y1, x2, y2)
-            coords_list.append(coords)
-
-        for element_box in coords_list:
-            x1, y1, x2, y2 = element_box
-            rectangle = self.game.canvas.create_rectangle(x1 - self.game.camera.x, y1 - self.game.camera.y, x2 - self.game.camera.x, y2 - self.game.camera.y, outline=color, width=width)
-            self.debug_elements.append({"id": rectangle, "type": "rect", "coords": (x1, y1, x2, y2)})
-
-
-    def _create_circle(self, list, radius, color):
-        coords_list = []
-        for element in list:
-            coords = (element["x"], element["y"])
-            coords_list.append(coords)
-
-        for element_coords in coords_list:
-            x, y = element_coords
-            circle = self.game.canvas.create_oval((x - radius) - self.game.camera.x, (y - radius) - self.game.camera.y, (x + radius) - self.game.camera.x, (y + radius) - self.game.camera.y, fill=color)
-            self.debug_elements.append({"id": circle, "type": "circle", "coords": (x, y, radius)})
+        """Toggles the debug mode on/off."""
+        self.debug_mode = not self.debug_mode
 
 
     def update(self):
@@ -370,36 +213,56 @@ class Room:
             rect = current_image.get_rect(center=(interactable["x"] - camera.x, interactable["y"] - camera.y))
             surface.blit(current_image, rect)
 
-        if self.debug_mode: self._draw_debug_positions(surface, camera) # DEBUG MODE
+        if self.debug_mode: self._draw_debug(surface, camera) # DEBUG MODE
 
 
-    def _update_debug_positions(self, surface, camera):
-        """Updates the debug rectangles/circles positions to respect camera x and y."""
-        for element in self.debug_elements:
-            if element["type"] == "text":
-                #self.game.canvas.tag_raise(element["id"])
-                pass
+    def _draw_debug(self, surface, camera):
+        """Draws the debug rectangles/circles dynamically every frame."""
+        def draw_rects(element_list, color, width=2):
+            for element in element_list:
+                if not self._isActive(element): continue
+                
+                if "x1" in element:
+                    x1, y1 = element["x1"], element["y1"]
+                    x2, y2 = element["x2"], element["y2"]
+                
+                else:
+                    obj_x, obj_y = element["x"], element["y"]
+                    if isinstance(element.get("image_obj"), list) and len(element["image_obj"]) > 0:
+                        img = element["image_obj"][element.get("frame_index", 0)]
+                    else:
+                        img = element.get("image_obj")
+                        
+                    if img:
+                        half_w = img.get_width() / 2
+                        half_h = img.get_height() / 2
+                    else:
+                        half_w, half_h = 15, 15
+                        
+                    x1, y1 = obj_x - half_w, obj_y - half_h
+                    x2, y2 = obj_x + half_w, obj_y + half_h
 
-            if element["type"] == "coords_text":
-                #self.game.canvas.tag_raise(element["id"])
-                #self.game.canvas.itemconfig(element["id"], text=f"{self.game.player.x:.2f}, {self.game.player.y:.2f}")
-                pass
+                rect = pygame.Rect(x1 - camera.x, y1 - camera.y, x2 - x1, y2 - y1)
+                pygame.draw.rect(surface, color, rect, width)
 
-            elif element["type"] == "rect":
-                x1, y1, x2, y2 = element["coords"]
-                #self.game.canvas.coords(element["id"], x1 - self.game.camera.x, y1 - self.game.camera.y, x2 - self.game.camera.x, y2 - self.game.camera.y)
+        draw_rects(self.walls, "blue")
+        draw_rects(self.exits, "red")
+        draw_rects(self.triggers, "pink")
+        draw_rects(self.interactables, "yellow")
 
-            elif element["type"] == "circle":
-                x, y, radius = element["coords"]
-                x1, y1, x2, y2 = x - radius, y - radius, x + radius, y + radius
-                #self.game.canvas.coords(element["id"], x1 - self.game.camera.x, y1 - self.game.camera.y, x2 - self.game.camera.x, y2 - self.game.camera.y)
+        for spawn in self.spawns:
+            cx = spawn["x"] - camera.x
+            cy = spawn["y"] - camera.y
+            pygame.draw.circle(surface, "green", (cx, cy), 20, width=2)
 
 
     def _isActive(self, interactable):
-        """Checks if an interactable is currently active on the canvas."""
-        if interactable.get("is_active", False): return False
-        if interactable.get("cutscene", None) != None:
-            if self.game.flags.get(f"cutscene_{interactable["cutscene"]}_completed", False):
+        """Checks if an interactable is currently active in the room."""
+        if interactable.get("is_active", False): 
+            return False
+        
+        if interactable.get("cutscene") is not None:
+            if self.flags.get(f"cutscene_{interactable['cutscene']}_completed", False):
                 return False
 
         return True

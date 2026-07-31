@@ -1,10 +1,24 @@
 from enum import Enum, auto
-from typing import ClassVar
+
+class Event(Enum):
+    """Contains all possible events."""
+
+    # UI / Dialogue
+    START_DIALOGUE = "start_dialogue"
+    SHOW_SAVE_SCREEN = "show_save_screen"
+    
+    # World / Room
+    CHANGE_ROOM = "change_room"
+    START_CUTSCENE = "start_cutscene"
+    OPEN_MENU = "open_menu"
+    
+    # Audio
+    PLAY_SOUND = "play_sound"
+    PLAY_MUSIC = "play_music"
+    STOP_SOUND = "stop_sound"
 
 class Action(Enum):
-    """
-    All possible events that can occur while in game. Check with is_pressed(Action.STATE)
-    """
+    """All possible keyboard events that can occur while in game. Check with is_pressed(Action.STATE)"""
 
     # Menu
     CONFIRM = 1
@@ -22,9 +36,7 @@ class Action(Enum):
     DEBUG = 10
 
 class GameState(Enum):
-    """
-    All possible game states. Check with GameState.VALUE
-    """
+    """All possible game states. Check with GameState.VALUE"""
 
     INTRO = 0
     FILE_SELECT = 1

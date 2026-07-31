@@ -65,10 +65,10 @@ class DialogueSystem:
 
         if page_data.get("face") != None:
             self.portrait_image = self.asset_manager.get_image(Portraits[page_data["face"]].value)
-            image_coords = (x1 + 25, y1 + 17)
-            text_coords = (x1 + 140, y1 + 13)
+            image_coords = (x1 + 25, y1 + 20)
+            text_coords = (x1 + 140, y1 + 15)
         else:
-            text_coords = (x1 + 25, y1 + 13)
+            text_coords = (x1 + 25, y1 + 15)
 
         return {"box_bounds": (x1, y1, x2 - x1, y2 - y1), "image_coords": image_coords, "text_coords": text_coords, "fill": fill, "outline": outline, "width": width}
 
@@ -268,7 +268,7 @@ class DialogueSystem:
                 draw_x += uniform(-char_data["shake_intensity"], char_data["shake_intensity"])
                 draw_y += uniform(-char_data["shake_intensity"], char_data["shake_intensity"])
 
-            char_rect = char_surface.get_rect(center=(draw_x, draw_y))
+            char_rect = char_surface.get_rect(topleft=(draw_x, draw_y))
             surface.blit(char_surface, char_rect)
 
 
