@@ -4,13 +4,14 @@ from src.core.input import InputManager
 from src.core.enums import Event, GameState
 from src.core.constants import Constants, Color
 from src.core.events import EventBus
+from src.core.transition import TransitionManager
 from src.systems.world_manager import WorldManager
 from src.systems.dialogue_system import DialogueSystem
 from src.systems.asset_manager import AssetManager
 from src.systems.save_system import SaveSystem
-from src.core.transition import TransitionManager
 from src.screens.intro_screen import IntroScreen
 from src.screens.file_select import FileSelectScreen
+from src.screens.save_screen import SaveScreen
 
 class Main:
     def __init__(self):
@@ -128,7 +129,7 @@ class Main:
 
             data = self.save_system.load_file(selected_slot)
             self.state = GameState.PLAYING
-            self.world_manager = WorldManager(self.asset_manager, self.transition_manager, data)
+            self.world_manager = WorldManager(self.asset_manager, self.transition_manager, self.save_system, selected_slot, data)
             self.world_manager.camera.update(self.world_manager.player, self.world_manager.current_room)
             self.world_manager.player.draw(self.screen, self.world_manager.camera)
             self.file_select_screen = None
@@ -137,7 +138,7 @@ class Main:
 
 
     def handle_dialogue(self, data):
-        """Event Bus method: Stars a new dialogue with the data given."""
+        """Event Bus method: Starts a new dialogue with the data given."""
         text = data.get("text")
         interaction_index = data.get("interaction_index", 0)
         interaction_type = data.get("type")
@@ -146,7 +147,7 @@ class Main:
 
         on_complete_cb = None
         if interaction_type == "SAVE_POINT":
-            on_complete_cb = lambda: self.save_screen.show_save_screen(interactable)
+            on_complete_cb = lambda: self.world_manager.open_save_menu(interactable)
 
         self.dialogue_system.start_dialogue(
             text=text,

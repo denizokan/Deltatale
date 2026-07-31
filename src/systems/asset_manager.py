@@ -1,5 +1,6 @@
 import os
 import re
+import json
 from pygame import image, transform, font, freetype, mixer
 from src.core.enums import Event
 from src.core.events import EventBus
@@ -32,6 +33,7 @@ class AssetManager:
         self.load_font("dtm_sans_16", "assets/fonts/DTM-Sans.otf", 16)
         self.load_font("dtm_sans_20", "assets/fonts/DTM-Sans.otf", 20)
         self.load_font("dtm_sans_24", "assets/fonts/DTM-Sans.otf", 24)
+        self.load_font("dtm_sans_26", "assets/fonts/DTM-Sans.otf", 26)
         self.load_font("dtm_sans_36", "assets/fonts/DTM-Sans.otf", 36)
         self.load_font("dtm_mono_26", "assets/fonts/DTM-Mono.otf", 26)
 
@@ -170,6 +172,15 @@ class AssetManager:
             return None
 
         return self.sfx[name]
+
+
+    def get_room_data(self, room_id):
+        try:
+            with open("data/rooms/" + room_id + ".json", "r") as file:
+                room_data = json.load(file)
+            return room_data
+        except Exception as e:
+            print(f"Warning: Could not read room data: {e}")
 
 
     # Event Bus Methods

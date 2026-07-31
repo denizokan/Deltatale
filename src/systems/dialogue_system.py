@@ -251,7 +251,7 @@ class DialogueSystem:
         pygame.draw.rect(surface, self.box_info["fill"], self.box_info["box_bounds"])
         
         if self.box_info["outline"] is not None:
-            border_rect = pygame.Rect(self.box_info["box_bounds"]).inflate(6, 6)
+            border_rect = pygame.Rect(self.box_info["box_bounds"]).inflate(self.box_info["width"], self.box_info["width"])
             pygame.draw.rect(surface, self.box_info["outline"], border_rect, self.box_info["width"])
 
         if hasattr(self, 'portrait_image') and self.portrait_image:

@@ -1,64 +1,107 @@
-from tkinter import messagebox
+import sys
+import pygame
 from pygame import mixer
 from src.core.enums import Action
+from src.core.constants import Constants, Color
 
 class SaveScreen:
     """This class gets called when a player interacts with a save point."""
 
-    def __init__(self, main_game):
-        self.game = main_game
-
+    def __init__(self, asset_manager):
+        self.asset_manager = asset_manager
+        
         self.is_active = False
         self.menu_index = 0
         self.saved = False
+        self.menu_soul_x, self.menu_soul_y = (Constants.WIDTH // 2) - ((Constants.WIDTH // 1.65) // 3) - 20, 250
+        self.data = None
+        self.interactable = None
 
-        self.active_ui_elements = []
-        self.ids = {
-            "box": None,
-            "name": None,
-            "level": None,
-            "playtime": None,
-            "location": None
-        }
-        self.button_ids = []
+        self.squeak_sound = self.asset_manager.get_sfx("snd_squeak")
+        self.save_sound = self.asset_manager.get_sfx("snd_save")
 
 
-    def show_save_screen(self, interactable):
+    def show_save_screen(self, current_data, interactable, on_save_callback):
         """Stops movement inputs and shows the save screen."""
-        save_index = self.game.selected_file_index
-
-        try:
-            old_data = self.game.save_system.load_file(save_index)
-        except RuntimeError as e:
-            self.game.root.destroy()
-            messagebox.showerror(
-                "An error has occured.",
-                f"{e}"
-            )
-            exit(1)
-
-        self.is_active = True
-        self.old_data = old_data
+        self.data = current_data
         self.interactable = interactable
+        self.on_save_callback = on_save_callback
+        
+        self.is_active = True
+        self.saved = False
+        self.menu_index = 0
 
-        self.draw_box()
-        self.draw_text(old_data)
-        self.update_visuals()
+
+    def draw(self, screen):
+        """Draws to the screen every game tick while a save screen is active."""
+        if not self.is_active: return
+
+        self.box_width = Constants.WIDTH // 1.65
+        self.box_height = 170
+        self.start_y = 120
+        
+        self.box_x = (Constants.WIDTH - self.box_width) // 2
+        self.box_y = self.start_y
+
+        pygame.draw.rect(screen, Color.BLACK, (self.box_x, self.box_y, self.box_width, self.box_height))
+        border_rect = pygame.Rect((self.box_x, self.box_y, self.box_width, self.box_height)).inflate(6, 6)
+        pygame.draw.rect(screen, Color.WHITE, border_rect, 6)
+
+        font = self.asset_manager.get_font("dtm_sans_26")
+        color = Color.WHITE
+        save_text = "Save"
+        if self.saved:
+            color = Color.YELLOW
+            save_text = "File saved."
+
+        # Name Text
+        name_surf = font.render(self.data["name"], True, color)
+        name_rect = name_surf.get_rect(midleft=(self.box_x + 30, self.box_y + 35))
+        screen.blit(name_surf, name_rect)
+
+        # Level Text
+        level_surf = font.render(f"LV {self.data["level"]}", True, color)
+        level_rect = level_surf.get_rect(center=(Constants.WIDTH // 2, self.box_y + 35))
+        screen.blit(level_surf, level_rect)
+
+        # Playtime Text
+        playtime_surf = font.render(self._playtime_to_str(self.data["playtime"]), True, color)
+        playtime_rect = playtime_surf.get_rect(midright=(self.box_x + self.box_width - 30, self.box_y + 35))
+        screen.blit(playtime_surf, playtime_rect)
+
+        # Location Text
+        location_surf = font.render(self.data["location"], True, color)
+        location_rect = location_surf.get_rect(midleft=(self.box_x + 30, self.box_y + 75))
+        screen.blit(location_surf, location_rect)
+        
+        # Create the buttons
+        save_surf = font.render(save_text, True, color)
+        save_rect = save_surf.get_rect(midleft=((Constants.WIDTH // 2) - ((Constants.WIDTH // 1.65) // 3), self.box_y + 130))
+        screen.blit(save_surf, save_rect)
+
+        if not self.saved:
+            return_surf = font.render("Return", True, color)
+            return_rect = return_surf.get_rect(midright=((Constants.WIDTH // 2) + ((Constants.WIDTH // 1.65) // 3), self.box_y + 130))
+            screen.blit(return_surf, return_rect)
+        
+            # Draw the SOUL sprite
+            menu_soul_sprite = self.asset_manager.get_image("spr_soul")
+            soul_rect = menu_soul_sprite.get_rect(center=(self.menu_soul_x, self.menu_soul_y))
+            screen.blit(menu_soul_sprite, soul_rect)
         
 
     def handle_input(self, input_mgr):
-        """Handles keyboard input while a save screen is active."""
         if not self.is_active: return
 
-        # Listen for confirm/cancel inputs
         if input_mgr.is_just_pressed(Action.CONFIRM):
             if self.saved:
                 self.clear()
                 return
             
             if self.menu_index == 0: # Player pressed save
-                new_save = self.overwrite_data(self.old_data, self.interactable)
-                self.save(new_save)
+                self.data = self.on_save_callback(self.interactable)
+                self.saved = True
+                self.save_sound.play()
                 return
 
             if self.menu_index == 1: # Player pressed cancel
@@ -83,168 +126,29 @@ class SaveScreen:
                 moved = True
 
         if moved:
-            mixer.Sound(file="sounds/sound_effects/snd_squeak.wav").play()
-            self.update_visuals()
+            self.squeak_sound.play()
 
 
-    def save(self, new_data):
-        """Saves the game and updates text on the screen."""
-        if self.saved: return
-
-        self.saved = True
-        try:
-            self.game.save_system.save_file(self.game.selected_file_index, new_data)
-        except RuntimeError as e:
-            self.game.root.destroy()
-            messagebox.showerror(
-                "An error has occured.",
-                f"{e}"
-            )
-            exit(1)
-
-        save_sound = mixer.Sound(file="sounds/sound_effects/snd_save.wav")
-        save_sound.play()
-        self.update_visuals(new_data)
-
-
-    def update_visuals(self, new_data=None):
+    def update(self):
         """
         Calculates the exact screen coordinates for the SOUL cursor based on the 
-        current menu_index state, then moves the canvas image component to match.
+        current menu_index state.
         """
+        if not self.is_active: return
+
         if not self.saved: # Navigating the buttons
-            x1, y1, x2, y2 = self.game.canvas.bbox(self.button_ids[self.menu_index])
-            target_x = x1 - 20
-            target_y = self.box_y1 + 130
-            self.game.canvas.coords(self.menu_soul, target_x, target_y)
-        else: # Saved the game
-            self.game.canvas.itemconfig(self.ids["name"], fill="yellow")
-            self.game.canvas.itemconfig(self.ids["level"], text=f"LV {new_data["level"]}", fill="yellow")
-            self.game.canvas.itemconfig(self.ids["playtime"], text=self._playtime_to_str(new_data["playtime"]), fill="yellow")
-            self.game.canvas.itemconfig(self.ids["location"], text=new_data["location"], fill="yellow")
-            self.game.canvas.delete(self.menu_soul)
-            self.game.canvas.delete(self.button_ids[1])
-            self.game.canvas.itemconfig(self.button_ids[0], text="File saved.", fill="yellow")
-            
-
-    def overwrite_data(self, old_data, interactable):
-        """Overwrites old save data with the new data."""
-        old_data["location"] = interactable["location"]
-        old_data["playtime"] += self.game.playtime
-        old_data["room"] = self.game.current_room.room_id
-        old_data["flags"] = self.game.flags
-        self.game.playtime = 0
-        # TODO: Update more values later
-
-        new_data = old_data
-        return new_data
-
-
-    def draw_box(self):
-        """Draws the save box on the screen."""
-        box_width = self.game.constants.WIDTH // 1.65
-        box_height = 170
-        start_y = 120
-
-        self.box_x1 = (self.game.constants.WIDTH - box_width) // 2
-        self.box_x2 = self.box_x1 + box_width
-        self.box_y1 = start_y
-        self.box_y2 = self.box_y1 + box_height
-
-        save_box = self.game.canvas.create_rectangle(
-            self.box_x1,
-            self.box_y1,
-            self.box_x2,
-            self.box_y2,
-            fill="black",
-            outline="white",
-            width=6
-        )
-        self.active_ui_elements.append(save_box)
-        self.ids["box"] = save_box
-
-
-    def draw_text(self, old_data):
-        """Draws info text on top of the save box."""
-        name_text = self.game.canvas.create_text(
-            self.box_x1 + 30,
-            self.box_y1 + 35,
-            text=old_data["name"],
-            fill="white",
-            font=("Determination Sans", 26, "normal"),
-            anchor="w"
-        )
-
-        level_text = self.game.canvas.create_text(
-            self.game.constants.WIDTH // 2,
-            self.box_y1 + 35,
-            text=f"LV {old_data["level"]}",
-            fill="white",
-            font=("Determination Sans", 26, "normal"),
-            anchor="center"
-        )
-
-        playtime_text = self.game.canvas.create_text(
-            self.box_x2 - 30,
-            self.box_y1 + 35,
-            text=self._playtime_to_str(old_data["playtime"]),
-            fill="white",
-            font=("Determination Sans", 26, "normal"),
-            anchor="e"
-        )
-
-        location_text = self.game.canvas.create_text(
-            self.box_x1 + 30,
-            self.box_y1 + 75,
-            text=old_data["location"],
-            fill="white",
-            font=("Determination Sans", 26, "normal"),
-            anchor="w"
-        )
-
-        # Create the buttons
-        save_button = self.game.canvas.create_text(
-            (self.game.constants.WIDTH // 2) - ((self.game.constants.WIDTH // 1.65) // 3),
-            self.box_y1 + 130,
-            text="Save",
-            fill="white",
-            font=("Determination Sans", 26, "normal"),
-            anchor="w"
-        )
-
-        return_button = self.game.canvas.create_text(
-            (self.game.constants.WIDTH // 2) + ((self.game.constants.WIDTH // 1.65) // 3),
-            self.box_y1 + 130,
-            text="Return",
-            fill="white",
-            font=("Determination Sans", 26, "normal"),
-            anchor="e"
-        )
-
-        # Draw the SOUL sprite
-        self.menu_soul = self.game.canvas.create_image(0, 0, image=self.game.player_sprite)
-
-        self.ids["name"] = name_text
-        self.ids["level"] = level_text
-        self.ids["playtime"] = playtime_text
-        self.ids["location"] = location_text
-
-        self.button_ids.extend([save_button, return_button])
-        self.active_ui_elements.extend([name_text, level_text, playtime_text, location_text, save_button, return_button, self.menu_soul])
+            self.menu_soul_x = (Constants.WIDTH // 2) - ((Constants.WIDTH // 1.65) // 3) - 20
+            if self.menu_index == 1:
+                self.menu_soul_x = (Constants.WIDTH // 2) + ((Constants.WIDTH // 1.65) // 3) - 105
+            self.menu_soul_y = self.box_y + 130
 
 
     def clear(self):
-        """Cleans up and clears the save box / text from the screen."""
-        for element in self.active_ui_elements:
-            self.game.canvas.delete(element)
-
-        self.active_ui_elements.clear()
-        self.button_ids.clear()
-        self.ids.clear()
-        self.box_x1 = None
-        self.box_x2 = None
-        self.box_y1 = None
-        self.box_y2 = None
+        """Cleans up variables."""
+        self.box_x = None
+        self.box_y = None
+        self.box_width = None
+        self.box_height = None
         self.menu_index = 0
         self.is_active = False
         self.interactable = None

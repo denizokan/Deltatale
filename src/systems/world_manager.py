@@ -1,4 +1,5 @@
 import json
+import pygame
 from src.core.transition import TransitionManager
 from src.core.camera import Camera
 from src.core.player import Player
@@ -6,16 +7,21 @@ from src.core.room import Room
 from src.core.events import EventBus
 from src.core.constants import Constants, Color
 from src.core.enums import Event, Interactable
+from src.screens.save_screen import SaveScreen
 
 class WorldManager:
     """Owns the player, the room, and the camera. Handles map logic."""
-    def __init__(self, asset_manager, transition_manager, save_data):
+    def __init__(self, asset_manager, transition_manager, save_system, selected_file_index, save_data):
         self.asset_manager = asset_manager
         self.transition_manager = transition_manager
+        self.save_system = save_system
+        self.selected_file_index = selected_file_index
         self.save_data = save_data
 
         self.flags = save_data["flags"]
-        
+        self.last_save_time = pygame.time.get_ticks()
+
+        self.save_screen = SaveScreen(self.asset_manager)
         self.camera = Camera()
         self.current_room = Room(save_data["room"], self.asset_manager, self.flags)
 
@@ -83,20 +89,20 @@ class WorldManager:
     
             self.transition_manager.fade_from_black(speed=24)
 
-        try:
-            with open("data/rooms/" + target_room_id + ".json", "r") as file:
-                next_room_peek = json.load(file)
-            
-            if self.current_room.room_data["music"] != next_room_peek["music"]:
-                if hasattr(self.current_room, "music"):
-                    self.music.fadeout(500)
-        except Exception as e:
-            print(f"Warning: Could not read next room music: {e}")
+        next_room_data = self.asset_manager.get_room_data(target_room_id)
+        if self.current_room.room_data["music"] != next_room_data["music"]:
+            if hasattr(self.current_room, "music"):
+                self.current_room.music.fadeout(500)
+
         self.transition_manager.fade_to_black(speed=24, on_complete=lambda: load_new_room(target_room_id))
 
 
     def update(self, input_manager):
-        if not self.transition_manager.is_transitioning:
+        if self.save_screen.is_active:
+            self.save_screen.handle_input(input_manager)
+            self.save_screen.update()
+            
+        elif not self.transition_manager.is_transitioning:
             self.player.update(input_manager, self.current_room)
             self.current_room.update()
             self.camera.update(self.player, self.current_room)
@@ -106,6 +112,31 @@ class WorldManager:
         self.current_room.draw(surface, self.camera)
         self.player.draw(surface, self.camera)
         if self.current_room.debug_mode: self._draw_debug_text(surface, clock)
+        
+        if self.save_screen.is_active:
+            self.save_screen.draw(surface)
+
+
+    def open_save_menu(self, interactable):
+        current_data = self.save_system.load_file(self.selected_file_index)
+        
+        def process_save(interactable_data):
+            current_time = pygame.time.get_ticks()
+            elapsed_ms = current_time - self.last_save_time
+            elapsed_seconds = elapsed_ms // 1000
+
+            current_data["location"] = interactable_data["location"]
+            current_data["room"] = self.current_room.room_id
+            current_data["flags"] = self.flags
+            current_data["playtime"] += elapsed_seconds
+            
+            self.save_system.save_file(self.selected_file_index, current_data)
+            
+            self.save_data = current_data
+            self.last_save_time = current_time - (elapsed_ms % 1000)
+            return current_data
+
+        self.save_screen.show_save_screen(current_data, interactable, process_save)
 
 
     def _draw_debug_text(self, screen, clock):
