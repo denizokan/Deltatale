@@ -6,6 +6,7 @@ class Event(Enum):
     # UI / Dialogue
     START_DIALOGUE = "start_dialogue"
     SHOW_SAVE_SCREEN = "show_save_screen"
+    SWITCH_TO_FILE_SELECT = "switch_to_file_select"
     
     # World / Room
     CHANGE_ROOM = "change_room"

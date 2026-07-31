@@ -1,12 +1,14 @@
 import pygame
 import sys
 from src.core.input import InputManager
-from src.core.enums import Event
+from src.core.enums import Event, GameState
 from src.core.constants import Constants, Color
 from src.core.events import EventBus
 from src.systems.world_manager import WorldManager
 from src.systems.dialogue_system import DialogueSystem
 from src.systems.asset_manager import AssetManager
+from src.screens.intro_screen import IntroScreen
+from src.screens.file_select import FileSelectScreen
 
 class Main:
     def __init__(self):
@@ -30,17 +32,20 @@ class Main:
         self.asset_manager = AssetManager()
         self.asset_manager.load_all()
         self.dialogue_system = DialogueSystem(self.asset_manager)
-        self.world_manager = WorldManager(self.asset_manager, self.flags)
+        #self.world_manager = WorldManager(self.asset_manager, self.flags)
 
         # Busses
+        EventBus.subscribe(Event.SWITCH_TO_FILE_SELECT, self.setup_file_select)
         EventBus.subscribe(Event.START_DIALOGUE, self.handle_dialogue)
 
+        self.state = GameState.INTRO
         self.running = True
 
-        self.update()
+        self.intro_screen = IntroScreen(self.asset_manager)
+        self.game_loop()
 
 
-    def update(self):
+    def game_loop(self):
         """The main execution thread. Runs Constants.FPS times per second."""
 
         while self.running:
@@ -56,11 +61,15 @@ class Main:
             # PHASE 2: MATH & LOGIC (UPDATE)
             # ==========================================
 
-            if self.dialogue_system.is_active:
-                self.dialogue_system.handle_input(self.input_manager)
-                self.dialogue_system.update()
-            else:
-                self.world_manager.update(self.input_manager)
+            if self.state == GameState.INTRO:
+                self.intro_screen.handle_input(self.input_manager)
+                self.intro_screen.update()
+            elif self.state == GameState.PLAYING:
+                if self.dialogue_system.is_active:
+                    self.dialogue_system.handle_input(self.input_manager)
+                    self.dialogue_system.update()
+                else:
+                    self.world_manager.update(self.input_manager)
 
             self.input_manager.update()
 
@@ -70,14 +79,23 @@ class Main:
             
             self.screen.fill(Color.BLACK)
 
-            self.world_manager.draw(self.screen, self.clock)
-            self.dialogue_system.draw(self.screen)
+            if self.state == GameState.INTRO:
+                self.intro_screen.draw(self.screen)
+            elif self.state == GameState.PLAYING:
+                self.world_manager.draw(self.screen, self.clock)
+                self.dialogue_system.draw(self.screen)
 
             pygame.display.update()
             self.clock.tick(Constants.FPS)
 
         pygame.quit()
         sys.exit()
+
+
+    def setup_file_select(self, bool):
+        """Event Bus method: Setups the file selection screen."""
+        self.state = GameState.FILE_SELECT
+        self.file_select_screen = FileSelectScreen(self)
 
 
     def handle_dialogue(self, data):

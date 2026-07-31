@@ -21,7 +21,7 @@ class AssetManager:
         """The manifest. Calls the setters to load files into RAM."""
 
         # Load Images
-        self.load_image("logo", "assets/images/logo/LOGO.png", scaling=1)
+        self.load_image("logo", "assets/images/logo/LOGO.png", scaling=0.75)
         self.load_characters()
         self.load_all_sprites("assets/images/sprites", scaling=2)
         self.load_all_rooms("assets/images/tilesets", scaling=2)

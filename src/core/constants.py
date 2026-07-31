@@ -40,3 +40,4 @@ class Color:
     YELLOW = (255, 255, 0)
     MAGENTA = (255, 0, 255)
     CYAN = (0, 255, 255)
+    GRAY = (128, 128, 128)
