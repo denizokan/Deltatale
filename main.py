@@ -7,6 +7,7 @@ from src.core.events import EventBus
 from src.systems.world_manager import WorldManager
 from src.systems.dialogue_system import DialogueSystem
 from src.systems.asset_manager import AssetManager
+from src.systems.save_system import SaveSystem
 from src.screens.intro_screen import IntroScreen
 from src.screens.file_select import FileSelectScreen
 
@@ -31,11 +32,12 @@ class Main:
         self.input_manager = InputManager()
         self.asset_manager = AssetManager()
         self.asset_manager.load_all()
+        self.save_system = SaveSystem()
         self.dialogue_system = DialogueSystem(self.asset_manager)
-        #self.world_manager = WorldManager(self.asset_manager, self.flags)
 
         # Busses
         EventBus.subscribe(Event.SWITCH_TO_FILE_SELECT, self.setup_file_select)
+        EventBus.subscribe(Event.START_GAME, self.start_game)
         EventBus.subscribe(Event.START_DIALOGUE, self.handle_dialogue)
 
         self.state = GameState.INTRO
@@ -64,6 +66,9 @@ class Main:
             if self.state == GameState.INTRO:
                 self.intro_screen.handle_input(self.input_manager)
                 self.intro_screen.update()
+            elif self.state == GameState.FILE_SELECT:
+                self.file_select_screen.handle_input(self.input_manager)
+                self.file_select_screen.update_visuals()
             elif self.state == GameState.PLAYING:
                 if self.dialogue_system.is_active:
                     self.dialogue_system.handle_input(self.input_manager)
@@ -81,6 +86,8 @@ class Main:
 
             if self.state == GameState.INTRO:
                 self.intro_screen.draw(self.screen)
+            elif self.state == GameState.FILE_SELECT:
+                self.file_select_screen.draw(self.screen)
             elif self.state == GameState.PLAYING:
                 self.world_manager.draw(self.screen, self.clock)
                 self.dialogue_system.draw(self.screen)
@@ -95,7 +102,13 @@ class Main:
     def setup_file_select(self, bool):
         """Event Bus method: Setups the file selection screen."""
         self.state = GameState.FILE_SELECT
-        self.file_select_screen = FileSelectScreen(self)
+        self.file_select_screen = FileSelectScreen(self.asset_manager, self.save_system)
+
+
+    def start_game(self, selected_slot):
+        """Event Bus method: Starts the world manager."""
+        self.state = GameState.PLAYING
+        self.world_manager = WorldManager(self.asset_manager, selected_slot, self.flags)
 
 
     def handle_dialogue(self, data):

@@ -1,6 +1,6 @@
 import os
 import re
-from pygame import image, transform, font, mixer
+from pygame import image, transform, font, freetype, mixer
 from src.core.enums import Event
 from src.core.events import EventBus
 
@@ -38,6 +38,7 @@ class AssetManager:
         # Load SFX
         self.load_all_sfx("assets/sfx/sound_effects")
         self.load_all_sfx("assets/sfx/text_sounds")
+        self.load_sfx("menu_theme", "assets/sfx/musics/menu_theme.mp3")
 
 
     def load_characters(self):

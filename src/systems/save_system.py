@@ -3,7 +3,7 @@ import json
 
 class SaveSystem:
     def __init__(self):
-        self.save_dir = "./data"
+        self.save_dir = "./saves"
         if not os.path.exists(self.save_dir):
             try:
                 os.mkdir(self.save_dir)

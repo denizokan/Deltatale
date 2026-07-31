@@ -9,6 +9,7 @@ class Event(Enum):
     SWITCH_TO_FILE_SELECT = "switch_to_file_select"
     
     # World / Room
+    START_GAME = "start_game"
     CHANGE_ROOM = "change_room"
     START_CUTSCENE = "start_cutscene"
     OPEN_MENU = "open_menu"

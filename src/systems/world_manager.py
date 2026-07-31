@@ -9,8 +9,9 @@ from src.core.enums import Event
 
 class WorldManager:
     """Owns the player, the room, and the camera. Handles map logic."""
-    def __init__(self, asset_manager, flags):
+    def __init__(self, asset_manager, selected_slot, flags):
         self.asset_manager = asset_manager
+        self.selected_slot = selected_slot
         self.flags = flags
         
         self.transition_manager = TransitionManager()
