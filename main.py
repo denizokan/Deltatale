@@ -28,6 +28,8 @@ class Main:
         self.clock = pygame.time.Clock()
 
         self.selected_file_index = 0
+        self.quit_hold_timer = 0
+        self.MAX_QUIT_TICKS = 45
         self.flags = {}
 
         # Load Managers
@@ -69,6 +71,8 @@ class Main:
             # PHASE 2: MATH & LOGIC (UPDATE)
             # ==========================================
 
+            self.update_quit()
+
             if not self.transition_manager.is_transitioning:
 
                 if self.state == GameState.INTRO:
@@ -103,12 +107,61 @@ class Main:
                 self.dialogue_system.draw(self.screen)
 
             self.transition_manager.draw(self.screen)
+            self.draw_quit(self.screen)
 
             pygame.display.update()
             self.clock.tick(Constants.FPS)
 
         pygame.quit()
         sys.exit()
+
+
+    def update_quit(self):
+        """Handles ESC key press logic and timers."""
+        if self.input_manager.is_pressed(Action.QUIT):
+            self.quit_hold_timer += 1
+
+            if self.quit_hold_timer >= self.MAX_QUIT_TICKS:
+                pygame.quit()
+                sys.exit()
+        else:
+            self.quit_hold_timer = 0
+
+
+    def draw_quit(self, screen):
+        """Draws the quitting text with an outline to the screen, fading it in."""
+        if self.quit_hold_timer > 0:
+            FADE_TICKS = 15.0
+            
+            fade_progress = min(1.0, self.quit_hold_timer / FADE_TICKS)
+            alpha_value = int(fade_progress * 255)
+
+            dot_count = min(3, self.quit_hold_timer // 12)
+            display_str = f"QUITTING{'.' * dot_count}"
+
+            font = self.asset_manager.get_font("dtm_sans_24")
+            from src.core.constants import Color 
+            white_text = font.render(display_str, False, Color.WHITE)
+            black_text = font.render(display_str, False, Color.BLACK)
+            
+            outline_width = 2
+            width = white_text.get_width() + (outline_width * 2)
+            height = white_text.get_height() + (outline_width * 2)
+            
+            combined_surf = pygame.Surface((width, height), pygame.SRCALPHA)
+            
+            offsets = [
+                (-outline_width, 0), (outline_width, 0), (0, -outline_width), (0, outline_width), # Cross
+                (-outline_width, -outline_width), (outline_width, -outline_width),               # Top Diagonals
+                (-outline_width, outline_width), (outline_width, outline_width)                  # Bottom Diagonals
+            ]
+            for dx, dy in offsets:
+                combined_surf.blit(black_text, (outline_width + dx, outline_width + dy))
+                
+            combined_surf.blit(white_text, (outline_width, outline_width))
+            combined_surf.set_alpha(alpha_value)
+            combined_rect = combined_surf.get_rect(topleft=(10 - outline_width, 5 - outline_width))
+            screen.blit(combined_surf, combined_rect)
 
 
     def setup_file_select(self, bool):
