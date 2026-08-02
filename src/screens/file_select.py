@@ -25,7 +25,7 @@ class FileSelectScreen:
         self.menu_index = 0
         self.selected_slot_index = None
         self.prompt_index = 0
-        self.menu_soul_x, self.menu_soul_y = 0, 0
+        self.menu_soul_x, self.menu_soul_y = (Constants.WIDTH - Constants.WIDTH // 1.65) // 2 + 30, 142
 
         self.save_slots = []
         for i in range(0, 3):
@@ -86,32 +86,32 @@ class FileSelectScreen:
                         prompt_msg = f"Start DELTATALE from slot {self.selected_slot_index + 1}?"
 
                 # Prompt
-                prompt_surf = font.render(prompt_msg, True, Color.WHITE)
+                prompt_surf = font.render(prompt_msg, False, Color.WHITE)
                 prompt_rect = prompt_surf.get_rect(center=(Constants.WIDTH // 2, y + 25))
                 screen.blit(prompt_surf, prompt_rect)
 
                 # Yes & No Buttons
-                yes_surf = font.render("Yes", True, Color.WHITE if self.prompt_index == 0 else Color.GRAY)
+                yes_surf = font.render("Yes", False, Color.WHITE if self.prompt_index == 0 else Color.GRAY)
                 yes_rect = yes_surf.get_rect(midleft=(x + 80, y + 60))
                 screen.blit(yes_surf, yes_rect)
 
-                no_surf = font.render("No", True, Color.WHITE if self.prompt_index == 1 else Color.GRAY)
+                no_surf = font.render("No", False, Color.WHITE if self.prompt_index == 1 else Color.GRAY)
                 no_rect = no_surf.get_rect(midright=(x + box_width - 80, y + 60))
                 screen.blit(no_surf, no_rect)
 
             else:
                 # Name
-                name_surf = font.render(slot['name'], True, color)
+                name_surf = font.render(slot['name'], False, color)
                 name_rect = name_surf.get_rect(midleft=(x + 60, y + 25))
                 screen.blit(name_surf, name_rect)
 
                 # Location
-                location_surf = font.render(slot['location'], True, color)
+                location_surf = font.render(slot['location'], False, color)
                 location_rect = location_surf.get_rect(midleft=(x + 60, y + 60))
                 screen.blit(location_surf, location_rect)
 
                 # Playtime
-                playtime_surf = font.render(self._playtime_to_str(slot['playtime']), True, color)
+                playtime_surf = font.render(self._playtime_to_str(slot['playtime']), False, color)
                 playtime_rect = playtime_surf.get_rect(midright=(x + box_width - 60, y + 25))
                 screen.blit(playtime_surf, playtime_rect)
 
@@ -137,13 +137,13 @@ class FileSelectScreen:
             if button_text == "Erase" and self.current_mode == ActionMode.ERASE:
                 button_text = "Cancel"
 
-            button_surf = font.render(button_text, True, color)
+            button_surf = font.render(button_text, False, color)
             button_rect = button_surf.get_rect(center=(button[0], button[1]))
             screen.blit(button_surf, button_rect)
     
         # Footer text & Kris/Susie
         footer_font = self.asset_manager.get_font("dtm_sans_16")
-        footer_surf = footer_font.render("DELTATALE 0.0.1", True, Color.GRAY)
+        footer_surf = footer_font.render("DELTATALE 0.0.1", False, Color.GRAY)
         footer_rect = footer_surf.get_rect(midright=(Constants.WIDTH - 5, Constants.HEIGHT - 15))
         screen.blit(footer_surf, footer_rect)
 

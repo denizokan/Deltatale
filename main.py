@@ -1,7 +1,7 @@
 import pygame
 import sys
 from src.core.input import InputManager
-from src.core.enums import Event, GameState
+from src.core.enums import Event, GameState, Action
 from src.core.constants import Constants, Color
 from src.core.events import EventBus
 from src.core.transition import TransitionManager
@@ -23,7 +23,7 @@ class Main:
 
         pygame.init()
 
-        self.screen = pygame.display.set_mode((Constants.WIDTH, Constants.HEIGHT))
+        self.screen = pygame.display.set_mode((Constants.WIDTH, Constants.HEIGHT), pygame.SCALED)
         pygame.display.set_caption("Deltatale")
         self.clock = pygame.time.Clock()
 
@@ -61,6 +61,9 @@ class Main:
                 if event.type == pygame.QUIT: self.running = False
                 if event.type == pygame.KEYDOWN: self.input_manager.press_key(event)
                 if event.type == pygame.KEYUP: self.input_manager.release_key(event)
+
+            if self.input_manager.is_just_pressed(Action.FULLSCREEN):
+                pygame.display.toggle_fullscreen()
 
             # ==========================================
             # PHASE 2: MATH & LOGIC (UPDATE)

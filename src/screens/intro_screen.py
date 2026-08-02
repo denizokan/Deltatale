@@ -36,6 +36,6 @@ class IntroScreen:
 
         if self.showing_text:
             intro_font = self.asset_manager.get_font("dtm_sans_20")
-            intro_surf = intro_font.render("Press [Z] or [ENTER]", True, Color.GRAY)
+            intro_surf = intro_font.render("Press [Z] or [ENTER]", False, Color.GRAY)
             text_rect = intro_surf.get_rect(center=(Constants.WIDTH // 2, Constants.HEIGHT // 2 + 120))
             screen.blit(intro_surf, text_rect)

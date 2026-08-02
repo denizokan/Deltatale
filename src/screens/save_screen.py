@@ -26,10 +26,10 @@ class SaveScreen:
         self.data = current_data
         self.interactable = interactable
         self.on_save_callback = on_save_callback
-        
-        self.is_active = True
-        self.saved = False
+
         self.menu_index = 0
+        self.saved = False
+        self.is_active = True
 
 
     def draw(self, screen):
@@ -55,32 +55,32 @@ class SaveScreen:
             save_text = "File saved."
 
         # Name Text
-        name_surf = font.render(self.data["name"], True, color)
+        name_surf = font.render(self.data["name"], False, color)
         name_rect = name_surf.get_rect(midleft=(self.box_x + 30, self.box_y + 35))
         screen.blit(name_surf, name_rect)
 
         # Level Text
-        level_surf = font.render(f"LV {self.data["level"]}", True, color)
+        level_surf = font.render(f"LV {self.data["level"]}", False, color)
         level_rect = level_surf.get_rect(center=(Constants.WIDTH // 2, self.box_y + 35))
         screen.blit(level_surf, level_rect)
 
         # Playtime Text
-        playtime_surf = font.render(self._playtime_to_str(self.data["playtime"]), True, color)
+        playtime_surf = font.render(self._playtime_to_str(self.data["playtime"]), False, color)
         playtime_rect = playtime_surf.get_rect(midright=(self.box_x + self.box_width - 30, self.box_y + 35))
         screen.blit(playtime_surf, playtime_rect)
 
         # Location Text
-        location_surf = font.render(self.data["location"], True, color)
+        location_surf = font.render(self.data["location"], False, color)
         location_rect = location_surf.get_rect(midleft=(self.box_x + 30, self.box_y + 75))
         screen.blit(location_surf, location_rect)
         
         # Create the buttons
-        save_surf = font.render(save_text, True, color)
+        save_surf = font.render(save_text, False, color)
         save_rect = save_surf.get_rect(midleft=((Constants.WIDTH // 2) - ((Constants.WIDTH // 1.65) // 3), self.box_y + 130))
         screen.blit(save_surf, save_rect)
 
         if not self.saved:
-            return_surf = font.render("Return", True, color)
+            return_surf = font.render("Return", False, color)
             return_rect = return_surf.get_rect(midright=((Constants.WIDTH // 2) + ((Constants.WIDTH // 1.65) // 3), self.box_y + 130))
             screen.blit(return_surf, return_rect)
         

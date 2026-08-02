@@ -14,6 +14,7 @@ class InputManager:
             pygame.K_c: False,
             pygame.K_RETURN: False,
             pygame.K_ESCAPE: False,
+            pygame.K_F4: False,
             pygame.K_COMMA: False # Debug key (,)
         }
         self.pressed_this_frame = {k: False for k in self.keys}
@@ -79,6 +80,8 @@ class InputManager:
 
         if action == Action.QUIT:
             return self.pressed_this_frame[pygame.K_ESCAPE]
+        if action == Action.FULLSCREEN:
+            return self.pressed_this_frame[pygame.K_F4]
         if action == Action.DEBUG: # Debug key check
             return self.pressed_this_frame[pygame.K_COMMA]
 
