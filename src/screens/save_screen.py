@@ -150,6 +150,7 @@ class SaveScreen:
         self.box_width = None
         self.box_height = None
         self.menu_index = 0
+        self.menu_soul_x, self.menu_soul_y = (Constants.WIDTH // 2) - ((Constants.WIDTH // 1.65) // 3) - 20, 250
         self.is_active = False
         self.interactable = None
         self.old_data = None
