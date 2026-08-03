@@ -145,8 +145,8 @@ class Player:
         else:
             sx, sy, s_facing, s_frame = self.history[0]
 
-        kris_img = self.kris_sprites[self.facing][self.anim_frame]
-        susie_img = self.susie_sprites[s_facing][s_frame]
+        kris_img = self.cutscene_sprite_override if hasattr(self, 'cutscene_sprite_override') and self.cutscene_sprite_override else self.kris_sprites[self.facing][self.anim_frame]
+        susie_img = self.cutscene_sprite_override_susie if hasattr(self, 'cutscene_sprite_override_susie') and self.cutscene_sprite_override_susie else self.susie_sprites[s_facing][s_frame]
 
         kris_rect = kris_img.get_rect(midbottom=(self.x - camera.x, self.y - camera.y + self.sprite_offsets["kris"][1]))
         susie_rect = susie_img.get_rect(midbottom=(sx - camera.x, sy - camera.y + self.sprite_offsets["susie"][1]))
@@ -178,6 +178,7 @@ class Player:
             self._target_y = self.y
 
         self._susie_x, self._susie_y = susie_start_coords
+        self._susie_facing = "down"
         self.anim_frame = 0
         self.anim_timer = 0
 

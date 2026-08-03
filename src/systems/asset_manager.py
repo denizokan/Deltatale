@@ -28,6 +28,8 @@ class AssetManager:
         self.load_all_rooms("assets/images/tilesets", scaling=2)
         self.load_image("spr_soul", "assets/images/sprites/spr_soul.png", scaling=1)
         self.load_image("spr_monster_soul", "assets/images/sprites/spr_monster_soul.png", scaling=1)
+        self.load_image("flowey_fight_lower_ui", "assets/images/sprites/battle/ui/flowey_fight_lower_ui.png", scaling=1)
+        self.load_image("flowey_fight_tp_bar", "assets/images/sprites/battle/ui/flowey_fight_tp_bar.png", scaling=1)
 
         # Load Fonts
         self.load_font("dtm_sans_16", "assets/fonts/DTM-Sans.otf", 16)

@@ -11,7 +11,6 @@ from src.systems.asset_manager import AssetManager
 from src.systems.save_system import SaveSystem
 from src.screens.intro_screen import IntroScreen
 from src.screens.file_select import FileSelectScreen
-from src.screens.save_screen import SaveScreen
 
 class Main:
     def __init__(self):
@@ -30,7 +29,6 @@ class Main:
         self.selected_file_index = 0
         self.quit_hold_timer = 0
         self.MAX_QUIT_TICKS = 45
-        self.flags = {}
 
         # Load Managers
         self.input_manager = InputManager()
@@ -39,6 +37,8 @@ class Main:
         self.transition_manager = TransitionManager()
         self.save_system = SaveSystem()
         self.dialogue_system = DialogueSystem(self.asset_manager)
+
+        self.context = GameContext(self.asset_manager, self.save_system, self.transition_manager, self.input_manager, self.dialogue_system)
 
         # Busses
         EventBus.subscribe(Event.SWITCH_TO_FILE_SELECT, self.setup_file_select)
@@ -82,12 +82,11 @@ class Main:
                     self.file_select_screen.handle_input(self.input_manager)
                     if self.state == GameState.FILE_SELECT: self.file_select_screen.update_visuals()
                 elif self.state == GameState.PLAYING:
+                    self.world_manager.update(self.input_manager, self.dialogue_system.is_active)
+                    
                     if self.dialogue_system.is_active:
                         self.dialogue_system.handle_input(self.input_manager)
                         self.dialogue_system.update()
-                        self.world_manager.current_room.update()
-                    else:
-                        self.world_manager.update(self.input_manager)
 
             self.transition_manager.update()
             self.input_manager.update()
@@ -104,12 +103,13 @@ class Main:
                 self.file_select_screen.draw(self.screen)
             elif self.state == GameState.PLAYING:
                 self.world_manager.draw(self.screen, self.clock)
-                self.dialogue_system.draw(self.screen)
 
             self.transition_manager.draw(self.screen)
+            self.dialogue_system.draw(self.screen)
             self.draw_quit(self.screen)
 
             pygame.display.update()
+            pygame.display.flip()
             self.clock.tick(Constants.FPS)
 
         pygame.quit()
@@ -140,7 +140,6 @@ class Main:
             display_str = f"QUITTING{'.' * dot_count}"
 
             font = self.asset_manager.get_font("dtm_sans_24")
-            from src.core.constants import Color 
             white_text = font.render(display_str, False, Color.WHITE)
             black_text = font.render(display_str, False, Color.BLACK)
             
@@ -184,8 +183,9 @@ class Main:
                     sys.exit()
 
             data = self.save_system.load_file(selected_slot)
+            self.context.flags = data["flags"]
             self.state = GameState.PLAYING
-            self.world_manager = WorldManager(self.asset_manager, self.transition_manager, self.save_system, selected_slot, data)
+            self.world_manager = WorldManager(self.context, selected_slot, data)
             self.world_manager.camera.update(self.world_manager.player, self.world_manager.current_room)
             self.world_manager.player.draw(self.screen, self.world_manager.camera)
             self.file_select_screen = None
@@ -211,6 +211,18 @@ class Main:
             actors=actors,
             on_complete=on_complete_cb
         )
+
+
+class GameContext:
+    """A bundle of all global managers."""
+    def __init__(self, asset_manager, save_system, transition_manager, input_manager, dialogue_system):
+        self.assets = asset_manager
+        self.saves = save_system
+        self.transitions = transition_manager
+        self.inputs = input_manager
+        self.dialogue = dialogue_system
+        self.world = None
+        self.flags = {}
 
             
 if __name__ == "__main__":
