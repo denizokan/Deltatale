@@ -41,8 +41,8 @@ class AssetManager:
 
         # Load SFX
         self.load_all_sfx("assets/sfx/sound_effects")
+        self.load_all_sfx("assets/sfx/musics")
         self.load_all_sfx("assets/sfx/text_sounds")
-        self.load_sfx("menu_theme", "assets/sfx/musics/menu_theme.mp3")
 
 
     def load_characters(self):
