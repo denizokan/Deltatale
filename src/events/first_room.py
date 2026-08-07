@@ -1,7 +1,8 @@
 import pygame, sys
 from pygame import mixer
+from src.events.cutscene import Cutscene
 
-class FirstRoomCutscene:
+class FirstRoomCutscene(Cutscene):
     def __init__(self, context, cutscene_mgr):
         self.context = context
         self.cutscene_mgr = cutscene_mgr
@@ -75,7 +76,6 @@ class FirstRoomCutscene:
     # --- Update loop ---
 
     def update(self):
-        """Runs FPS times a second. Checks the time and updates animations."""
         now = pygame.time.get_ticks()
         elapsed_time = now - self.state_timer
 
