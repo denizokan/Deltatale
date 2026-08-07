@@ -80,17 +80,19 @@ class WaitAction(CutsceneAction):
 
 class DialogueAction(CutsceneAction):
     """Stars a dialogue and waits until it's over."""
-    def __init__(self, context, dialogue_data, actors=None):
+    def __init__(self, context, dialogue_data, actors=None, is_battle=False):
         self.context = context
         self.dialogue_data = dialogue_data
         self.actors = actors
+        self.is_battle = is_battle
         self.is_done = False
 
     def start(self):
         self.context.dialogue.start_dialogue(
             self.dialogue_data,
             on_complete=self.on_dialogue_complete,
-            actors=self.actors
+            actors=self.actors,
+            is_battle=self.is_battle
         )
 
     def on_dialogue_complete(self):
@@ -178,7 +180,7 @@ class CustomLoopAction(CutsceneAction):
 
 
 class SlideAction(CutsceneAction):
-    """Moves an object from point A to point B smoothly. Waits until move animation is done."""
+    """Moves an object or dictionary from point A to point B smoothly."""
     def __init__(self, obj, attr_x, attr_y, end_pos, duration_ms, ease_out=True):
         self.obj = obj
         self.attr_x = attr_x
@@ -189,21 +191,31 @@ class SlideAction(CutsceneAction):
 
     def start(self):
         self.start_time = pygame.time.get_ticks()
-        self.start_pos = (getattr(self.obj, self.attr_x), getattr(self.obj, self.attr_y))
+        
+        if isinstance(self.obj, dict):
+            self.start_pos = (self.obj[self.attr_x], self.obj[self.attr_y])
+        else:
+            self.start_pos = (getattr(self.obj, self.attr_x), getattr(self.obj, self.attr_y))
 
     def update(self):
         now = pygame.time.get_ticks()
         t = (now - self.start_time) / self.duration_ms
         
         if t >= 1.0:
-            setattr(self.obj, self.attr_x, self.end_pos[0])
-            setattr(self.obj, self.attr_y, self.end_pos[1])
+            self._set_val(self.attr_x, self.end_pos[0])
+            self._set_val(self.attr_y, self.end_pos[1])
             return True
 
         ease_t = 1 - (1 - t)**3 if self.ease_out else t
         new_x = self.start_pos[0] + (self.end_pos[0] - self.start_pos[0]) * ease_t
         new_y = self.start_pos[1] + (self.end_pos[1] - self.start_pos[1]) * ease_t
         
-        setattr(self.obj, self.attr_x, new_x)
-        setattr(self.obj, self.attr_y, new_y)
+        self._set_val(self.attr_x, new_x)
+        self._set_val(self.attr_y, new_y)
         return False
+
+    def _set_val(self, key, value):
+        if isinstance(self.obj, dict):
+            self.obj[key] = value
+        else:
+            setattr(self.obj, key, value)

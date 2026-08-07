@@ -40,7 +40,11 @@ class FloweyIntroCutscene(Cutscene):
 
         # Character References
         self.player = self.context.world.player
-        self.susie = self.context.world.active_characters[1]
+        sx, sy, s_facing, _ = self.player.history[0]
+        self.player._susie_x = sx
+        self.player._susie_y = sy
+        self.player._susie_facing = s_facing
+        self.player.state = "SUSIE_CINEMATIC"
 
         # SOUL State Variables
         self.soul_visible = False
@@ -57,12 +61,12 @@ class FloweyIntroCutscene(Cutscene):
         self.action_queue = [
             PlaySoundAction(self.flowey_music, loops=-1),
             DialogueAction(self.context, self.dialogue_data['greeting'], actors={"FLOWEY": self.flowey_interactable}),
-            WaitAction(500),
-            DialogueAction(self.context, self.dialogue_data['heated_up'], actors={"FLOWEY": self.flowey_interactable}),
             ParallelAction(
                 CallAction(self.flowey_music.fadeout, 1500),
                 WaitAction(2500)
             ),
+
+            DialogueAction(self.context, self.dialogue_data['heated_up'], actors={"FLOWEY": self.flowey_interactable}),
             ParallelAction(
                 PlaySoundAction(self.snd_laz),
                 AnimateAction(self.player, "cutscene_sprite_override_susie", self.susie_attack_sprites, delay_ms=100)
@@ -73,9 +77,9 @@ class FloweyIntroCutscene(Cutscene):
 
             # --- 1. SLIDE EVERYONE INTO POSITION ---
             ParallelAction(
-                SlideAction(self.player, "x", "y", (150, self.context.constants.HEIGHT // 2 - 50), 300),
-                SlideAction(self.susie, "x", "y", (130, self.context.constants.HEIGHT // 2 + 50), 300),
-                SlideAction(self.flowey_interactable, "x", "y", (520, self.context.constants.HEIGHT // 2 - 25), 300),
+                SlideAction(self.player, "x", "y", (150, Constants.HEIGHT // 2 - 50), 300),
+                SlideAction(self.player, "_susie_x", "_susie_y", (130, Constants.HEIGHT // 2 + 50), 300),
+                SlideAction(self.flowey_interactable, "x", "y", (520, Constants.HEIGHT // 2 - 25), 300),
             ),
 
             # --- 2. DRAW SWORDS & PLAY ANIMATIONS ---
@@ -92,7 +96,7 @@ class FloweyIntroCutscene(Cutscene):
 
             # --- 4. SOUL EXTRACTION ---
             CallAction(self.setup_soul_spawn),
-            SlideAction(self, "soul_x", "soul_y", (self.context.constants.WIDTH // 2, self.context.constants.HEIGHT // 2 - 50), 400),
+            SlideAction(self, "soul_x", "soul_y", (Constants.WIDTH // 2, Constants.HEIGHT // 2 - 50), 400),
             CallAction(self.trigger_soul_pulse),
 
             # --- 5. BATTLE PHASE ---
@@ -145,7 +149,7 @@ class FloweyIntroCutscene(Cutscene):
 
         # Draw Main Battle Box
         if self.box_active:
-            box_x, box_y = self.context.constants.WIDTH // 2, self.context.constants.HEIGHT // 2 - 50
+            box_x, box_y = Constants.WIDTH // 2, Constants.HEIGHT // 2 - 50
             
             if self.box_angle == 0:
                 rect = pygame.Rect(0, 0, self.box_current_w, self.box_current_h)
@@ -170,8 +174,8 @@ class FloweyIntroCutscene(Cutscene):
     def setup_battle(self):
         """Sets initial SOUL position and starts the battle state."""
         self.battle_started = True
-        self.soul_x = self.context.constants.WIDTH // 2
-        self.soul_y = self.context.constants.HEIGHT // 2 - 50
+        self.soul_x = Constants.WIDTH // 2
+        self.soul_y = Constants.HEIGHT // 2 - 50
 
 
     def update_battle(self):
@@ -193,8 +197,8 @@ class FloweyIntroCutscene(Cutscene):
         if self.context.inputs.is_pressed(Action.LEFT): target_x -= Constants.SOUL_SPEED
         if self.context.inputs.is_pressed(Action.RIGHT): target_x += Constants.SOUL_SPEED
 
-        box_center_x = self.context.constants.WIDTH // 2
-        box_center_y = self.context.constants.HEIGHT // 2 - 50
+        box_center_x = Constants.WIDTH // 2
+        box_center_y = Constants.HEIGHT // 2 - 50
         
         soul_radius = 8
         offset = 4 
@@ -327,7 +331,7 @@ class FloweyIntroCutscene(Cutscene):
         ]
 
         self.flowey_bullet_sprites = [
-            self.context.assets.get_image("spr_pellet")[i] for i in range(2)
+            self.context.assets.get_image("spr_flowey_pellet")[i] for i in range(2)
         ]
         for i, sprite in enumerate(self.flowey_bullet_sprites):
             self.flowey_bullet_sprites[i] = pygame.transform.scale_by(sprite, 1)
@@ -440,7 +444,7 @@ class FloweyIntroCutscene(Cutscene):
         self.box_current_h = self.box_target_h * ease_t
         self.box_angle = math.pi * (1 - ease_t)
 
-        box_x, box_y = self.context.constants.WIDTH // 2, self.context.constants.HEIGHT // 2 - 50
+        box_x, box_y = Constants.WIDTH // 2, Constants.HEIGHT // 2 - 50
         current_corners = self._get_rotated_corners(box_x, box_y, self.box_current_w, self.box_current_h, self.box_angle)
 
         if t < 0.35 and self.box_anim_frame % 2 == 0:
