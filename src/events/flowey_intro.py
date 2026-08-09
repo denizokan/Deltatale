@@ -32,6 +32,14 @@ class FloweyIntroCutscene(Cutscene):
         self.box_target_w = 160
         self.box_target_h = 160
         self.box_ghosts = []
+
+        # Character Ghosts
+        self.active_char_ghosts = []
+        
+        # Battle UI State
+        self.ui_active = False
+        self.ui_lower_y = Constants.HEIGHT + 150
+        self.ui_tp_x = -100
         
         # Bullet State
         self.active_bullets = []
@@ -76,30 +84,45 @@ class FloweyIntroCutscene(Cutscene):
             WaitAction(100),
 
             # --- 1. SLIDE EVERYONE INTO POSITION ---
+            CallAction(setattr, self.player, "cutscene_sprite_override", self.kris_sprites[1]),
+            CallAction(setattr, self.player, "cutscene_sprite_override_susie", self.susie_sprites[1]),
+
             ParallelAction(
-                SlideAction(self.player, "x", "y", (150, Constants.HEIGHT // 2 - 50), 300),
-                SlideAction(self.player, "_susie_x", "_susie_y", (130, Constants.HEIGHT // 2 + 50), 300),
-                SlideAction(self.flowey_interactable, "x", "y", (520, Constants.HEIGHT // 2 - 25), 300),
+                SlideAction(self.player, "x", "y", (150, 440), 240, ease_out=False),
+                SlideAction(self.player, "_susie_x", "_susie_y", (130, 500), 240, ease_out=False),
+                SlideAction(self.flowey_interactable, "x", "y", (520, 460), 240, ease_out=False),
+                CustomLoopAction(self.update_slide_ghosts)
             ),
 
-            # --- 2. DRAW SWORDS & PLAY ANIMATIONS ---
+            # --- 2. DRAW SWORDS SOUND ---
             CallAction(self.snd_weapon.play),
-            ParallelAction(
-                AnimateAction(self.player, "cutscene_sprite_override", self.kris_attack_sprites, delay_ms=100),
-                AnimateAction(self.player, "cutscene_sprite_override_susie", self.susie_attack_sprites, delay_ms=100)
-            ),
             
-            # --- 3. START MUSIC & OPEN BATTLE BOX ---
-            PlaySoundAction(self.battle_mus, loops=-1),
-            CallAction(self.start_box_anim),
-            CustomLoopAction(self.update_box_anim),
+            # --- 3. START MUSIC & OPEN BATTLE BOX/UI ---
+            ParallelAction(
+                AnimateAction(self.player, "cutscene_sprite_override", self.kris_attack_sprites, delay_ms=400),
+                AnimateAction(self.player, "cutscene_sprite_override_susie", self.susie_attack_sprites, delay_ms=400),
+                
+                # This sequence starts at the exact same time as the animations
+                CutsceneSequence([
+                    WaitAction(500),
 
-            # --- 4. SOUL EXTRACTION ---
-            CallAction(self.setup_soul_spawn),
-            SlideAction(self, "soul_x", "soul_y", (Constants.WIDTH // 2, Constants.HEIGHT // 2 - 50), 400),
-            CallAction(self.trigger_soul_pulse),
+                    PlaySoundAction(self.battle_mus, loops=-1),
+                    ParallelAction(
+                        CallAction(self.start_box_anim),
+                        CustomLoopAction(self.update_box_anim),
+                        CallAction(self.start_ui_anim),
+                        CustomLoopAction(self.update_ui_anim),
+                        
+                        CutsceneSequence([
+                            CallAction(self.setup_soul_spawn),
+                            SlideAction(self, "soul_x", "soul_y", (Constants.WIDTH // 2, Constants.HEIGHT // 2 - 50), 400),
+                            CallAction(self.trigger_soul_pulse),
+                        ])
+                    )
+                ])
+            ),
 
-            # --- 5. BATTLE PHASE ---
+            # --- 4. BATTLE PHASE ---
             CallAction(self.setup_battle),
             ParallelAction(
                 # Loop 1: Constant SOUL movement and constraints
@@ -127,6 +150,17 @@ class FloweyIntroCutscene(Cutscene):
 
 
     def draw(self, surface, camera):
+        # Draw Ghosts
+        for ghost in self.active_char_ghosts[:]:
+            ghost['alpha'] -= ghost['decay']
+            if ghost['alpha'] <= 0:
+                self.active_char_ghosts.remove(ghost)
+            else:
+                img = ghost['image'].copy()
+                img.set_alpha(ghost['alpha'])
+                rect = img.get_rect(midbottom=(ghost['x'] - camera.x, ghost['y'] - camera.y))
+                surface.blit(img, rect)
+
         # Darken Background
         if self.bg_darkness > 0:
             dark_surf = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
@@ -160,6 +194,16 @@ class FloweyIntroCutscene(Cutscene):
                 points = self._get_rotated_corners(box_x, box_y, self.box_current_w, self.box_current_h, self.box_angle)
                 pygame.draw.polygon(surface, Color.BLACK, points)
                 pygame.draw.polygon(surface, Color.GREEN, points, width=4)
+
+        # Draw Battle UI
+        if self.ui_active:
+            # Lower UI
+            lower_rect = self.battle_lower_ui.get_rect(midbottom=(Constants.WIDTH // 2, int(self.ui_lower_y)))
+            surface.blit(self.battle_lower_ui, lower_rect)
+
+            # TP Bar
+            tp_rect = self.battle_tp_ui.get_rect(topleft=(int(self.ui_tp_x), 50))
+            surface.blit(self.battle_tp_ui, tp_rect)
 
         # Draw Bullets
         if self.active_bullets:
@@ -221,8 +265,8 @@ class FloweyIntroCutscene(Cutscene):
         """Called by Action Queue: Spawns bullets fanning out from Flowey."""
         self.active_bullets = []
         
-        spawn_x = self.flowey_interactable.x
-        spawn_y = self.flowey_interactable.y
+        spawn_x = self.flowey_interactable["x"] - self.context.world.camera.x
+        spawn_y = self.flowey_interactable["y"] - self.context.world.camera.y
         
         num_bullets = 4
         
@@ -285,8 +329,8 @@ class FloweyIntroCutscene(Cutscene):
     def setup_soul_spawn(self):
         """Places the SOUL on Kris's chest and makes it visible."""
         self.soul_visible = True
-        self.soul_x = self.player.x - 30
-        self.soul_y = self.player.y - 50
+        self.soul_x = self.player.x - 30 - self.context.world.camera.x
+        self.soul_y = self.player.y - 50 - self.context.world.camera.y
         
     def trigger_soul_pulse(self):
         """Starts the pulse animation loop."""
@@ -461,4 +505,55 @@ class FloweyIntroCutscene(Cutscene):
                 self.box_ghosts.remove(ghost)
 
         self.box_anim_frame += 1
+        return False
+
+    def start_ui_anim(self):
+        """Initializes the Battle UI pop-up animation."""
+        self.ui_active = True
+        self.ui_anim_frame = 0
+        self.ui_anim_total = 20
+
+    def update_ui_anim(self):
+        """Animates the UI sliding in from the edges of the screen."""
+        if self.ui_anim_frame > self.ui_anim_total:
+            return True
+
+        t = self.ui_anim_frame / self.ui_anim_total
+        ease_t = 1 - (1 - t)**3
+
+        start_lower_y = Constants.HEIGHT + 150
+        target_lower_y = Constants.HEIGHT
+        self.ui_lower_y = start_lower_y + (target_lower_y - start_lower_y) * ease_t
+
+        start_tp_x = -100
+        target_tp_x = 10
+        self.ui_tp_x = start_tp_x + (target_tp_x - start_tp_x) * ease_t
+
+        self.ui_anim_frame += 1
+        return False
+
+    def update_slide_ghosts(self):
+        """Spawns fading ghost trails while the characters slide."""
+        now = pygame.time.get_ticks()
+        if not hasattr(self, 'ghost_start_time'):
+            self.ghost_start_time = now
+            self.ghost_frame = 0
+
+        if now - self.ghost_start_time > 240:
+            del self.ghost_start_time
+            return True
+
+        if self.ghost_frame % 2 == 0:
+            self.active_char_ghosts.append({
+                "x": self.player.x, "y": self.player.y + 2,
+                "image": self.player.cutscene_sprite_override,
+                "alpha": 150, "decay": 15
+            })
+            self.active_char_ghosts.append({
+                "x": self.player._susie_x, "y": self.player._susie_y,
+                "image": self.player.cutscene_sprite_override_susie,
+                "alpha": 150, "decay": 15
+            })
+            
+        self.ghost_frame += 1
         return False
